@@ -1,0 +1,15 @@
+# Generated files
+.nuxt/
+dist/
+.output/
+node_modules/
+
+# Build outputs
+*.min.js
+*.min.css
+
+# Config files (may use CJS)
+*.config.js
+*.config.cjs
+*.config.mjs
+
