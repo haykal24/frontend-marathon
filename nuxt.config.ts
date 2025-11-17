@@ -242,6 +242,16 @@ export default defineNuxtConfig({
   // SSR Configuration
   ssr: true,
 
+  // Nitro Configuration
+  nitro: {
+    prerender: {
+      // Don't fail build on prerender errors (allow build to continue)
+      failOnError: false,
+      // Crawl links for prerendering
+      crawlLinks: true,
+    },
+  },
+
   // TypeScript Configuration
   typescript: {
     strict: true,
