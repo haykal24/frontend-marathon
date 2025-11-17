@@ -1,5 +1,9 @@
 <template>
-  <section class="bg-white py-10">
+  <section 
+    data-seo-related-keywords
+    :data-keyword-id="keyword.primary"
+    class="bg-white py-10"
+  >
     <div class="layout-container space-y-10">
       <!-- Header -->
       <div class="max-w-3xl mx-auto text-center">
@@ -80,16 +84,23 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const { generateH2WithKeyword, generateSectionSubtitle, generateInternalLinks } = useSeoInjection()
+const { 
+  generateH2WithKeyword, 
+  generateSectionSubtitle, 
+  generateInternalLinks,
+  generateCardDescription
+} = useSeoInjection()
 
 const h2Title = computed(() => generateH2WithKeyword(props.keyword, 'Pelajari Juga'))
-const subtitle = computed(() => generateSectionSubtitle(props.keyword, 'related'))
+const subtitle = computed(() => generateSectionSubtitle(props.keyword, 'short'))
 const internalLinks = computed(() => generateInternalLinks(props.keyword, 3))
 
+// PEOPLE-FIRST: Generate variatif card descriptions, bukan repetitif pattern
 const cards = computed(() =>
   internalLinks.value.map(link => ({
     title: link.text.replace(/\b[a-z]/, char => char.toUpperCase()),
-    description: `Eksplor topik ${link.text} dan hubungannya dengan ${props.keyword.primary}.`,
+    // Generate description dengan variasi - bukan selamanya "Eksplor topik X dan hubungannya dengan Y"
+    description: generateCardDescription(props.keyword, link.text),
     url: link.url,
   }))
 )

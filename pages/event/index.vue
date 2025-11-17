@@ -31,13 +31,15 @@ const config = useRuntimeConfig()
 // --- State (declare early) ---
 const events = ref<EventType[]>([])
 
-// --- SEO ---
+// --- SEO Meta ---
 useSeoMetaDynamic({
   title: `Jadwal Event Lari ${currentYear.value} - Kalender Event Lari Indonesia`,
   description:
     'Temukan jadwal lengkap event lari di seluruh Indonesia. Kalender lari terbaru untuk road run, trail run, fun run, dan marathon.',
   url: '/event',
 })
+
+// SEO: OG Image menggunakan fallback og.webp (tidak perlu defineOgImage untuk listing)
 
 // --- CollectionPage & ItemList Schema.org (SEO Optimal) ---
 useSchemaOrg([
@@ -76,6 +78,9 @@ const breadcrumbItems = computed<BreadcrumbItem[]>(() => {
   ]
   return items
 })
+
+// SEO: BreadcrumbList Schema.org untuk rich results
+useBreadcrumbSchema(breadcrumbItems)
 
 // --- Composables ---
 const { fetchEvents } = useEvents()
@@ -587,7 +592,7 @@ loadEvents()
               :class="[
                 'p-2 rounded-md transition',
                 viewMode === 'table'
-                 ? 'bg-secondary text-primary'
+                  ? 'bg-secondary text-primary'
                   : 'bg-white border border-secondary/40 text-gray-500 hover:border-secondary/60'
               ]"
               aria-label="Table View"
@@ -651,25 +656,25 @@ loadEvents()
                   scope="col"
                   class="px-4 sm:px-6 py-4 font-bold text-primary text-xs tracking-wider uppercase"
                 >
-                  📅 Tanggal
+                  Tanggal
                 </th>
                 <th
                   scope="col"
                   class="px-4 sm:px-6 py-4 font-bold text-primary text-xs tracking-wider uppercase min-w-60"
                 >
-                  🏃Nama Event
+                  Nama Event
                 </th>
                 <th
                   scope="col"
                   class="px-4 sm:px-6 py-4 font-bold text-primary text-xs tracking-wider uppercase min-w-48"
                 >
-                  📍 Lokasi
+                  Lokasi
                 </th>
                 <th
                   scope="col"
                   class="px-4 sm:px-6 py-4 font-bold text-primary text-xs tracking-wider uppercase min-w-40"
                 >
-                  🏷️ Kategori
+                  Kategori
                 </th>
               </tr>
             </thead>
@@ -800,7 +805,10 @@ loadEvents()
         v-if="pillarKeyword"
         class="space-y-10 lg:space-y-16 mt-16"
       >
-        <SeoFaqSection :keyword="pillarKeyword" />
+        <SeoFaqSection
+          :keyword="pillarKeyword"
+          :context="{ pageType: 'listing' }"
+        />
         <SeoRelatedKeywords :keyword="pillarKeyword" />
       </div>
 

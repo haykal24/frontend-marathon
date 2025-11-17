@@ -5,7 +5,7 @@ import IconsResolver from 'unplugin-icons/resolver'
 import Components from 'unplugin-vue-components/vite'
 
 export default defineNuxtConfig({
-  compatibilityDate: '2025-11-15',
+  compatibilityDate: '2025-11-17',
   devtools: { enabled: false },
   // nitro: {
   //   compatibilityDate: '2025-11-14',
@@ -56,6 +56,14 @@ export default defineNuxtConfig({
     '/api/**': { ssr: false },
   },
 
+  // Site Meta Configuration (Centralized for @nuxtjs/seo)
+  site: {
+    url: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+    name: 'indonesiamarathon.com',
+    description: `Platform digital #1 di Indonesia sebagai pusat informasi dan komunitas event lari. Temukan jadwal lari ${new Date().getFullYear()} terlengkap, ekosistem vendor, dan artikel seputar dunia lari.`,
+    defaultLocale: 'id-ID',
+  },
+
   // Modules
   modules: [
     '@nuxtjs/seo', // SEO optimization (meta tags, sitemap, robots, schema-org)
@@ -95,10 +103,70 @@ export default defineNuxtConfig({
     },
   },
 
-  // Sitemap Configuration
+  // Sitemap Configuration (@nuxtjs/seo with dynamic backend API)
   sitemap: {
-    sources: ['/api/__sitemap__/urls'],
+    // Manual chunking dengan sources terpisah per kategori
+    // Backend mengirim field `_sitemap` dan frontend filter berdasarkan itu
+    // Result: /pages-sitemap.xml, /events-sitemap.xml, /blog-sitemap.xml, /categories-sitemap.xml
+    
+    // Define manual sitemaps dengan sources terpisah
+    sitemaps: {
+      pages: {
+        sources: ['/api/__sitemap__/pages-urls'],
+      },
+      events: {
+        sources: ['/api/__sitemap__/events-urls'],
+      },
+      blog: {
+        sources: ['/api/__sitemap__/blog-urls'],
+      },
+      categories: {
+        sources: ['/api/__sitemap__/categories-urls'],
+      },
+    },
+    
+    // General options
+    gzip: true,
     xsl: false,
+    discoverImages: true,
+    credits: false,
+    strictNuxtContentPaths: false,
+    
+    // Don't auto-add lastmod (sudah di-handle backend)
+    autoLastmod: false,
+    
+    // Exclude paths secara global
+    exclude: [
+      '/api/**',
+      '/_nuxt/**',
+      '/admin/**',
+      '/login',
+      '/register',
+      '/mitra/**',
+      '/auth/**',
+    ],
+  },
+
+  seo: {
+    // Enable breadcrumbs support
+    breadcrumbs: true,
+    // Enable Link Checker
+    linkChecker: {
+      enabled: true,
+      failOnError: false, // Don't fail build on broken links, just warn
+    },
+  },
+
+  // OG Image Configuration
+  // Menggunakan og.webp sebagai fallback default untuk semua halaman
+  ogImage: {
+    enabled: true,
+    defaults: {
+      url: '/og.webp', // Fallback image di public folder
+      width: 1200,
+      height: 630,
+      alt: 'indonesiamarathon.com - Platform Digital #1 Event Lari Indonesia',
+    },
   },
 
   // Robots Configuration (untuk menghilangkan warning)
@@ -131,15 +199,30 @@ export default defineNuxtConfig({
     exposeConfig: true,
   },
 
+  // Fontaine Configuration (Font Optimization)
+  fontMetrics: {
+    fonts: [
+      {
+        family: 'Saira',
+        fallbacks: ['system-ui', 'sans-serif'],
+        fallbackName: 'fallback-saira',
+      },
+      {
+        family: 'Fira Sans',
+        fallbacks: ['system-ui', 'sans-serif'],
+        fallbackName: 'fallback-fira',
+      },
+    ],
+  },
+
   // App Configuration
   app: {
     head: {
-      // Minimal head configuration - most is in app.vue
+      // Load Google Fonts (Fontaine will optimize them)
       link: [
         {
           rel: 'preconnect',
           href: 'https://fonts.googleapis.com',
-          crossorigin: 'anonymous',
         },
         {
           rel: 'preconnect',
@@ -148,7 +231,7 @@ export default defineNuxtConfig({
         },
         {
           rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700&family=Fira+Sans:wght@400;500;600&display=swap',
+          href: 'https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800&family=Fira+Sans:wght@300;400;500;600;700&display=swap',
         },
       ],
     },

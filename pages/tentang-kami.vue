@@ -1,10 +1,12 @@
 <script setup lang="ts">
+/* eslint-disable vue/no-v-html */
 import { computed } from 'vue'
 import type { BreadcrumbItem } from '~/components/layout/Breadcrumb.vue'
 import LayoutPageHeader from '~/components/layout/PageHeader.vue'
 import { useSeoMetaDynamic } from '~/composables/useSeoMeta'
 import { useSiteSettings } from '~/composables/useSiteSettings'
 import { useStaticPage } from '~/composables/useStaticPage'
+import { useSchemaOrg, defineWebPage } from '#imports'
 import IconHeroiconsSparkles20Solid from '~icons/heroicons/sparkles-20-solid'
 
 const siteSettings = useSiteSettings()
@@ -39,6 +41,16 @@ useSeoMetaDynamic({
   description: seoDescription,
   url: '/tentang-kami',
 })
+
+// SEO: OG Image menggunakan fallback og.webp (static page)
+
+// SEO: Schema.org untuk halaman statis
+useSchemaOrg([
+  defineWebPage({
+    name: pageTitle.value,
+    description: seoDescription.value,
+  }),
+])
 </script>
 
 <template>
@@ -82,10 +94,11 @@ useSeoMetaDynamic({
             Konten tentang kami belum tersedia. Silakan coba beberapa saat lagi.
           </div>
           <div
-            v-else
-            class="prose prose-lg max-w-none text-gray-700 leading-relaxed"
-            v-html="renderedContent ?? ''"
+            v-if="renderedContent"
+            class="prose prose-lg mt-8 max-w-none text-gray-700"
+            v-html="renderedContent"
           />
+          <!-- eslint-enable vue/no-v-html -->
         </div>
       </div>
     </section>

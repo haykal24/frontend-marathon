@@ -61,15 +61,8 @@ export const useSeoMetaDynamic = (metaData: SeoMetaData) => {
     ...(modifiedTime && { articleModifiedTime: modifiedTime }),
   })
 
-  // Also set canonical URL
-  useHead({
-    link: [
-      {
-        rel: 'canonical',
-        href: resolvedUrl,
-      },
-    ],
-  })
+  // NOTE: Canonical URL is automatically handled by @nuxtjs/seo module
+  // No need to set manually - removing to avoid duplication
 
   return {
     title: resolvedTitle,

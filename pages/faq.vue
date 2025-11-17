@@ -118,7 +118,6 @@
 import { ref, computed, onMounted } from 'vue'
 import type { FAQ } from '~/types/faq'
 import { useFAQ } from '~/composables/useFAQ'
-import { useSeoInjection } from '~/composables/useSeoInjection'
 import { useSiteSettings } from '~/composables/useSiteSettings'
 import { useSeoMetaDynamic } from '~/composables/useSeoMeta'
 import type { BreadcrumbItem } from '~/components/layout/Breadcrumb.vue'
@@ -126,7 +125,6 @@ import IconMdiChevronDown from '~icons/mdi/chevron-down'
 import { useAdBanners } from '~/composables/useAdBanners'
 
 const { fetchFAQs, fetchFAQCategories } = useFAQ()
-const { generateSectionSubtitle, SEO_KEYWORDS } = useSeoInjection()
 const { getImage } = useSiteSettings()
 const { fetchResponsiveBanners } = useAdBanners()
 
@@ -137,6 +135,29 @@ useSeoMetaDynamic({
     'Tanya jawab lengkap tentang marathon, pace, fun run, trail run, dan informasi event lari di Indonesia.',
   url: '/faq',
 })
+
+// SEO: OG Image menggunakan fallback og.webp (static page)
+
+// SEO: Schema.org FAQPage untuk rich results di Google
+// CRITICAL: FAQPage schema harus memiliki mainEntity dengan Question/Answer array
+// untuk memenuhi Google's FAQ rich results requirements
+useSchemaOrg([
+  defineWebPage({
+    '@type': 'FAQPage',
+    name: 'FAQ - Tanya Jawab Seputar Lari Marathon',
+    description: 'Tanya jawab lengkap tentang marathon, pace, fun run, trail run, dan informasi event lari.',
+    mainEntity: computed(() =>
+      filteredFAQs.value.map(faq => ({
+        '@type': 'Question',
+        name: faq.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: faq.answer,
+        },
+      }))
+    ),
+  }),
+])
 
 // State
 const faqs = ref<FAQ[]>([])
@@ -155,10 +176,13 @@ const { data: faqHeaderBanners } = await useAsyncData('ad-banners-page-header-fa
 const headerAdBanners = computed(() => faqHeaderBanners.value?.desktop ?? [])
 const headerAdBannersMobile = computed(() => faqHeaderBanners.value?.mobile ?? [])
 const h2Title = computed(() => 'FAQ - Tanya Jawab Seputar Lari')
-const subtitle = computed(() => generateSectionSubtitle(SEO_KEYWORDS.marathon!, 'related'))
+const subtitle = computed(() => 'Temukan jawaban lengkap untuk pertanyaan seputar marathon, pace, fun run, trail run, dan event lari di Indonesia.')
 
 // Breadcrumb
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [{ text: 'FAQ', link: null }])
+
+// SEO: BreadcrumbList Schema.org untuk rich results
+useBreadcrumbSchema(breadcrumbItems)
 
 // Computed
 const filteredFAQs = computed(() =>

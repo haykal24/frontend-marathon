@@ -6,63 +6,73 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useSchemaOrg, defineOrganization } from '#imports'
 
 const config = useRuntimeConfig()
-const route = useRoute()
+const siteConfig = useSiteConfig()
 
 const apiBaseUrl = config.public.apiBase || 'http://localhost:8000'
-const siteUrl = config.public.siteUrl || 'http://localhost:3000'
-const siteName = 'indonesiamarathon.com'
 const currentYear = new Date().getFullYear()
 
-// Dynamic description dengan tahun otomatis
-const defaultDescription = computed(
-  () =>
-    `Platform digital #1 di Indonesia sebagai pusat informasi dan komunitas event lari. Temukan jadwal lari ${currentYear} terlengkap, ekosistem vendor, dan artikel seputar dunia lari.`
-)
-
-const defaultOgImage = `${siteUrl}/og.webp`
-
-// Build canonical URL
-const canonicalUrl = computed(() => {
-  const path = route.path === '/' ? '' : route.path
-  return `${siteUrl}${path}`
-})
-
-// Generate BreadcrumbList schema based on current route
-const generateBreadcrumbs = () => {
-  const breadcrumbs = [{ position: 1, name: 'Home', item: siteUrl }]
-
-  const pathSegments = route.path.split('/').filter(Boolean)
-
-  if (pathSegments.length > 0) {
-    let path = ''
-    pathSegments.forEach((segment, _index) => {
-      path += `/${segment}`
-      const segmentName = segment
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ')
-
-      breadcrumbs.push({
-        position: breadcrumbs.length + 1,
-        name: segmentName,
-        item: `${siteUrl}${path}`,
-      })
-    })
-  }
-
-  return breadcrumbs
-}
+// Define Organization Schema using the composable with full details
+useSchemaOrg([
+  defineOrganization({
+    name: siteConfig.name || 'indonesiamarathon.com',
+    url: siteConfig.url,
+    logo: `${siteConfig.url}/logo.png`,
+    description: siteConfig.description,
+    sameAs: [
+      'https://www.instagram.com/indonesiamarathon',
+      'https://www.tiktok.com/@indonesiamarathon',
+    ],
+    // Add potentialAction for Google Sitelinks Search Box
+    potentialAction: [
+      {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${siteConfig.url}/event?q={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    ],
+    // Add mainEntity for sitelink candidates
+    mainEntity: [
+      {
+        '@type': 'WebPage',
+        name: 'Kalender Lari',
+        url: `${siteConfig.url}/event`,
+        description: 'Jadwal event running, marathon, dan fun run terbaru di Indonesia',
+      },
+      {
+        '@type': 'WebPage',
+        name: 'Blog Lari',
+        url: `${siteConfig.url}/blog`,
+        description: 'Artikel dan panduan tentang marathon, pace, dan lari lainnya',
+      },
+      {
+        '@type': 'WebPage',
+        name: 'Ekosistem',
+        url: `${siteConfig.url}/ekosistem`,
+        description: 'Vendor medali, race management, komunitas lari, dan fotografer',
+      },
+      {
+        '@type': 'WebPage',
+        name: 'Rate Card',
+        url: `${siteConfig.url}/rate-card`,
+        description: 'Promosikan event lari Anda dengan paket advertising kami',
+      },
+    ],
+  }),
+])
 
 useHead({
   // 1. TEMPLATE JUDUL (SANGAT PENTING UNTUK SEO)
+  // This pattern is excellent and works perfectly with @nuxtjs/seo
   titleTemplate: titleChunk => {
     return titleChunk
-      ? `${titleChunk} | ${siteName}`
-      : `${siteName} - Kalender Lari & Jadwal Marathon ${currentYear} Terlengkap di Indonesia`
+      ? `${titleChunk} | ${siteConfig.name}`
+      : `${siteConfig.name} - Kalender Lari & Jadwal Marathon ${currentYear}`
   },
 
   htmlAttrs: {
@@ -75,7 +85,8 @@ useHead({
     { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
     { name: 'referrer', content: 'no-referrer-when-downgrade' },
     { name: 'format-detection', content: 'telephone=no' },
-    { name: 'description', content: defaultDescription.value },
+    
+    // Default description is now handled by site config, but can be overridden per page
 
     // 3. PWA & MOBILE
     { name: 'mobile-web-app-capable', content: 'yes' },
@@ -88,42 +99,23 @@ useHead({
     { name: 'theme-color', content: '#121212' },
     { name: 'color-scheme', content: 'dark light' },
 
-    // 5. OPEN GRAPH (OG) - Untuk Social Media Sharing
-    { property: 'og:type', content: 'website' },
-    { property: 'og:site_name', content: siteName },
-    { property: 'og:title', content: siteName },
-    { property: 'og:description', content: defaultDescription.value },
-    { property: 'og:image', content: defaultOgImage },
-    { property: 'og:image:width', content: '1200' },
-    { property: 'og:image:height', content: '630' },
-    { property: 'og:image:type', content: 'image/webp' },
-    { property: 'og:locale', content: 'id_ID' },
-
-    // 6. TWITTER CARD
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: siteName },
-    { name: 'twitter:description', content: defaultDescription.value },
-    { name: 'twitter:image', content: defaultOgImage },
-    { name: 'twitter:image:alt', content: siteName },
+    // OG and Twitter defaults are now handled by @nuxtjs/seo via site config
 
     // 7. ADDITIONAL SEO
-    {
-      name: 'keywords',
-      content: 'kalender lari, jadwal marathon, event running, fun run, trail run, Indonesia',
-    },
-    { name: 'author', content: siteName },
+    // NOTE: Meta keywords REMOVED - Google deprecated this since 2009
+    // Author and copyright can also be managed by the module if needed,
+    // but this is fine here for explicit control.
+    { name: 'author', content: siteConfig.name },
     {
       name: 'copyright',
-      content: `© ${new Date().getFullYear()} ${siteName}. All rights reserved.`,
+      content: `© ${new Date().getFullYear()} ${siteConfig.name}. All rights reserved.`,
     },
   ],
 
   link: [
-    // 8. CANONICAL URL (Dynamic - berdasarkan current route)
-    { rel: 'canonical', href: canonicalUrl.value },
+    // Canonical URL is now automatically handled by @nuxtjs/seo
 
     // 9. FAVICONS & MANIFEST (PWA)
-    // Semua asset sudah ada di public folder dan disupport dari favicon.io
     { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
     { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
     { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
@@ -137,22 +129,9 @@ useHead({
     { rel: 'dns-prefetch', href: new URL(apiBaseUrl).origin },
   ],
 
-  script: [
-    // 11. BREADCRUMBLIST SCHEMA (Global - untuk semua halaman)
-    {
-      type: 'application/ld+json',
-      innerHTML: JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'BreadcrumbList',
-        itemListElement: generateBreadcrumbs().map(item => ({
-          '@type': 'ListItem',
-          position: item.position,
-          name: item.name,
-          item: item.item,
-        })),
-      }),
-    },
-  ],
+  // The Organization and Breadcrumb schemas have been refactored
+  // using useSchemaOrg() composable for better integration.
+  script: [],
 })
 </script>
 

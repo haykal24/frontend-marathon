@@ -51,6 +51,8 @@ useSeoMetaDynamic({
   url: '/rate-card',
 })
 
+// SEO: OG Image menggunakan fallback og.webp (static page)
+
 useSchemaOrg([
   defineWebPage({
     '@id': `${config.public.siteUrl}/rate-card`,
@@ -298,7 +300,10 @@ const hasPackages = computed(() => ratePackages.value.length > 0)
             Pilih paket dengan kombinasi placement web, sosial media, newsletter, hingga aktivasi komunitas.
           </p>
         </div>
-        <div v-if="hasPackages" class="space-y-10">
+        <div
+          v-if="hasPackages"
+          class="space-y-10"
+        >
           <template
             v-for="category in orderedCategories"
             :key="category"
@@ -323,37 +328,52 @@ const hasPackages = computed(() => ratePackages.value.length > 0)
                 </p>
               </div>
 
-              <EcosystemTable background="surface" class="border border-secondary">
-                  <template #header class="bg-surface">
-                    <tr>
-                      <th class="px-4 py-4 text-left max-w-[280px]">Paket & Deskripsi</th>
-                      <th class="px-4 py-4 text-left whitespace-nowrap">Durasi</th>
-                      <th class="px-4 py-4 text-left">Benefit</th>
-                      <th class="px-4 py-4 text-left">Channel</th>
-                      <th class="px-4 py-4 text-left whitespace-nowrap">Harga</th>
-                      <th class="px-4 py-4 text-left">Kontak</th>
-                    </tr>
-                  </template>
-                  <template #body>
-                    <tr
-                      v-for="pkg in packagesByCategory[category]"
-                      :key="pkg.id"
-                      class="align-top bg-white"
-                    >
-                      <td class="px-4 py-5 space-y-2 text-gray-900 max-w-[280px]">
-                        <span class="text-base font-semibold tracking-tight text-primary block break-words">
-                          {{ pkg.name }}
-                        </span>
-                        <p
-                          v-if="pkg.description"
-                          class="text-sm text-gray-600 leading-relaxed break-words"
-                        >
-                          {{ pkg.description }}
-                        </p>
-                        <p class="text-xs text-gray-500 break-words">
-                          Audience: {{ pkg.audience || 'Pelari & komunitas running di Indonesia' }}
-                        </p>
-                      </td>
+              <EcosystemTable
+                background="surface"
+                class="border border-secondary"
+              >
+                <template #header>
+                  <tr>
+                    <th class="px-4 py-4 text-left max-w-[280px]">
+                      Paket & Deskripsi
+                    </th>
+                    <th class="px-4 py-4 text-left whitespace-nowrap">
+                      Durasi
+                    </th>
+                    <th class="px-4 py-4 text-left">
+                      Benefit
+                    </th>
+                    <th class="px-4 py-4 text-left">
+                      Channel
+                    </th>
+                    <th class="px-4 py-4 text-left whitespace-nowrap">
+                      Harga
+                    </th>
+                    <th class="px-4 py-4 text-left">
+                      Kontak
+                    </th>
+                  </tr>
+                </template>
+                <template #body>
+                  <tr
+                    v-for="pkg in packagesByCategory[category]"
+                    :key="pkg.id"
+                    class="align-top bg-white"
+                  >
+                    <td class="px-4 py-5 space-y-2 text-gray-900 max-w-[280px]">
+                      <span class="text-base font-semibold tracking-tight text-primary block break-words">
+                        {{ pkg.name }}
+                      </span>
+                      <p
+                        v-if="pkg.description"
+                        class="text-sm text-gray-600 leading-relaxed break-words"
+                      >
+                        {{ pkg.description }}
+                      </p>
+                      <p class="text-xs text-gray-500 break-words">
+                        Audience: {{ pkg.audience || 'Pelari & komunitas running di Indonesia' }}
+                      </p>
+                    </td>
                     <td class="px-4 py-5 text-sm text-gray-600 min-w-[140px] whitespace-nowrap">
                       <span
                         v-if="pkg.duration"
@@ -483,7 +503,6 @@ const hasPackages = computed(() => ratePackages.value.length > 0)
               Kami bantu rekomendasikan kombinasi placement terbaik sesuai tujuan campaign Anda,
               lengkap dengan reporting performa yang transparan.
             </p>
-           
           </div>
           <div class="flex flex-wrap gap-3">
             <UiAppButton

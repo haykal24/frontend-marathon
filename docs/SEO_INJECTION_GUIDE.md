@@ -376,6 +376,119 @@ export const SEO_KEYWORDS: Record<string, KeywordCluster> = {
 
 ---
 
+## ⚠️ PEOPLE-FIRST IMPLEMENTATION GUIDELINES (Updated)
+
+### 1. Context-Aware FAQ Generation
+
+**Jangan**: Generate FAQ yang sama untuk event detail page seperti blog page.
+
+**Lakukan**: Gunakan context parameter untuk customize FAQ:
+
+```typescript
+// Blog page - general FAQ
+<SeoFaqSection 
+  :keyword="SEO_KEYWORDS.marathon"
+  :context="{ pageType: 'blog' }"
+/>
+
+// Event detail - event-specific FAQ
+<SeoFaqSection 
+  :keyword="SEO_KEYWORDS.marathon"
+  :context="{ 
+    pageType: 'event', 
+    eventData: { 
+      title: event.title,
+      cutOffTime: event.cutOffTime,
+      categories: event.categories
+    }
+  }"
+  :max-items="3"
+/>
+```
+
+**Result**: Event page akan punya FAQ tentang "Kapan cut off time?" (specific), bukan generic "Apa itu marathon?"
+
+### 2. Limit SEO Blocks per Halaman
+
+**Guardrails built-in**:
+
+```typescript
+// Automatic warnings di console (development mode)
+⚠️ Terlalu banyak FAQ blocks (3). Idealnya max 1-2 per halaman.
+⚠️ Keyword "Marathon" appears in 2 FAQ blocks. Make sure this is intentional.
+⚠️ Total SEO blocks (5) terasa terlalu banyak. Jaga keseimbangan.
+```
+
+**Rule of thumb**:
+- Max 1 FAQ block yang truly contextual
+- Max 1 related keywords block (3 links max)
+- FAQ answers > 100 chars, natural language
+
+### 3. Answer Variability
+
+**KeywordCluster sekarang support multiple answer templates**:
+
+```typescript
+answerTemplates: {
+  'Apa itu marathon?': [
+    'Marathon adalah lari jarak 42.195 km yang menguji ketahanan fisik...',
+    'Marathon merupakan event lari yang mengukur stamina dan ketekunan...'
+  ]
+}
+```
+
+**Result**: Jawaban tidak selalu sama di setiap halaman yang pakai keyword ini.
+
+### 4. Card Description Variability
+
+**Sebelum** (repetitif):
+```
+"Eksplor topik X dan hubungannya dengan Y" (di semua card)
+```
+
+**Sesudah** (variatif):
+```
+"Pelajari lebih lanjut tentang X dan pengaruhnya terhadap Y"
+"Temukan panduan praktis: X untuk meningkatkan performa Y"
+"X adalah kunci dalam Y. Baca tips dan best practices"
+```
+
+### 5. Schema Validation
+
+**Ensure schema === visible content** (no ghost FAQ):
+
+```typescript
+// Otomatis verify di component
+if (visibleCount !== schemaCount) {
+  console.warn(`Schema mismatch: ${visibleCount} FAQ visible, tapi schema punya ${schemaCount}`)
+}
+```
+
+### 6. Type Safety dengan Hints
+
+**Setiap keyword boleh punya hints untuk content creators**:
+
+```typescript
+marathon: {
+  // ... existing fields ...
+  hints: 'Untuk event detail, tanya tentang kategori jarak, cut off time. Jangan copy-paste dari blog.'
+}
+```
+
+---
+
+## Implementation Checklist (Updated)
+
+- [ ] Extend keyword cluster dengan `contextualFaqs`, `description_variants`, `answerTemplates`, `hints`
+- [ ] Pass `context` prop ke `SeoFaqSection` (pageType, eventData, city)
+- [ ] Set `maxItems` prop untuk limit items (default: 3)
+- [ ] Monitor console warnings di development mode
+- [ ] Verify schema === visible content dengan Google Rich Result Tester
+- [ ] Audit existing pages untuk double keywords, excessive blocks
+- [ ] Document SEO strategy per page type (blog vs event vs listing)
+
+---
+
 ## Monitoring
 
 Setelah implementasi, monitor di Google Search Console:
@@ -384,3 +497,12 @@ Setelah implementasi, monitor di Google Search Console:
 - CTR improvement
 - Position trending untuk target keywords
 - Coverage untuk all target pages
+- **Baru**: Monitoring over-optimization signals (excessive blocks, thin content, template patterns)
+
+---
+
+## Helpful Resources
+
+- [Creating Helpful, Reliable, People-First Content - Google](https://developers.google.com/search/docs/fundamentals/creating-helpful-content)
+- [Spam Policies - Google](https://developers.google.com/search/docs/essentials/spam-policies)
+- [Structured Data Best Practices - Google](https://developers.google.com/search/docs/appearance/structured-data/)

@@ -9,7 +9,7 @@ export const useEvents = () => {
   const api = useApi()
 
   /**
-   * Fetch events dengan filter
+   * Fetch events dengan filter (public API - hanya published events)
    */
   const fetchEvents = async (params?: {
     page?: number

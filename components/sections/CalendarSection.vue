@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
 import { useCurrentYear } from '~/composables/useCurrentYear'
 
@@ -7,29 +7,63 @@ const { currentYear: dynamicCurrentYear } = useCurrentYear()
 
 interface Props {
   stats: Record<number, number> // monthIndex (1-12) -> count
+  statsByYear?: Record<number, Record<number, number>>
   title?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   title: 'Kalender Event Lari',
   stats: () => ({}),
+  statsByYear: undefined,
 })
 
 const currentYear = computed(() => dynamicCurrentYear.value)
 
-const hasEvents = computed(() => Object.values(props.stats).some(count => count > 0))
+const availableYears = computed<number[]>(() => {
+  if (props.statsByYear && Object.keys(props.statsByYear).length > 0) {
+    return Object.keys(props.statsByYear)
+      .map(year => Number(year))
+      .sort((a, b) => a - b)
+  }
+  return [currentYear.value]
+})
+
+const selectedYear = ref<number>(currentYear.value)
+
+watch(
+  [availableYears, currentYear],
+  ([years, current]) => {
+    if (years.length === 0) {
+      selectedYear.value = current
+      return
+    }
+    if (!years.includes(selectedYear.value)) {
+      selectedYear.value = years.includes(current) ? current : years[0]
+    }
+  },
+  { immediate: true },
+)
+
+const activeStats = computed<Record<number, number>>(() => {
+  if (props.statsByYear && Object.keys(props.statsByYear).length > 0) {
+    return props.statsByYear[selectedYear.value] ?? {}
+  }
+  return props.stats ?? {}
+})
+
+const hasEvents = computed(() => Object.values(activeStats.value).some(count => count > 0))
 
 const totalEventsInYear = computed(() => {
-  return Object.values(props.stats).reduce((sum, count) => sum + count, 0)
+  return Object.values(activeStats.value).reduce((sum, count) => sum + count, 0)
 })
 
 const calendarGrid = computed(() => {
   return Array.from({ length: 12 }, (_, i) => {
     const monthNum = i + 1 // 1-12
-    const date = new Date(currentYear.value, i, 1)
+    const date = new Date(selectedYear.value, i, 1)
     const monthName = new Intl.DateTimeFormat('id-ID', { month: 'long' }).format(date)
     const monthShortName = new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(date)
-    const eventCount = props.stats[monthNum] || 0
+    const eventCount = activeStats.value[monthNum] || 0
     return {
       monthName,
       monthShortName,
@@ -44,6 +78,8 @@ const busiestMonth = computed(() => {
     return current.eventCount > busiest.eventCount ? current : busiest
   })
 })
+
+const showYearSelector = computed(() => availableYears.value.length > 1)
 </script>
 
 <template>
@@ -60,22 +96,48 @@ const busiestMonth = computed(() => {
           <h2
             class="mt-4 text-xl font-bold leading-tight tracking-tighter text-primary lg:text-2xl mb-2"
           >
-            {{ title }} {{ currentYear }}
+            {{ title }} {{ selectedYear }}
           </h2>
           <p class="text-sm leading-relaxed text-gray-600 lg:text-base">
-            Jelajahi jadwal event lari sepanjang tahun {{ currentYear }}. Temukan event running di
+            Jelajahi jadwal event lari sepanjang tahun {{ selectedYear }}. Temukan event running di
             bulanmu dan catat race favorit untuk persiapan terbaik.
           </p>
         </div>
-        <UiAppButton
-          to="/event"
-          variant="primary"
-          size="sm"
-          class="self-start shrink-0 lg:w-auto"
-          :icon="IconHeroiconsArrowRight20Solid"
-        >
-          Jelajah Semua Event
-        </UiAppButton>
+        <div class="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+          <div
+            v-if="showYearSelector"
+            class="flex items-center gap-2 rounded-2xl border border-secondary/60 bg-white px-3 py-2"
+          >
+            <label
+              class="text-xs font-semibold uppercase tracking-wide text-gray-500"
+              for="calendar-year-select"
+            >
+              Tahun
+            </label>
+            <select
+              id="calendar-year-select"
+              v-model.number="selectedYear"
+              class="rounded-xl border border-secondary/60 bg-white px-3 py-1.5 text-sm focus:border-secondary focus:outline-none focus:ring-1 focus:ring-secondary/20"
+            >
+              <option
+                v-for="year in availableYears"
+                :key="year"
+                :value="year"
+              >
+                {{ year }}
+              </option>
+            </select>
+          </div>
+          <UiAppButton
+            to="/event"
+            variant="primary"
+            size="sm"
+            class="self-start shrink-0 lg:w-auto"
+            :icon="IconHeroiconsArrowRight20Solid"
+          >
+            Jelajah Semua Event
+          </UiAppButton>
+        </div>
       </div>
 
       <div
@@ -87,7 +149,7 @@ const busiestMonth = computed(() => {
             <NuxtLink
               v-for="(month, index) in calendarGrid"
               :key="month.monthName"
-              :to="`/event?month=${currentYear}-${String(index + 1).padStart(2, '0')}`"
+              :to="`/event?month=${selectedYear}-${String(index + 1).padStart(2, '0')}`"
               class="group flex h-full flex-col justify-between rounded-2xl border p-4 transition-colors duration-200"
               :class="
                 month.eventCount > 0

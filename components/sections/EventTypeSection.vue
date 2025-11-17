@@ -17,6 +17,10 @@ const props = defineProps<Props>()
 const eventTypes = computed(() => props.eventTypes ?? [])
 const eventsByType = computed(() => props.eventsByType ?? {})
 
+const eventTypesWithEvents = computed(() =>
+  eventTypes.value.filter(type => (eventsByType.value?.[type.slug]?.length ?? 0) > 0),
+)
+
 const getTypeLabel = (slug: string) => {
   const type = eventTypes.value.find((t: EventType) => t.slug === slug)
   return type?.name || slug
@@ -93,12 +97,12 @@ const sliderOptions = {
       </div>
 
       <Splide
-        v-if="eventTypes.length > 0"
+        v-if="eventTypesWithEvents.length > 0"
         :options="sliderOptions"
         class="event-type-splide"
       >
         <SplideSlide
-          v-for="eventType in eventTypes"
+          v-for="eventType in eventTypesWithEvents"
           :key="eventType.id"
           class="h-full"
         >
@@ -192,7 +196,7 @@ const sliderOptions = {
         v-else
         class="rounded-2xl border border-dashed border-secondary/40 bg-white/70 py-10 text-center text-sm text-gray-500"
       >
-        Belum ada data jenis event yang dapat ditampilkan saat ini.
+        Belum ada data jenis event dengan acara terbaru saat ini.
       </div>
     </div>
   </section>

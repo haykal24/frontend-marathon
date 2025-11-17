@@ -1,10 +1,12 @@
 <script setup lang="ts">
+/* eslint-disable vue/no-v-html */
 import { computed } from 'vue'
 import type { BreadcrumbItem } from '~/components/layout/Breadcrumb.vue'
 import LayoutPageHeader from '~/components/layout/PageHeader.vue'
 import { useSeoMetaDynamic } from '~/composables/useSeoMeta'
 import { useSiteSettings } from '~/composables/useSiteSettings'
 import { useStaticPage } from '~/composables/useStaticPage'
+import { useSchemaOrg, defineWebPage } from '#imports'
 import IconHeroiconsSparkles20Solid from '~icons/heroicons/sparkles-20-solid'
 
 const siteSettings = useSiteSettings()
@@ -39,6 +41,22 @@ useSeoMetaDynamic({
   description: seoDescription,
   url: '/kontak',
 })
+
+// SEO: OG Image menggunakan fallback og.webp (static page)
+
+// SEO: Schema.org untuk halaman kontak
+useSchemaOrg([
+  defineWebPage({
+    name: pageTitle.value,
+    description: seoDescription.value,
+  }),
+  // ContactPage schema
+  {
+    '@type': 'ContactPage',
+    name: pageTitle.value,
+    description: seoDescription.value,
+  },
+])
 </script>
 
 <template>

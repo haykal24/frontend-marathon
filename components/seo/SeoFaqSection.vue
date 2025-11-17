@@ -1,5 +1,9 @@
 <template>
-  <section class="bg-surface py-10 border-t border-secondary/20">
+  <section 
+    data-seo-faq-section
+    :data-keyword-id="props.dataKeywordId || keyword.primary"
+    class="bg-surface py-10 border-t border-secondary/20"
+  >
     <div class="layout-container space-y-10">
       <!-- Header -->
       <div class="max-w-3xl mx-auto text-center">
@@ -47,6 +51,7 @@
                   {{ item.answer }}
                 </p>
                 <NuxtLink
+                  v-if="item.url"
                   :to="item.url"
                   class="inline-flex items-center gap-2 text-secondary font-semibold text-sm transition-all hover:gap-3"
                 >
@@ -61,16 +66,16 @@
 
       <!-- CTA Button -->
       <div
-        v-if="showCTA"
+        v-if="showCtaButton"
         class="flex justify-center pt-2"
       >
         <UiAppButton
-          :to="ctaUrl"
+          :to="ctaLink"
           variant="secondary"
           size="md"
           :icon="IconHeroiconsArrowRight20Solid"
         >
-          {{ ctaLabel }}
+          {{ ctaText }}
         </UiAppButton>
       </div>
     </div>
@@ -79,7 +84,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useSeoInjection } from '~/composables/useSeoInjection'
+import { useSeoInjection, type SeoContext } from '~/composables/useSeoInjection'
 import { type KeywordCluster } from '~/utils/seoKeywords'
 import IconMdiChevronDown from '~icons/mdi/chevron-down'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
@@ -100,30 +105,101 @@ const injectFAQSchema = (schema: unknown) => {
 
 interface Props {
   keyword: KeywordCluster
+  context?: SeoContext
+  dataKeywordId?: string
+  maxItems?: number
   showCTA?: boolean
   ctaLabel?: string
   ctaUrl?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  context: () => ({}),
+  dataKeywordId: '',
+  maxItems: 3,
   showCTA: true,
   ctaLabel: 'Lihat Semua Artikel',
   ctaUrl: '/blog',
 })
 
-const { generateH2WithKeyword, generateSectionSubtitle, generateFAQItems, generateFAQSchema } =
-  useSeoInjection()
+interface GeneratedFaqItem {
+  question: string
+  answer: string
+  url?: string
+}
+
+const { 
+  generateH2WithKeyword, 
+  generateSectionSubtitle, 
+  generateFAQItems, 
+  generateFAQSchema,
+  validatePageSeoHealth
+} = useSeoInjection()
 
 const expandedIndex = ref<number | null>(0) // Default expand first item
 
 const h2Title = computed(() => generateH2WithKeyword(props.keyword, 'Tanya Jawab'))
-const subtitle = computed(() => generateSectionSubtitle(props.keyword, 'related'))
-const faqItems = computed(() => generateFAQItems(props.keyword))
-const faqSchema = computed(() => generateFAQSchema(props.keyword))
+const subtitle = computed(() => generateSectionSubtitle(props.keyword, 'short'))
+
+// PEOPLE-FIRST: Generate FAQ dengan context awareness
+const faqItems = computed<GeneratedFaqItem[]>(() => {
+  const allItems = generateFAQItems(props.keyword, props.context) as GeneratedFaqItem[]
+  const limit = Number(props.maxItems) > 0 ? Number(props.maxItems) : 3
+  return allItems.slice(0, limit)
+})
+
+const showCtaButton = computed(() => props.showCTA)
+const ctaText = computed(() => props.ctaLabel)
+const ctaLink = computed(() => props.ctaUrl)
+
+// VALIDATION: Verify schema === visible content
+const faqSchema = computed(() => {
+  const schema = generateFAQSchema(faqItems.value)
+  
+  // Verify count
+  if (import.meta.client && process.env.NODE_ENV === 'development') {
+    const visibleCount = faqItems.value.length
+    const schemaCount = (schema as { mainEntity?: Array<unknown> })?.mainEntity?.length ?? 0
+    
+    if (visibleCount !== schemaCount) {
+      console.warn(
+        `⚠️ [SeoFaqSection] Schema mismatch: ${visibleCount} FAQ visible, tapi schema punya ${schemaCount}. This violates Google structured data guidelines.`
+      )
+    }
+  }
+  
+  return schema
+})
 
 // Inject schema when component mounts
 onMounted(() => {
   injectFAQSchema(faqSchema.value)
+  
+  // GUARD: Warn jika multiple FAQ blocks dengan keyword yang sama
+  if (props.dataKeywordId) {
+    const otherFaqBlocks = document.querySelectorAll(
+      `[data-keyword-id="${props.dataKeywordId}"]`
+    )
+    
+    if (otherFaqBlocks.length > 1 && process.env.NODE_ENV === 'development') {
+      console.warn(
+        `⚠️ [SeoFaqSection] Keyword "${props.keyword.primary}" appears in ${otherFaqBlocks.length} FAQ blocks on this page. Make sure this is intentional and not over-optimization.`,
+        'Hints:', props.keyword.hints
+      )
+    }
+  }
+  
+  // GUARD: Validate overall page SEO health
+  const faqBlocks = document.querySelectorAll('[data-seo-faq-section]').length
+  const relatedKeywordBlocks = document.querySelectorAll('[data-seo-related-keywords]').length
+  
+  if (faqBlocks > 0 && process.env.NODE_ENV === 'development') {
+    const health = validatePageSeoHealth('page', faqBlocks, relatedKeywordBlocks)
+    
+    if (!health.isHealthy) {
+      health.warnings.forEach((w) => console.warn(w))
+    }
+  }
 })
 
 const toggleItem = (index: number) => {

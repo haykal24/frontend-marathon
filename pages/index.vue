@@ -7,12 +7,16 @@ import type { Event, EventType, Province } from '~/types/event'
 
 const { currentYear } = useCurrentYear()
 
+// SEO: Meta tags dinamis untuk homepage
 useSeoMetaDynamic({
   // OPTIMASI: Menggunakan keyword utama bervolume tinggi sesuai dokumentasi SEO
   title: `Kalender Lari ${currentYear.value} & Jadwal Marathon Indonesia`,
   description: `Jelajahi jadwal lari ${currentYear.value} terlengkap dari indonesiamarathon.com: temukan event running favorit, fun run seru, dan ekosistem seputar lari di seluruh Indonesia.`,
   url: '/',
 })
+
+// SEO: OG Image akan menggunakan fallback og.webp (sudah dikonfigurasi di nuxt.config.ts)
+// Tidak perlu defineOgImage di sini karena homepage menggunakan default
 
 const homepage = useHomepageData()
 

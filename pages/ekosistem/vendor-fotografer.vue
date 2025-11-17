@@ -36,6 +36,8 @@ useSeoMetaDynamic({
   url: '/ekosistem/vendor-fotografer',
 })
 
+// SEO: OG Image menggunakan fallback og.webp (collection page)
+
 // --- State & Data Fetching ---
 const items = ref<Vendor[]>([])
 const currentPage = ref(1)
@@ -335,7 +337,10 @@ const pillarKeyword = SEO_KEYWORDS.vendorFotografer
       v-if="pillarKeyword"
       class="space-y-10 lg:space-y-16 bg-surface"
     >
-      <SeoFaqSection :keyword="pillarKeyword" />
+      <SeoFaqSection
+        :keyword="pillarKeyword"
+        :context="{ pageType: 'detail' }"
+      />
       <SeoRelatedKeywords :keyword="pillarKeyword" />
     </div>
   </div>

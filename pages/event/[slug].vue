@@ -8,6 +8,7 @@ import { useSeoMetaDynamic } from '~/composables/useSeoMeta'
 import { useEvents } from '~/composables/useEvents'
 import { useSiteSettings } from '~/composables/useSiteSettings'
 import { useAdBanners } from '~/composables/useAdBanners'
+import { useEventFaq } from '~/composables/useEventFaq'
 import { formatEventType } from '~/utils/format'
 import LayoutPageHeader from '~/components/layout/PageHeader.vue'
 import IconMdiShareVariant from '~icons/mdi/share-variant'
@@ -20,6 +21,10 @@ import IconSimpleIconsX from '~icons/simple-icons/x'
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
 import { ref } from 'vue'
 import { useSchemaOrg, defineEvent } from '#imports'
+import IconMdiChevronDown from '~icons/mdi/chevron-down'
+import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
+import IconMdiEmail from '~icons/mdi/email'
+import IconMdiPhone from '~icons/mdi/phone'
 import { SEO_KEYWORDS } from '~/utils/seoKeywords'
 import SeoFaqSection from '~/components/seo/SeoFaqSection.vue'
 import SeoRelatedKeywords from '~/components/seo/SeoRelatedKeywords.vue'
@@ -27,6 +32,9 @@ import SeoRelatedKeywords from '~/components/seo/SeoRelatedKeywords.vue'
 const route = useRoute()
 const config = useRuntimeConfig()
 const slug = route.params.slug as string
+
+// --- Event FAQ State ---
+const eventFaqExpandedIndex = ref<number | null>(0)
 
 // --- Fetch Event Data (Best Practice: await useAsyncData) ---
 const { fetchEventBySlug } = useEvents()
@@ -96,19 +104,45 @@ const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
   { text: eventData.value.title || 'Detail Event', link: null },
 ])
 
+// SEO: BreadcrumbList Schema.org untuk rich results
+useBreadcrumbSchema(breadcrumbItems)
+
 // --- SEO Meta Tags ---
 if (event.value) {
   const evt = event.value as Event
+  
+  // SEO: Meta tags dinamis untuk halaman event
   useSeoMetaDynamic({
     title: evt.seo_title || evt.title,
     description: evt.seo_description || evt.description?.substring(0, 160) || '',
-    image: evt.poster_webp_url || evt.image || `${config.public.siteUrl}/og-default.webp`,
     url: `/event/${slug}`,
     type: 'article',
     publishedTime: evt.created_at,
   })
 
+  // SEO: Override OG Image dengan poster event (fallback ke og.webp jika tidak ada)
+  const ogImageUrl = evt.poster_webp_url || evt.image
+  if (ogImageUrl) {
+    defineOgImage({
+      url: ogImageUrl,
+      alt: `${evt.title} - ${evt.location_name}`,
+      width: 1200,
+      height: 630,
+    })
+  }
+  // Jika tidak ada poster, akan otomatis menggunakan og.webp dari config
+}
+
+  // --- Event-Specific FAQ Generation ---
+const { generateFaq } = useEventFaq()
+  const eventFaqItems = computed(() => {
+    if (!event.value) return []
+    return generateFaq(event.value)
+  })
+
   // --- Event Schema.org Markup ---
+if (event.value) {
+  const evt = event.value as Event
   useSchemaOrg([
     defineEvent({
       name: evt.title,
@@ -505,8 +539,96 @@ const allContactItems = computed(() => {
       v-if="pillarKeyword"
       class="space-y-10 lg:space-y-16 bg-surface py-10"
     >
-      <SeoFaqSection :keyword="pillarKeyword" />
-      <SeoRelatedKeywords :keyword="pillarKeyword" />
+      <!-- Event-Specific FAQ (auto-generated from event data) -->
+      <div
+        v-if="eventFaqItems.length > 0"
+        class="space-y-10"
+      >
+        <div class="bg-surface py-10 border-t border-secondary/20 rounded-2xl">
+          <div class="layout-container space-y-10">
+            <div class="max-w-3xl mx-auto text-center">
+              <h2 class="text-2xl lg:text-3xl font-bold text-primary tracking-tighter leading-[1.2]">
+                Pertanyaan Seputar {{ eventData.title }}
+              </h2>
+              <p class="mt-4 text-gray-600 text-sm lg:text-base">
+                Jawaban lengkap tentang detail event, registrasi, dan benefit peserta
+              </p>
+            </div>
+
+            <!-- Event FAQ Accordion -->
+            <div class="space-y-4 max-w-3xl mx-auto">
+              <div
+                v-for="(item, index) in eventFaqItems"
+                :key="index"
+                class="rounded-2xl border border-secondary/30 bg-white transition-all duration-300"
+              >
+                <button
+                  class="w-full px-6 py-4 flex items-center justify-between text-left gap-4"
+                  @click="eventFaqExpandedIndex = eventFaqExpandedIndex === index ? null : index"
+                >
+                  <span class="font-semibold text-primary leading-snug">{{ item.question }}</span>
+                  <IconMdiChevronDown
+                    class="h-6 w-6 text-secondary flex-shrink-0 transition-transform"
+                    :class="{ 'rotate-180': eventFaqExpandedIndex === index }"
+                  />
+                </button>
+
+                <!-- Answer -->
+                <transition
+                  enter-active-class="transition-all duration-300 ease-out"
+                  leave-active-class="transition-all duration-200 ease-in"
+                  enter-from-class="max-h-0 opacity-0"
+                  enter-to-class="max-h-[500px] opacity-100"
+                  leave-from-class="max-h-[500px] opacity-100"
+                  leave-to-class="max-h-0 opacity-0"
+                >
+                  <div
+                    v-if="eventFaqExpandedIndex === index"
+                    class="overflow-hidden"
+                  >
+                    <div class="px-6 pb-5 pt-2 border-t border-secondary/20">
+                      <p class="text-gray-700 text-sm lg:text-base leading-relaxed">
+                        {{ item.answer }}
+                      </p>
+                    </div>
+                  </div>
+                </transition>
+              </div>
+            </div>
+
+            <!-- CTA for registration -->
+            <div class="flex justify-center pt-4">
+              <NuxtLink
+                :to="eventData.registration_url || '#'"
+                :external="!!eventData.registration_url"
+                class="inline-flex items-center gap-2 px-6 py-3 bg-secondary text-primary font-semibold rounded-full hover:bg-secondary/90 transition-colors"
+              >
+                <span>Daftar Sekarang</span>
+                <IconHeroiconsArrowRight20Solid class="h-4 w-4" />
+              </NuxtLink>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generic Pillar Keyword FAQ & Related Keywords -->
+      <SeoFaqSection
+        v-if="pillarKeyword"
+        :keyword="pillarKeyword"
+        :context="{
+          pageType: 'event',
+          eventData: {
+            title: eventData.title,
+            cutOffTime: undefined, // TODO: Add cut off time field to event model
+            categories: eventData.categories?.map(cat => typeof cat === 'string' ? cat : cat.name) || [],
+            location: eventData.location_name
+          }
+        }"
+      />
+      <SeoRelatedKeywords
+        v-if="pillarKeyword"
+        :keyword="pillarKeyword"
+      />
     </div>
   </div>
 </template>

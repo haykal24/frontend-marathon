@@ -62,6 +62,33 @@ export const formatEventDate = (date?: string | null): string => {
   }
 }
 
+/**
+ * Format tanggal dengan hari (contoh: "Senin, 15 Januari 2025")
+ * @param date - String tanggal (format: YYYY-MM-DD) atau Date object
+ * @returns String format "hari, tanggal bulan tahun"
+ */
+export const formatDateWithDay = (date?: string | Date | null): string => {
+  if (!date) {
+    return ''
+  }
+
+  try {
+    const dateObj = typeof date === 'string' ? new Date(date) : date
+    if (isNaN(dateObj.getTime())) {
+      return ''
+    }
+
+    return new Intl.DateTimeFormat('id-ID', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(dateObj)
+  } catch {
+    return ''
+  }
+}
+
 export const getDescriptionSnippet = (description?: string | null, limit = 160): string => {
   if (!description) {
     return 'Platform #1 event lari Indonesia. Temukan jadwal, daftar, dan promosikan event Anda di sini.'
@@ -106,4 +133,33 @@ export const calculateReadingTime = (content?: string | null): string | null => 
   if (!words) return null
   const minutes = Math.max(1, Math.ceil(words / 200))
   return `${minutes} menit baca`
+}
+
+/**
+ * Format angka menjadi format rupiah dengan titik sebagai pemisah ribuan
+ * @param value - Nilai yang akan diformat (string atau number)
+ * @returns String format rupiah (contoh: "350.000" atau "1.500.000")
+ */
+export const formatRupiah = (value: string | number | null | undefined): string => {
+  if (!value && value !== 0) return ''
+  
+  // Hapus semua karakter non-digit
+  const numericValue = String(value).replace(/\D/g, '')
+  
+  if (!numericValue) return ''
+  
+  // Format dengan titik sebagai pemisah ribuan
+  return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
+
+/**
+ * Parse format rupiah kembali ke angka (string tanpa format)
+ * @param value - String format rupiah (contoh: "350.000" atau "Rp 1.500.000")
+ * @returns String angka tanpa format (contoh: "350000")
+ */
+export const parseRupiah = (value: string | null | undefined): string => {
+  if (!value) return ''
+  
+  // Hapus semua karakter non-digit
+  return value.replace(/\D/g, '')
 }

@@ -24,6 +24,17 @@ useSeoMetaDynamic({
   url: '/ekosistem',
 })
 
+// SEO: OG Image menggunakan fallback og.webp (navigation page)
+
+// SEO: Schema.org untuk halaman ekosistem
+useSchemaOrg([
+  defineWebPage({
+    '@type': 'WebPage',
+    name: pageTitle,
+    description: pageDescription,
+  }),
+])
+
 // --- Breadcrumb & Header ---
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [{ text: 'Ekosistem', link: null }])
 const headerBg = computed(() => getImage('header_bg_ekosistem', null) ?? undefined)

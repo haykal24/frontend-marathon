@@ -11,6 +11,22 @@ export interface KeywordCluster {
   priority: 'high' | 'medium' | 'low'
   targetPage: string // Halaman yang target keyword ini
   description: string // Untuk SEO description
+  
+  // PEOPLE-FIRST ENHANCEMENT
+  type?: 'informational' | 'navigational' | 'local' | 'ecosystem' // Tipe keyword
+  contextualFaqs?: {
+    // FAQ spesifik per page type (misal: event FAQ berbeda dengan blog FAQ)
+    event?: string[]
+    blog?: string[]
+    listing?: string[]
+    detail?: string[]
+  }
+  description_variants?: string[] // Multiple description options untuk card yang variatif
+  answerTemplates?: {
+    // Multiple answer templates per question untuk variasi
+    [key: string]: string[]
+  }
+  hints?: string // Tips untuk content creator supaya nggak sembarangan (dalam comments)
 }
 
 export const SEO_KEYWORDS: Record<string, KeywordCluster> = {
@@ -28,6 +44,38 @@ export const SEO_KEYWORDS: Record<string, KeywordCluster> = {
     targetPage: '/blog/apa-itu-marathon-jarak-lari',
     description:
       'Panduan lengkap marathon: definisi, jarak, teknik latihan, dan tips menjalankan marathon hingga finish line untuk pemula hingga advanced.',
+    
+    // PEOPLE-FIRST ENHANCEMENT
+    type: 'informational',
+    contextualFaqs: {
+      blog: [
+        'Apa itu marathon?',
+        'Marathon berapa kilometer?',
+        'Bagaimana cara latihan marathon?',
+        'Marathon memerlukan kondisi fisik apa?',
+      ],
+      event: [
+        'Apa persyaratan minimal untuk mengikuti marathon ini?',
+        'Bagaimana sistem kategori jarak di event ini?',
+        'Kapan cut off time marathon ini?',
+      ],
+    },
+    description_variants: [
+      'Panduan lengkap marathon: definisi, jarak, teknik latihan, dan tips menjalankan marathon hingga finish line untuk pemula hingga advanced.',
+      'Marathon adalah lari jarak 42.195 km yang menguji stamina dan mental. Pelajari teknik latihan, persiapan fisik, dan strategi menjalani marathon.',
+      'Ingin menjalankan marathon? Baca panduan lengkap marathon: apa itu, berapa jauhnya, cara latihan, tips finish line, dan tips recovery.',
+    ],
+    answerTemplates: {
+      'Apa itu marathon?': [
+        'Marathon adalah lari jarak 42.195 km yang menguji ketahanan fisik dan mental peserta. Ini adalah salah satu event olahraga paling ikonik di dunia.',
+        'Marathon merupakan event lari yang mengukur stamina dan ketekunan peserta dalam menempuh jarak 42.195 kilometer tanpa henti.',
+      ],
+      'Marathon berapa kilometer?': [
+        'Marathon standar internasional adalah 42.195 kilometer. Jarak ini sudah ditetapkan sejak Olimpik modern pertama tahun 1896.',
+        'Jarak marathon yang resmi adalah 42 kilometer 195 meter (42.195 km). Ini adalah standar untuk semua event marathon di dunia.',
+      ],
+    },
+    hints: 'Untuk event detail, tanya tentang kategori jarak, cut off time, dan persyaratan. Jangan hanya copy-paste general FAQ dari blog.',
   },
 
   halfMarathon: {

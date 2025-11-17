@@ -114,12 +114,8 @@ const { data: blogDetailBanners } = await useAsyncData(`ad-banners-blog-detail-$
 const headerAdBanners = computed(() => blogDetailBanners.value?.desktop ?? [])
 const headerAdBannersMobile = computed(() => blogDetailBanners.value?.mobile ?? [])
 
-// --- Article URL & OG Image ---
+// --- Article URL ---
 const articleUrl = computed(() => `${config.public.siteUrl}/blog/${post.value?.slug ?? ''}`)
-const ogImage = computed(
-  () =>
-    post.value?.banner || getImage('og_default', null) || `${config.public.siteUrl}/og-default.webp`
-)
 
 // --- SEO Meta Tags ---
 const seoTitle = computed(() => post.value?.seo_title || post.value?.title || 'Artikel Blog')
@@ -130,16 +126,28 @@ const seoDescription = computed(
     'Temukan insight terbaru seputar dunia lari di IndonesiaMarathon.com.'
 )
 
+// SEO: Meta tags dinamis untuk halaman blog
 useSeoMetaDynamic({
   title: seoTitle.value,
   description: seoDescription.value,
   type: 'article',
   url: `/blog/${post.value?.slug}`,
-  ...(ogImage.value && { image: ogImage.value }),
 })
 
+// SEO: Override OG Image dengan banner artikel (fallback ke og.webp jika tidak ada)
+if (post.value?.banner) {
+  defineOgImage({
+    url: post.value.banner,
+    alt: `${post.value.title} - ${post.value.category?.name || 'Blog'}`,
+    width: 1200,
+    height: 630,
+})
+}
+// Jika tidak ada banner, akan otomatis menggunakan og.webp dari config
+
 // --- Article Schema.org ---
-const articleSchema: Record<string, unknown> = {
+useSchemaOrg([
+  defineArticle({
   headline: post.value?.title,
   description: seoDescription.value,
   datePublished: post.value?.published_at || undefined,
@@ -150,21 +158,19 @@ const articleSchema: Record<string, unknown> = {
         name: post.value.author.name,
       }
     : undefined,
-  articleSection: post.value?.category?.name,
   url: articleUrl.value,
-}
-
-if (ogImage.value) {
-  articleSchema.image = ogImage.value
-}
-
-useSchemaOrg([defineArticle(articleSchema)])
+    image: post.value?.banner || undefined,
+  }),
+])
 
 // --- Breadcrumbs ---
 const breadcrumbs = computed<BreadcrumbItem[]>(() => [
   { text: 'Blog', link: '/blog' },
   { text: post.value?.title ?? 'Artikel', link: null },
 ])
+
+// SEO: BreadcrumbList Schema.org untuk rich results
+useBreadcrumbSchema(breadcrumbs)
 
 // --- Formatted Data (using utils) ---
 const formattedDate = computed(() => formatBlogDate(post.value?.published_at))
@@ -476,7 +482,10 @@ const shareX = () => {
       v-if="pillarKeyword"
       class="space-y-10 lg:space-y-16"
     >
-      <SeoFaqSection :keyword="pillarKeyword" />
+      <SeoFaqSection
+        :keyword="pillarKeyword"
+        :context="{ pageType: 'blog' }"
+      />
       <SeoRelatedKeywords :keyword="pillarKeyword" />
     </div>
   </div>

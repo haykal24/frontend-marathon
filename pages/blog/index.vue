@@ -42,6 +42,8 @@ useSeoMetaDynamic({
   url: '/blog',
 })
 
+// SEO: OG Image menggunakan fallback og.webp (tidak perlu defineOgImage untuk listing)
+
 // --- Schema.org CollectionPage ---
 useSchemaOrg([
   defineWebPage({
@@ -67,6 +69,9 @@ useSchemaOrg([
 
 // --- Breadcrumb ---
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [{ text: 'Blog', link: null }])
+
+// SEO: BreadcrumbList Schema.org untuk rich results
+useBreadcrumbSchema(breadcrumbItems)
 
 // --- Header Background ---
 const headerBg = computed(() => getImage('header_bg_blog', null) ?? undefined)

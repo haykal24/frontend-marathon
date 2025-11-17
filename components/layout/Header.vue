@@ -18,15 +18,17 @@ import IconMdiCamera from '~icons/mdi/camera'
 import IconHeroiconsChevronDown from '~icons/heroicons/chevron-down'
 import IconHeroiconsBars3 from '~icons/heroicons/bars-3'
 import IconHeroiconsXMark from '~icons/heroicons/x-mark'
+import IconHeroiconsUserCircle from '~icons/heroicons/user-circle'
+import IconHeroiconsRectangleGroup from '~icons/heroicons/rectangle-group'
 
 import { useAuth } from '~/composables/useAuth'
 import { useSiteSettings } from '~/composables/useSiteSettings'
+import { validateAnchorText, detectDuplicateAnchors, type InternalLink } from '~/composables/useInternalLinking'
 
 interface NavigationItem {
   label: string
   path: string
   icon: Component
-  requiresAuth?: boolean
   children?: Array<{
     label: string
     path: string
@@ -56,21 +58,15 @@ const navigationItems = computed<NavigationItem[]>(() => [
       { label: 'Vendor Medali', path: '/ekosistem/vendor-medali', icon: IconHeroiconsTrophy },
       { label: 'Vendor Jersey', path: '/ekosistem/vendor-jersey', icon: IconMdiTshirtCrew },
       { label: 'Fotografer Lari', path: '/ekosistem/vendor-fotografer', icon: IconMdiCamera },
+      { label: 'Rate Card', path: '/rate-card', icon: IconHeroiconsMegaphone },
     ],
   },
   { label: 'Artikel', path: '/blog', icon: IconHeroiconsNewspaper },
-  { label: 'Rate Card', path: '/rate-card', icon: IconHeroiconsMegaphone },
-  {
-    label: 'Submit Event',
-    path: '/event/submit',
-    icon: IconHeroiconsDocumentPlus,
-    requiresAuth: true,
-  },
+  // Always show Submit Event; link resolves to login if not authenticated
+  { label: 'Submit Event', path: '/mitra/event/submit', icon: IconHeroiconsDocumentPlus },
 ])
 
-const filteredNavigationItems = computed(() =>
-  navigationItems.value.filter(item => !item.requiresAuth || isAuthenticated.value)
-)
+const filteredNavigationItems = computed(() => navigationItems.value)
 
 const isMenuOpen = ref(false)
 const openDropdown = ref<string | null>(null)
@@ -91,38 +87,6 @@ const isItemActive = (item: NavigationItem) => {
   return isActive(item.path)
 }
 
-const findActiveChild = (item: NavigationItem) => {
-  if (!item.children?.length) return null
-
-  return (
-    item.children.find(
-      child => route.path === child.path || route.path.startsWith(`${child.path}/`)
-    ) ?? null
-  )
-}
-
-const getNavigationLabel = (item: NavigationItem) => {
-  const activeChild = findActiveChild(item)
-  return activeChild ? activeChild.label : item.label
-}
-
-watch(
-  () => route.path,
-  () => {
-    isMenuOpen.value = false
-    openDropdown.value = null
-    updateActiveDropdown()
-  }
-)
-
-const handleMouseEnter = (item: NavigationItem) => {
-  if (item.children?.length) openDropdown.value = item.label
-}
-
-const handleMouseLeave = (item: NavigationItem) => {
-  if (item.children?.length) openDropdown.value = null
-}
-
 const findActiveParentLabel = () => {
   const parent = navigationItems.value.find(item => item.children?.length && isItemActive(item))
   return parent?.label ?? null
@@ -141,9 +105,86 @@ const handleMobileItemClick = (item: NavigationItem, event: Event) => {
   }
 }
 
+const userMenuOpen = ref(false)
+const userInitials = computed(() => {
+  const rawName = (user.value?.name || 'Pelari').trim()
+  const nameToUse = rawName || 'Pelari'
+  const parts = nameToUse.split(' ').filter(Boolean)
+  const first = parts[0]?.[0]
+  const second = parts[1]?.[0]
+  const initials =
+    parts.length >= 2 && first && second
+      ? `${first}${second}`
+      : first || nameToUse[0] || 'P'
+  return initials.toUpperCase()
+})
+
+const onGlobalClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  if (!target.closest('#header-user-menu')) {
+    userMenuOpen.value = false
+  }
+}
+
+const handleMouseEnter = (item: NavigationItem) => {
+  if (!item.children?.length) return
+  userMenuOpen.value = false
+  openDropdown.value = item.label
+}
+
+const handleMouseLeave = (item: NavigationItem) => {
+  if (!item.children?.length) return
+  openDropdown.value = null
+}
+
+watch(
+  () => route.path,
+  () => {
+    isMenuOpen.value = false
+    openDropdown.value = null
+    mobileOpenDropdown.value = null
+    updateActiveDropdown()
+  }
+)
+
 onMounted(() => {
   updateActiveDropdown()
+  document.addEventListener('click', onGlobalClick)
+  
+  // SITELINK VALIDATION (development only)
+  if (process.env.NODE_ENV === 'development') {
+    // Convert navigationItems to InternalLink format for validation
+    const linksForValidation: InternalLink[] = navigationItems.value.map(item => ({
+      text: item.label,
+      href: item.path,
+    }))
+    
+    // Validate anchor text quality (silent in production)
+    if (import.meta.dev) {
+    linksForValidation.forEach(link => {
+      const validation = validateAnchorText(link.text)
+      if (!validation.isValid) {
+        validation.warnings.forEach(w => console.warn(`[Header Nav] ${w}`))
+      }
+    })
+    
+    // Detect duplicate anchors
+    const dupCheck = detectDuplicateAnchors(linksForValidation)
+    if (dupCheck.hasDuplicates) {
+      console.warn(
+        '[Header Nav] ⚠️ Duplicate anchor text detected in main navigation. This may affect Google Sitelinks quality.'
+      )
+      }
+    }
+  }
 })
+
+const resolveLink = (item: NavigationItem) => {
+  if (item.label === 'Submit Event' && !isAuthenticated.value) {
+    return `/login?next=${encodeURIComponent('/mitra/event/submit')}`
+  }
+  return item.path
+}
 </script>
 
 <template>
@@ -174,7 +215,7 @@ onMounted(() => {
             @focusout="handleMouseLeave(item)"
           >
             <NuxtLink
-              :to="item.path"
+              :to="resolveLink(item)"
               :class="[
                 'group flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors',
                 isItemActive(item) || (item.children && openDropdown === item.label)
@@ -191,7 +232,7 @@ onMounted(() => {
                     : 'text-white group-hover:text-secondary',
                 ]"
               />
-              <span>{{ getNavigationLabel(item) }}</span>
+              <span>{{ item.label }}</span>
               <IconHeroiconsChevronDown
                 v-if="item.children"
                 :class="[
@@ -235,21 +276,63 @@ onMounted(() => {
         <ClientOnly>
           <div class="hidden items-center gap-3 lg:flex">
             <template v-if="isAuthenticated">
-              <NuxtLink
-                to="/profile"
-                class="text-sm font-medium text-white/80 transition hover:text-white"
+              <div
+                id="header-user-menu"
+                class="relative"
               >
-                Halo, {{ user?.name || 'Pelari' }}
-              </NuxtLink>
-              <UiAppButton
-                variant="outline"
-                size="sm"
-                class="border-white/60 text-white"
-                :icon="IconHeroiconsArrowLeftOnRectangle20Solid"
-                @click="logout()"
-              >
-                Logout
-              </UiAppButton>
+                <button
+                  type="button"
+                  class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/10 hover:bg-white/20"
+                  aria-label="User menu"
+                  @click="userMenuOpen = !userMenuOpen; openDropdown = userMenuOpen ? null : openDropdown"
+                >
+                  <span class="text-xs font-bold">{{ userInitials }}</span>
+                </button>
+                <transition
+                  enter-active-class="transition duration-150 ease-out"
+                  enter-from-class="opacity-0 -translate-y-1"
+                  leave-active-class="transition duration-100 ease-in"
+                  leave-to-class="opacity-0 -translate-y-1"
+                >
+                  <div
+                    v-if="userMenuOpen"
+                    class="absolute right-0 mt-2 w-56 rounded-2xl border border-white/10 bg-primary/95 p-2 text-sm text-white/80 shadow-2xl backdrop-blur"
+                  >
+                    <NuxtLink
+                      to="/mitra/profile"
+                      class="flex items-center gap-3 rounded-xl px-3 py-2 text-white transition hover:text-secondary"
+                      @click="userMenuOpen = false; openDropdown = null"
+                    >
+                      <IconHeroiconsUserCircle class="h-5 w-5" />
+                      <span>Profil</span>
+                    </NuxtLink>
+                    <NuxtLink
+                      to="/mitra/dashboard"
+                      class="flex items-center gap-3 rounded-xl px-3 py-2 text-white transition hover:text-secondary"
+                      @click="userMenuOpen = false; openDropdown = null"
+                    >
+                      <IconHeroiconsRectangleGroup class="h-5 w-5" />
+                      <span>Dashboard Mitra</span>
+                    </NuxtLink>
+                    <NuxtLink
+                      to="/mitra/event/submit"
+                      class="flex items-center gap-3 rounded-xl px-3 py-2 text-white transition hover:text-secondary"
+                      @click="userMenuOpen = false; openDropdown = null"
+                    >
+                      <IconHeroiconsDocumentPlus class="h-5 w-5" />
+                      <span>Submit Event</span>
+                    </NuxtLink>
+                    <button
+                      type="button"
+                      class="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-white/80 hover:text-secondary"
+                      @click="logout(); userMenuOpen = false; openDropdown = null"
+                    >
+                      <IconHeroiconsArrowLeftOnRectangle20Solid class="h-5 w-5" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                </transition>
+              </div>
             </template>
             <template v-else>
               <UiAppButton
@@ -312,7 +395,7 @@ onMounted(() => {
             >
               <NuxtLink
                 v-if="!item.children?.length"
-                :to="item.path"
+                :to="resolveLink(item)"
                 class="group flex items-center justify-between gap-3 font-medium transition"
                 :class="[isItemActive(item) ? 'text-secondary' : 'hover:text-secondary']"
                 @click="isMenuOpen = false"
@@ -351,7 +434,7 @@ onMounted(() => {
                         : 'text-white group-hover:text-secondary',
                     ]"
                   />
-                  <span>{{ getNavigationLabel(item) }}</span>
+                  <span>{{ item.label }}</span>
                 </div>
                 <IconHeroiconsChevronDown
                   v-if="item.children"
@@ -390,12 +473,31 @@ onMounted(() => {
             <div class="grid gap-2">
               <template v-if="isAuthenticated">
                 <NuxtLink
-                  to="/profile"
+                  to="/mitra/profile"
                   class="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3 text-sm font-medium text-white/80 transition hover:bg-secondary hover:text-primary"
                   @click="isMenuOpen = false"
                 >
-                  <span>Profil Saya</span>
+                  <div class="flex items-center gap-3">
+                    <IconHeroiconsUserCircle class="h-5 w-5" />
+                    <span>Profil Saya</span>
+                  </div>
                   <span class="text-xs text-white/60">({{ user?.name || 'Pelari' }})</span>
+                </NuxtLink>
+                <NuxtLink
+                  to="/mitra/dashboard"
+                  class="flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3 text-sm font-medium text-white/80 transition hover:bg-secondary hover:text-primary"
+                  @click="isMenuOpen = false"
+                >
+                  <IconHeroiconsRectangleGroup class="h-5 w-5" />
+                  <span>Dashboard Mitra</span>
+                </NuxtLink>
+                <NuxtLink
+                  to="/mitra/event/submit"
+                  class="flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3 text-sm font-medium text-white/80 transition hover:bg-secondary hover:text-primary"
+                  @click="isMenuOpen = false"
+                >
+                  <IconHeroiconsDocumentPlus class="h-5 w-5" />
+                  <span>Submit Event</span>
                 </NuxtLink>
                 <UiAppButton
                   variant="outline"

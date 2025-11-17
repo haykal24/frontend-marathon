@@ -31,6 +31,20 @@ const containerToneClasses = computed(() => {
 
   return 'border border-secondary bg-surface'
 })
+
+// Check if event has valid image (not null, not empty, not placeholder)
+const hasValidImage = computed(() => {
+  const image = props.event.image || props.event.poster_webp_url
+  if (!image) return false
+  
+  // Check if image is placeholder path
+  const imageStr = String(image).toLowerCase()
+  if (imageStr.includes('placeholder') || imageStr.includes('/images/placeholder')) {
+    return false
+  }
+  
+  return true
+})
 </script>
 
 <template>
@@ -41,10 +55,10 @@ const containerToneClasses = computed(() => {
       containerToneClasses,
     ]"
   >
+    <!-- Image atau Fallback dengan bg-primary (konsisten dengan EventTypeSection/BlogSection) -->
     <div
-      v-if="props.event.image"
       :class="[
-        'relative flex-shrink-0 overflow-hidden bg-primary/5',
+        'relative flex-shrink-0 overflow-hidden',
         'w-full h-48 sm:w-[220px] sm:h-full',
       ]"
     >
@@ -66,25 +80,26 @@ const containerToneClasses = computed(() => {
         </div>
       </div>
 
+      <!-- Image jika ada dan valid (tidak placeholder) -->
       <NuxtImg
-        :src="sanitizeMediaUrl(props.event.image)"
+        v-if="hasValidImage"
+        :src="sanitizeMediaUrl(props.event.image || props.event.poster_webp_url)"
         :alt="props.event.title"
         class="h-full w-full object-cover"
         sizes="(max-width: 768px) 100vw, 33vw"
         format="webp"
         loading="lazy"
       />
-    </div>
-    <div
-      v-else
-      :class="[
-        'relative flex flex-shrink-0 items-center justify-center bg-gradient-to-br from-primary via-primary/80 to-black p-4 text-center text-white overflow-hidden',
-        'w-full h-48 sm:w-[220px] sm:h-full',
-      ]"
-    >
-      <span class="text-sm font-semibold tracking-tight leading-snug z-10">
-        {{ props.event.title }}
-      </span>
+
+      <!-- Fallback dengan bg-primary gradient (konsisten dengan EventTypeSection/BlogSection) -->
+      <div
+        v-else
+        class="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary via-primary/70 to-black p-4 text-center text-white"
+      >
+        <span class="text-sm font-semibold tracking-tight leading-snug z-10">
+          {{ props.event.title }}
+        </span>
+      </div>
     </div>
 
     <div :class="['flex flex-1 flex-col justify-between gap-4 p-5', 'md:p-6']">

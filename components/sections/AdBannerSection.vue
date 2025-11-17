@@ -14,14 +14,14 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   banners: () => [],
   bannersMobile: () => [],
-  title: '',
-  description: '',
+  title: undefined,
+  description: undefined,
 })
 
-const sectionTitle = computed(() => props.title ?? 'Penawaran Spesial dari Partner')
+const sectionTitle = computed(() => props.title || 'Penawaran Spesial dari Partner')
 const sectionDescription = computed(
   () =>
-    props.description ??
+    props.description ||
     'Temukan penawaran eksklusif dari partner terpercaya komunitas lari. Hemat untuk persiapan event lari terbaik kamu.'
 )
 
@@ -292,46 +292,46 @@ defineExpose({
             >
               Slot {{ slot.label }} belum terisi.
             </div>
-            </div>
           </div>
         </div>
+      </div>
 
       <div
         v-if="mobileCombinedBanners.length"
         class="lg:hidden"
       >
-          <Splide
-            :options="mobileSliderOptions"
-            class="ad-banner-splide-mobile"
-          >
-            <SplideSlide
+        <Splide
+          :options="mobileSliderOptions"
+          class="ad-banner-splide-mobile"
+        >
+          <SplideSlide
             v-for="banner in mobileCombinedBanners"
-              :key="`mobile-${banner.id}`"
+            :key="`mobile-${banner.id}`"
+          >
+            <NuxtLink
+              :to="banner.target_url"
+              external
+              target="_blank"
+              rel="noopener"
+              class="group block overflow-hidden rounded-2xl border border-secondary/50 bg-surface/90"
             >
-              <NuxtLink
-                :to="banner.target_url"
-                external
-                target="_blank"
-                rel="noopener"
-                class="group block overflow-hidden rounded-2xl border border-secondary/50 bg-surface/90"
+              <NuxtImg
+                v-if="banner.image"
+                :src="sanitizeMediaUrl(banner.image)"
+                :alt="banner.name"
+                class="h-72 w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+                format="webp"
+                loading="lazy"
+              />
+              <div
+                v-else
+                class="flex h-72 items-center justify-center bg-primary text-white"
               >
-                <NuxtImg
-                  v-if="banner.image"
-                  :src="sanitizeMediaUrl(banner.image)"
-                  :alt="banner.name"
-                  class="h-72 w-full object-cover transition duration-500 group-hover:scale-[1.02]"
-                  format="webp"
-                  loading="lazy"
-                />
-                <div
-                  v-else
-                  class="flex h-72 items-center justify-center bg-primary text-white"
-                >
-                  <span class="text-lg font-semibold tracking-tight">{{ banner.name }}</span>
-                </div>
-              </NuxtLink>
-            </SplideSlide>
-          </Splide>
+                <span class="text-lg font-semibold tracking-tight">{{ banner.name }}</span>
+              </div>
+            </NuxtLink>
+          </SplideSlide>
+        </Splide>
       </div>
 
       <div

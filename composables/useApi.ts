@@ -24,10 +24,14 @@ const resolveAuthStore = () => {
 export const useApi = () => {
   const apiConfig = useApiConfig()
 
-  const getHeaders = () => {
+  const getHeaders = (body?: BodyInit | Record<string, unknown>) => {
     const headers: Record<string, string> = {
       Accept: 'application/json',
-      'Content-Type': 'application/json',
+    }
+
+    // Don't set Content-Type for FormData - let browser set it automatically with boundary
+    if (!(body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json'
     }
 
     const authStore = resolveAuthStore()
@@ -43,6 +47,7 @@ export const useApi = () => {
       const response = await $fetch<T>(`${apiConfig.baseUrl}${url}`, {
         method: 'GET',
         headers: getHeaders(),
+        credentials: 'include', // Enable cookies for SSR
         ...options,
       })
       return response
@@ -55,8 +60,9 @@ export const useApi = () => {
     ): Promise<T> => {
       const response = await $fetch<T>(`${apiConfig.baseUrl}${url}`, {
         method: 'POST',
-        headers: getHeaders(),
+        headers: getHeaders(body),
         body,
+        credentials: 'include', // Enable cookies for SSR
         ...options,
       })
       return response
@@ -71,6 +77,7 @@ export const useApi = () => {
         method: 'PUT',
         headers: getHeaders(),
         body,
+        credentials: 'include', // Enable cookies for SSR
         ...options,
       })
       return response
@@ -80,6 +87,7 @@ export const useApi = () => {
       const response = await $fetch<T>(`${apiConfig.baseUrl}${url}`, {
         method: 'DELETE',
         headers: getHeaders(),
+        credentials: 'include', // Enable cookies for SSR
         ...options,
       })
       return response

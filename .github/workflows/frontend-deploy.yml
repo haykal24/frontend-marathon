@@ -1,0 +1,62 @@
+name: Deploy Frontend to cPanel
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy-frontend:
+    name: Deploy Frontend (Nuxt)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Install Frontend Dependencies
+        run: bun install
+
+      - name: Build Nuxt Application
+        run: bun run build
+        env:
+          NODE_ENV: production
+          NUXT_PUBLIC_API_BASE: ${{ secrets.NUXT_API_BASE }}
+          NUXT_PUBLIC_API_URL: ${{ secrets.NUXT_API_BASE }}
+          NUXT_PUBLIC_SITE_URL: ${{ secrets.NUXT_SITE_URL }}
+          NUXT_PUBLIC_APP_NAME: Marathon Indonesia
+
+      - name: Prepare Deployment Files
+        run: |
+          # Copy package.json from server to root for cPanel
+          cp .output/server/package.json .output/package.json || true
+          
+          # Create .npmrc for cPanel compatibility
+          echo "shamefully-hoist=true" > .output/.npmrc
+          
+          # Copy public files to .output
+          cp -r public/* .output/public/ || true
+
+      - name: Deploy Frontend to cPanel
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.CPANEL_FTP_HOST }}
+          username: ${{ secrets.FRONTEND_FTP_USER }}
+          password: ${{ secrets.FRONTEND_FTP_PASS }}
+          local-dir: .output/
+          server-dir: /
+          protocol: ftp
+          port: 21
+          exclude: |
+            **/.git*
+            **/.cursor/**
+            **/.vscode/**
+            **/node_modules/**
+            .env*
+
+      - name: Deployment Complete
+        run: echo "✅ Frontend deployment to cPanel completed successfully!"
