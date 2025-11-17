@@ -35,11 +35,15 @@ jobs:
           # Copy package.json from server to root for cPanel
           cp .output/server/package.json .output/package.json || true
           
-          # Create .npmrc for cPanel compatibility
+          # Create .npmrc for cPanel compatibility (shamefully-hoist untuk resolve dependencies)
           echo "shamefully-hoist=true" > .output/.npmrc
+          echo "✅ Created .npmrc with shamefully-hoist=true"
           
-          # Copy public files to .output
-          cp -r public/* .output/public/ || true
+          # Copy public files to .output (if any)
+          cp -r public/* .output/public/ 2>/dev/null || true
+          
+          # Verify package.json exists
+          test -f .output/package.json && echo "✅ package.json ready" || echo "⚠️  package.json not found"
 
       - name: Deploy Frontend to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
@@ -57,6 +61,17 @@ jobs:
             **/.vscode/**
             **/node_modules/**
             .env*
+            # Note: .npmrc and package.json will be uploaded (needed for npm install on server)
 
-      - name: Deployment Complete
-        run: echo "✅ Frontend deployment to cPanel completed successfully!"
+      - name: Post-Deployment Notice
+        run: |
+          echo "✅ Frontend deployment to cPanel completed successfully!"
+          echo ""
+          echo "⚠️  IMPORTANT: node_modules excluded from deploy. Install dependencies on server:"
+          echo ""
+          echo "   Run these commands via cPanel Terminal:"
+          echo "   cd /home/youruser/yourdomain.com"
+          echo "   npm install --production"
+          echo "   pm2 restart marathon-frontend"
+          echo ""
+          echo "   .npmrc with 'shamefully-hoist=true' has been uploaded for cPanel compatibility."

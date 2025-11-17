@@ -244,6 +244,10 @@ export default defineNuxtConfig({
 
   // Nitro Configuration
   nitro: {
+    // Bundle dependencies (Nuxt 4 bundles automatically, but ensure node_modules are included)
+    experimental: {
+      wasm: true,
+    },
     prerender: {
       // Don't fail build on prerender errors (allow build to continue)
       failOnError: false,
