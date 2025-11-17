@@ -58,7 +58,7 @@ export default defineNuxtConfig({
 
   // Site Meta Configuration (Centralized for @nuxtjs/seo)
   site: {
-    url: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+    url: process.env.NUXT_PUBLIC_SITE_URL || (process.env.NODE_ENV === 'production' ? 'https://indonesiamarathon.com' : 'http://localhost:3000'),
     name: 'indonesiamarathon.com',
     description: `Platform digital #1 di Indonesia sebagai pusat informasi dan komunitas event lari. Temukan jadwal lari ${new Date().getFullYear()} terlengkap, ekosistem vendor, dan artikel seputar dunia lari.`,
     defaultLocale: 'id-ID',

@@ -14,15 +14,35 @@ export const useSiteSettings = () => {
     siteSettingsData = useAsyncData(
       'site-settings',
       async () => {
-        const config = useRuntimeConfig()
-        const apiBase = config.public.apiBase
-        const response = await $fetch<{
-          success: boolean
-          message: string
-          data: Record<string, SiteSettingValue>
-          meta?: Record<string, unknown>
-        }>(`${apiBase}${SETTINGS_ENDPOINT}`)
-        return response.data
+        try {
+          const config = useRuntimeConfig()
+          const apiBase = config.public.apiBase
+          
+          // Ensure we have a valid base URL
+          if (!apiBase || apiBase === 'http://localhost:8000/api/v1') {
+            // During build/prerender, return empty settings
+            if (process.env.NODE_ENV === 'production' && !process.client) {
+              return {} as SiteSettingResponse
+            }
+          }
+          
+          // Build full URL
+          const fullUrl = apiBase.startsWith('http') 
+            ? `${apiBase}${SETTINGS_ENDPOINT}`
+            : `http://localhost:8000/api/v1${SETTINGS_ENDPOINT}`
+          
+          const response = await $fetch<{
+            success: boolean
+            message: string
+            data: Record<string, SiteSettingValue>
+            meta?: Record<string, unknown>
+          }>(fullUrl)
+          return response.data
+        } catch (error) {
+          // During build/prerender, return empty settings if API is not available
+          console.warn('Failed to fetch site settings:', error)
+          return {} as SiteSettingResponse
+        }
       },
       {
         server: true,
