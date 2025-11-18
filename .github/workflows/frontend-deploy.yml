@@ -35,9 +35,18 @@ jobs:
           # Copy package.json from server to root for cPanel
           cp .output/server/package.json .output/package.json || true
           
-          # Create .npmrc for cPanel compatibility (shamefully-hoist untuk resolve dependencies)
-          echo "shamefully-hoist=true" > .output/.npmrc
-          echo "✅ Created .npmrc with shamefully-hoist=true"
+          # Copy .npmrc from root to .output (or create if not exists)
+          if [ -f .npmrc ]; then
+            cp .npmrc .output/.npmrc
+            echo "✅ Copied .npmrc from repository"
+          else
+            # Create .npmrc if not in repository
+            cat > .output/.npmrc << 'EOF'
+          shamefully-hoist=true
+          optional=false
+          EOF
+            echo "✅ Created .npmrc (skips optional deps like sharp)"
+          fi
           
           # Copy public files to .output (if any)
           cp -r public/* .output/public/ 2>/dev/null || true
@@ -74,4 +83,8 @@ jobs:
           echo "   npm install --production"
           echo "   pm2 restart marathon-frontend"
           echo ""
-          echo "   .npmrc with 'shamefully-hoist=true' has been uploaded for cPanel compatibility."
+          echo "   📝 .npmrc Configuration:"
+          echo "      - shamefully-hoist=true (for cPanel compatibility)"
+          echo "      - optional=false (skips Sharp & other optional deps)"
+          echo "      ✅ This prevents Sharp platform mismatch errors"
+          echo "      ✅ We use IPX provider (doesn't need Sharp)"
