@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useSeoMetaDynamic } from '~/composables/useSeoMeta'
+import { useCurrentYear } from '~/composables/useCurrentYear'
+import { useHomepageData } from '~/composables/useHomepageData'
 import type { AdBanner } from '~/types/ad'
 import type { BlogPost } from '~/types/blog'
 import type { Event, EventType, Province } from '~/types/event'

@@ -190,12 +190,14 @@ export default defineNuxtConfig({
     disallow: ['/api/', '/admin/', '/_nuxt/'],
   },
 
-  // Image Optimization (@nuxt/image)
   image: {
     provider: 'ipx',
     quality: 80,
     format: ['webp'],
-    domains: ['localhost', 'marathonindonesia.com'],
+    domains: [
+      'localhost',
+      'dasbor.indonesiamarathon.com',
+    ],
   },
 
   // Font Optimization (Saira & Fira Sans)
