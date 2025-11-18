@@ -262,19 +262,6 @@ export default defineNuxtConfig({
     experimental: {
       wasm: true,
     },
-    // ⚠️ PENTING: Bundle semua dependencies termasuk lru-cache
-    // Ini memastikan tidak perlu node_modules di production
-    externals: {
-      // Jangan external-kan dependencies yang dibutuhkan runtime
-      inline: [
-        'lru-cache',
-        'semver',
-        'node-fetch-native',
-      ],
-    },
-    // Bundle semua dependencies ke dalam .output
-    minify: true,
-    sourceMap: false,
     prerender: {
       // Don't fail build on prerender errors (allow build to continue)
       failOnError: false,
