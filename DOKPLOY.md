@@ -24,12 +24,18 @@ PORT=3000
 
 ## Troubleshooting
 
+### Error: Cannot find module '@oxc-parser/binding-linux-x64-gnu'
+
+**Solusi**: 
+- `nixpacks.toml` sudah dikonfigurasi untuk install Linux bindings secara eksplisit
+- npm akan otomatis skip Windows bindings di Linux
+- Jika masih error, pastikan `nixpacks.toml` ada di repository
+
 ### Error: Unsupported platform for @oxc-parser/binding-win32-x64-msvc
 
-**Solusi**: File `.npmrc` sudah dikonfigurasi untuk skip optional dependencies. Jika masih error:
-
-1. Pastikan `.npmrc` ada di repository dengan `optional=false`
-2. Atau set environment variable di Dokploy: `NPM_CONFIG_OPTIONAL=false`
+**Solusi**: 
+- npm secara otomatis akan skip Windows-specific packages di Linux
+- Tidak perlu konfigurasi tambahan
 
 ### Node.js Version Warning
 

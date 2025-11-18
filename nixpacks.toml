@@ -6,7 +6,8 @@ nixPkgs = ["nodejs_20"]
 
 [phases.install]
 cmds = [
-  "npm ci --omit=optional --legacy-peer-deps || npm install --omit=optional --legacy-peer-deps"
+  "npm install --legacy-peer-deps",
+  "npm install --save-optional @oxc-parser/binding-linux-x64-gnu @oxc-transform/binding-linux-x64-gnu || echo 'Optional bindings already installed or not needed'"
 ]
 
 [phases.build]

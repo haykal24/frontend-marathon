@@ -8,7 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "start": "node .output/server/index.mjs",
-    "postinstall": "nuxt prepare || true",
+    "postinstall": "nuxt prepare || echo 'nuxt prepare skipped'",
     "postinstall:sharp": "npm rebuild sharp --arch=x64 --platform=linux || true",
     "prepare": "nuxt prepare",
     "lint": "eslint . --ext .vue,.js,.ts",
