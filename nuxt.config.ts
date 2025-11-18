@@ -5,7 +5,7 @@ import IconsResolver from 'unplugin-icons/resolver'
 import Components from 'unplugin-vue-components/vite'
 
 export default defineNuxtConfig({
-  compatibilityDate: '2025-11-17',
+  compatibilityDate: '2025-11-18',
   devtools: { enabled: false },
   // nitro: {
   //   compatibilityDate: '2025-11-14',
@@ -28,8 +28,8 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
-    // Homepage: Prerender + SWR (1 jam) - Data relatif stabil
-    '/': { prerender: true, swr: 3600 },
+    // Homepage: SWR (1 jam) - Data dari backend API
+    '/': { swr: 3600 },
 
     // Event Listing: SWR (30 menit) - Data bisa update tapi tidak terlalu sering
     '/event': { swr: 1800 },
@@ -46,10 +46,10 @@ export default defineNuxtConfig({
     // Direktori: SWR (2 jam) - Data vendor/komunitas relatif stabil
     '/ekosistem/**': { swr: 7200 },
 
-    // Static Pages: Prerender - Halaman statis tidak berubah
-    '/tentang-kami': { prerender: true },
-    '/kontak': { prerender: true },
-    '/rate-card': { prerender: true },
+    // Static Pages: SWR (1 jam) - Data dari backend tapi jarang berubah
+    '/tentang-kami': { swr: 3600 },
+    '/kontak': { swr: 3600 },
+    '/rate-card': { swr: 3600 },
 
     // Admin/API routes: No SSR (client-side only)
     '/admin/**': { ssr: false },
@@ -84,11 +84,25 @@ export default defineNuxtConfig({
             prefix: 'Icon', // Menggunakan <Icon...>
           }),
         ],
+        dts: true,
       }),
       Icons({
         autoInstall: true,
+        compiler: 'vue3',
+        defaultClass: 'inline-block',
       }),
     ],
+    optimizeDeps: {
+      include: [
+        '@iconify/vue',
+      ],
+    },
+    ssr: {
+      noExternal: [
+        '@iconify/vue',
+        'unplugin-icons',
+      ],
+    },
   },
 
   // Runtime Config (API Base URL dari environment variables)
@@ -251,8 +265,10 @@ export default defineNuxtConfig({
     prerender: {
       // Don't fail build on prerender errors (allow build to continue)
       failOnError: false,
-      // Crawl links for prerendering
-      crawlLinks: true,
+      // Disable crawl links - kita pakai SWR untuk semua halaman dinamis
+      crawlLinks: false,
+      // Only prerender error pages
+      routes: ['/404.html', '/500.html'],
     },
   },
 
