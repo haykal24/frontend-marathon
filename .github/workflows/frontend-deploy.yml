@@ -32,18 +32,22 @@ jobs:
 
       - name: Prepare Deployment Files
         run: |
-          # Copy package.json from server to root for cPanel
-          cp .output/server/package.json .output/package.json || true
-          
-          # Create .npmrc for cPanel compatibility (shamefully-hoist untuk resolve dependencies)
-          echo "shamefully-hoist=true" > .output/.npmrc
-          echo "✅ Created .npmrc with shamefully-hoist=true"
-          
           # Copy public files to .output (if any)
           cp -r public/* .output/public/ 2>/dev/null || true
           
-          # Verify package.json exists
-          test -f .output/package.json && echo "✅ package.json ready" || echo "⚠️  package.json not found"
+          # Verify server build is self-contained
+          echo "🔍 Verifying Nitro build..."
+          test -f .output/server/index.mjs && echo "✅ Server entry point exists" || echo "❌ Server entry point missing!"
+          test -d .output/server/node_modules && echo "⚠️  node_modules found (should be bundled)" || echo "✅ No node_modules (dependencies bundled)"
+          
+          # Check if lru-cache is bundled (should be in chunks)
+          if grep -r "lru-cache" .output/server/chunks/ > /dev/null 2>&1; then
+            echo "✅ lru-cache is bundled in chunks"
+          else
+            echo "⚠️  lru-cache not found in chunks (may cause runtime error)"
+          fi
+          
+          echo "✅ Deployment files ready (self-contained build)"
 
       - name: Deploy Frontend to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
@@ -61,17 +65,16 @@ jobs:
             **/.vscode/**
             **/node_modules/**
             .env*
-            # Note: .npmrc and package.json will be uploaded (needed for npm install on server)
+            # Note: Build is self-contained, no npm install needed on server
 
       - name: Post-Deployment Notice
         run: |
           echo "✅ Frontend deployment to cPanel completed successfully!"
           echo ""
-          echo "⚠️  IMPORTANT: node_modules excluded from deploy. Install dependencies on server:"
+          echo "📦 Build is self-contained (all dependencies bundled by Nitro)"
           echo ""
-          echo "   Run these commands via cPanel Terminal:"
-          echo "   cd /home/youruser/yourdomain.com"
-          echo "   npm install --production"
-          echo "   pm2 restart marathon-frontend"
+          echo "🚀 Next steps:"
+          echo "   1. Restart your Node.js application (PM2/supervisor)"
+          echo "   2. Verify the app is running: node server/index.mjs"
           echo ""
-          echo "   .npmrc with 'shamefully-hoist=true' has been uploaded for cPanel compatibility."
+          echo "💡 No npm install needed - all dependencies are bundled in .output/server/"
