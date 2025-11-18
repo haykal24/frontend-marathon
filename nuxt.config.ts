@@ -267,8 +267,8 @@ export default defineNuxtConfig({
       failOnError: false,
       // Disable crawl links - kita pakai SWR untuk semua halaman dinamis
       crawlLinks: false,
-      // Only prerender error pages
-      routes: ['/404.html', '/500.html'],
+      // Only prerender 404 page (500 is runtime error, can't be prerendered)
+      routes: ['/404.html'],
     },
   },
 
