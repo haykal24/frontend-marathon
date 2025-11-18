@@ -25,28 +25,22 @@ jobs:
         run: bun run build
         env:
           NODE_ENV: production
-          NUXT_PUBLIC_API_BASE: ${{ secrets.NUXT_API_BASE }}
-          NUXT_PUBLIC_API_URL: ${{ secrets.NUXT_API_BASE }}
-          NUXT_PUBLIC_SITE_URL: ${{ secrets.NUXT_SITE_URL }}
-          NUXT_PUBLIC_APP_NAME: Marathon Indonesia
+          # API Configuration
+          NUXT_PUBLIC_API_BASE: https://dasbor.indonesiamarathon.com/api/v1
+          NUXT_PUBLIC_API_URL: https://dasbor.indonesiamarathon.com/api/v1
+          # Site Configuration
+          NUXT_PUBLIC_SITE_URL: https://indonesiamarathon.com
+          # App Name
+          NUXT_PUBLIC_APP_NAME: Indonesia Marathon
 
       - name: Prepare Deployment Files
         run: |
           # Copy package.json from server to root for cPanel
           cp .output/server/package.json .output/package.json || true
           
-          # Copy .npmrc from root to .output (or create if not exists)
-          if [ -f .npmrc ]; then
-            cp .npmrc .output/.npmrc
-            echo "✅ Copied .npmrc from repository"
-          else
-            # Create .npmrc if not in repository
-            cat > .output/.npmrc << 'EOF'
-          shamefully-hoist=true
-          optional=false
-          EOF
-            echo "✅ Created .npmrc (skips optional deps like sharp)"
-          fi
+          # Create .npmrc for cPanel compatibility (shamefully-hoist untuk resolve dependencies)
+          echo "shamefully-hoist=true" > .output/.npmrc
+          echo "✅ Created .npmrc with shamefully-hoist=true"
           
           # Copy public files to .output (if any)
           cp -r public/* .output/public/ 2>/dev/null || true
@@ -81,18 +75,6 @@ jobs:
           echo "   Run these commands via cPanel Terminal:"
           echo "   cd /home/youruser/yourdomain.com"
           echo "   npm install --production"
+          echo "   pm2 restart marathon-frontend"
           echo ""
-          echo "   ⚠️  If Sharp platform mismatch error occurs:"
-          echo "      npm run postinstall:sharp"
-          echo "      # OR manually:"
-          echo "      npm rebuild sharp --arch=x64 --platform=linux"
-          echo ""
-          echo "   Then restart your application:"
-          echo "      pm2 restart marathon-frontend"
-          echo ""
-          echo "   📝 .npmrc Configuration:"
-          echo "      - shamefully-hoist=true (for cPanel compatibility)"
-          echo "      - optional=false (skips optional deps)"
-          echo ""
-          echo "   ℹ️  Note: IPX provider requires Sharp. If install fails,"
-          echo "      rebuild Sharp with correct platform (see above)."
+          echo "   .npmrc with 'shamefully-hoist=true' has been uploaded for cPanel compatibility."
