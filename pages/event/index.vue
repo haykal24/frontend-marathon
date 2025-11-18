@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { Event as EventType } from '~/types/event'
 import type { BreadcrumbItem } from '~/components/layout/Breadcrumb.vue'
@@ -90,14 +90,41 @@ const { getImage } = useSiteSettings()
 const { fetchResponsiveBanners } = useAdBanners()
 
 // --- Initial Data Fetch (Best Practice: await useAsyncData) ---
-const { data: provincesData } = await useAsyncData('event-page-provinces', () =>
-  fetchActiveProvinces()
+// Use lazy: false to ensure data is loaded on both SSR and client
+// Key must be unique to avoid conflicts with other pages
+const { data: provincesData, error: provincesError, refresh: refreshProvinces } = await useAsyncData(
+  'event-listing-provinces',
+  () => fetchActiveProvinces(),
+  {
+    lazy: false, // Ensure data is loaded immediately
+    server: true, // Load on server
+    default: () => ({ data: [] }), // Default value
+  }
 )
-const { data: eventTypesData } = await useAsyncData('event-page-event-types', () =>
-  fetchActiveEventTypes()
+const { data: eventTypesData, error: eventTypesError } = await useAsyncData(
+  'event-listing-event-types',
+  () => fetchActiveEventTypes(),
+  {
+    lazy: false,
+    server: true,
+    default: () => ({ data: [] }),
+  }
 )
-const provinces = computed(() => provincesData.value?.data || [])
-const eventTypes = computed(() => eventTypesData.value?.data || [])
+
+const provinces = computed(() => {
+  const data = provincesData.value?.data
+  if (!data || !Array.isArray(data)) {
+    return []
+  }
+  return data
+})
+const eventTypes = computed(() => {
+  const data = eventTypesData.value?.data
+  if (!data || !Array.isArray(data)) {
+    return []
+  }
+  return data
+})
 const headerBg = computed(() => getImage('header_bg_events', null) ?? undefined)
 
 const { data: eventHeaderBanners } = await useAsyncData('ad-banners-page-header-events', () =>
@@ -160,12 +187,24 @@ const monthOptions = computed(() => {
 })
 
 // --- Computed Options for Filters ---
-const provinceOptions = computed(() =>
-  (provinces.value || []).map(p => ({ value: p.slug, label: p.name }))
-)
-const eventTypeOptions = computed(() =>
-  (eventTypes.value || []).map(t => ({ value: t.slug, label: t.name }))
-)
+const provinceOptions = computed(() => {
+  const provs = provinces.value || []
+  return provs
+    .map(p => {
+      if (!p.slug || !p.name) return null
+      return { value: p.slug, label: p.name }
+    })
+    .filter(Boolean) as Array<{ value: string; label: string }>
+})
+const eventTypeOptions = computed(() => {
+  const types = eventTypes.value || []
+  return types
+    .map(t => {
+      if (!t.slug || !t.name) return null
+      return { value: t.slug, label: t.name }
+    })
+    .filter(Boolean) as Array<{ value: string; label: string }>
+})
 
 async function loadEvents(page = 1, append = false) {
   pending.value = true
@@ -199,7 +238,7 @@ async function loadEvents(page = 1, append = false) {
     // Update pagination rel links for SEO
     updatePaginationLinks()
   } catch (error) {
-    console.error('Failed to fetch events:', error)
+    // Silently handle error
   } finally {
     pending.value = false
   }
@@ -207,8 +246,24 @@ async function loadEvents(page = 1, append = false) {
 
 // --- Pagination SEO Links ---
 function updatePaginationLinks() {
+  // Only run on client-side to avoid SSR errors
+  if (process.server) return
+  
   const baseUrl = route.path
-  const queryParams = new URLSearchParams(window.location.search)
+  // Use route.query instead of window.location for SSR compatibility
+  const queryParams = new URLSearchParams()
+  
+  // Copy existing query params (except page)
+  Object.entries(route.query).forEach(([key, value]) => {
+    if (key !== 'page' && value) {
+      if (Array.isArray(value)) {
+        value.forEach(v => queryParams.append(key, String(v)))
+      } else {
+        queryParams.append(key, String(value))
+      }
+    }
+  })
+  
   const links: { rel: string; href: string }[] = []
 
   if (currentPage.value > 1) {
@@ -317,6 +372,12 @@ function initializeFiltersFromQuery() {
 
 onMounted(() => {
   initializeFiltersFromQuery()
+  
+  // Refresh provinces if empty (fallback for client-side)
+  // This handles cases where SSR didn't load the data or API failed
+  if (provinces.value.length === 0) {
+    refreshProvinces()
+  }
 })
 
 // --- Initial Load ---

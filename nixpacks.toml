@@ -1,0 +1,17 @@
+# Nixpacks configuration for Dokploy deployment
+# This file helps Dokploy build the application correctly
+
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = [
+  "npm ci --omit=optional --legacy-peer-deps || npm install --omit=optional --legacy-peer-deps"
+]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm run start"
+

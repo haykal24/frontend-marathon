@@ -7,10 +7,10 @@ import IconSimpleIconsX from '~icons/simple-icons/x'
 import IconSimpleIconsTiktok from '~icons/simple-icons/tiktok'
 import IconHeroiconsEnvelope from '~icons/heroicons/envelope'
 import IconMdiWhatsapp from '~icons/mdi/whatsapp'
+import IconHeroiconsHomeModern from '~icons/heroicons/home-modern'
 import IconHeroiconsCalendarDays from '~icons/heroicons/calendar-days'
 import IconHeroiconsGlobeAlt from '~icons/heroicons/globe-alt'
 import IconHeroiconsNewspaper from '~icons/heroicons/newspaper'
-import IconHeroiconsDocumentPlus from '~icons/heroicons/document-plus'
 import IconHeroiconsInformationCircle from '~icons/heroicons/information-circle'
 import IconHeroiconsChatBubbleBottomCenterText from '~icons/heroicons/chat-bubble-bottom-center-text'
 import IconHeroiconsShieldCheck from '~icons/heroicons/shield-check'
@@ -157,24 +157,40 @@ const contactItems = computed(() => {
   return items
 })
 
+// Store icons in constants to ensure they're available during SSR
+const footerIcons = {
+  home: IconHeroiconsHomeModern,
+  calendar: IconHeroiconsCalendarDays,
+  globe: IconHeroiconsGlobeAlt,
+  newspaper: IconHeroiconsNewspaper,
+  ellipsis: IconHeroiconsEllipsisHorizontalCircle,
+  info: IconHeroiconsInformationCircle,
+  chat: IconHeroiconsChatBubbleBottomCenterText,
+  shield: IconHeroiconsShieldCheck,
+  userGroup: IconHeroiconsUserGroup,
+  trophy: IconHeroiconsTrophy,
+  flag: IconHeroiconsFlag,
+  megaphone: IconHeroiconsMegaphone,
+} as const
+
 const footerLinks = {
   platform: [
-    { label: 'Event Lari', path: '/event', icon: IconHeroiconsCalendarDays },
-    { label: 'Ekosistem', path: '/ekosistem', icon: IconHeroiconsGlobeAlt },
-    { label: 'Artikel', path: '/blog', icon: IconHeroiconsNewspaper },
-    { label: 'Submit Event', path: '/event/submit', icon: IconHeroiconsDocumentPlus },
+    { label: 'Beranda', path: '/', icon: footerIcons.home },
+    { label: 'Event Lari', path: '/event', icon: footerIcons.calendar },
+    { label: 'Ekosistem', path: '/ekosistem', icon: footerIcons.globe },
+    { label: 'Artikel', path: '/blog', icon: footerIcons.newspaper },
   ],
   informasi: [
-    { label: 'FAQ', path: '/faq', icon: IconHeroiconsEllipsisHorizontalCircle },
-    { label: 'Tentang Kami', path: '/tentang-kami', icon: IconHeroiconsInformationCircle },
-    { label: 'Kontak', path: '/kontak', icon: IconHeroiconsChatBubbleBottomCenterText },
-    { label: 'Rate Card', path: '/rate-card', icon: IconHeroiconsMegaphone },
-    { label: 'Kebijakan Privasi', path: '/privacy', icon: IconHeroiconsShieldCheck },
+    { label: 'FAQ', path: '/faq', icon: footerIcons.ellipsis },
+    { label: 'Tentang Kami', path: '/tentang-kami', icon: footerIcons.info },
+    { label: 'Kontak', path: '/kontak', icon: footerIcons.chat },
+    { label: 'Rate Card', path: '/rate-card', icon: footerIcons.megaphone },
+    { label: 'Kebijakan Privasi', path: '/privacy', icon: footerIcons.shield },
   ],
   ekosistem: [
-    { label: 'Komunitas Lari', path: '/ekosistem/komunitas-lari', icon: IconHeroiconsUserGroup },
-    { label: 'Vendor Medali', path: '/ekosistem/vendor-medali', icon: IconHeroiconsTrophy },
-    { label: 'Race Management', path: '/ekosistem/race-management', icon: IconHeroiconsFlag },
+    { label: 'Komunitas Lari', path: '/ekosistem/komunitas-lari', icon: footerIcons.userGroup },
+    { label: 'Vendor Medali', path: '/ekosistem/vendor-medali', icon: footerIcons.trophy },
+    { label: 'Race Management', path: '/ekosistem/race-management', icon: footerIcons.flag },
   ],
 }
 

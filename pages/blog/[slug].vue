@@ -175,7 +175,11 @@ useBreadcrumbSchema(breadcrumbs)
 // --- Formatted Data (using utils) ---
 const formattedDate = computed(() => formatBlogDate(post.value?.published_at))
 const readingTime = computed(() => calculateReadingTime(post.value?.content))
-const tags = computed<BlogTag[]>(() => post.value?.tags ?? [])
+const tags = computed<BlogTag[]>(() => {
+  const allTags = post.value?.tags ?? []
+  // Backend already filters invalid tags, but add safety check
+  return allTags.filter(tag => tag.name && tag.name.trim() !== '')
+})
 
 // --- Category Link ---
 const categoryLink = computed(() =>
@@ -386,7 +390,18 @@ const shareX = () => {
                   </Popover>
                 </div>
 
-                <!-- Tags -->
+                <!-- Metadata Separator -->
+                <div class="border-t border-secondary/50" />
+
+                <!-- Article Content -->
+                <article
+                  class="text-sm lg:text-base prose prose-base max-w-none text-gray-700 prose-headings:text-primary prose-a:text-secondary prose-blockquote:border-secondary/40 prose-img:rounded-2xl prose-ol:list-decimal prose-ul:list-disc"
+                >
+                  <!-- eslint-disable-next-line vue/no-v-html -->
+                  <div v-html="post.content" />
+                </article>
+
+                <!-- Tags (Below Content) -->
                 <div
                   v-if="tags.length"
                   class="border-t border-secondary/20 pt-4 flex flex-wrap items-center gap-2"
@@ -406,17 +421,6 @@ const shareX = () => {
                     </NuxtLink>
                   </div>
                 </div>
-
-                <!-- Metadata Separator -->
-                <div class="border-t border-secondary/50" />
-
-                <!-- Article Content -->
-                <article
-                  class="text-sm lg:text-base prose prose-base max-w-none text-gray-700 prose-headings:text-primary prose-a:text-secondary prose-blockquote:border-secondary/40 prose-img:rounded-2xl prose-ol:list-decimal prose-ul:list-disc"
-                >
-                  <!-- eslint-disable-next-line vue/no-v-html -->
-                  <div v-html="post.content" />
-                </article>
               </div>
             </div>
           </div>

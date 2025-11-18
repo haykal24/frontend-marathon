@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import type { Component } from 'vue'
 import { useRoute } from '#imports'
 import IconHeroiconsArrowLeftOnRectangle20Solid from '~icons/heroicons/arrow-left-on-rectangle-20-solid'
@@ -45,25 +45,41 @@ const siteName = computed(
 )
 const siteLogo = computed(() => getImage('logo', null) ?? '/logo.png')
 
+// Store icons in a ref to ensure they're available during SSR
+// This prevents "is not defined" errors, especially for IconHeroiconsDocumentPlus
+const navIcons = shallowRef({
+  home: IconHeroiconsHomeModern,
+  calendar: IconHeroiconsCalendarDays,
+  globe: IconHeroiconsGlobeAlt,
+  userGroup: IconHeroiconsUserGroup,
+  flag: IconHeroiconsFlag,
+  trophy: IconHeroiconsTrophy,
+  tshirt: IconMdiTshirtCrew,
+  camera: IconMdiCamera,
+  megaphone: IconHeroiconsMegaphone,
+  newspaper: IconHeroiconsNewspaper,
+  documentPlus: IconHeroiconsDocumentPlus,
+})
+
 const navigationItems = computed<NavigationItem[]>(() => [
-  { label: 'Beranda', path: '/', icon: IconHeroiconsHomeModern },
-  { label: 'Event Lari', path: '/event', icon: IconHeroiconsCalendarDays },
+  { label: 'Beranda', path: '/', icon: navIcons.value.home },
+  { label: 'Event Lari', path: '/event', icon: navIcons.value.calendar },
   {
     label: 'Ekosistem',
     path: '/ekosistem',
-    icon: IconHeroiconsGlobeAlt,
+    icon: navIcons.value.globe,
     children: [
-      { label: 'Komunitas Lari', path: '/ekosistem/komunitas-lari', icon: IconHeroiconsUserGroup },
-      { label: 'Race Management', path: '/ekosistem/race-management', icon: IconHeroiconsFlag },
-      { label: 'Vendor Medali', path: '/ekosistem/vendor-medali', icon: IconHeroiconsTrophy },
-      { label: 'Vendor Jersey', path: '/ekosistem/vendor-jersey', icon: IconMdiTshirtCrew },
-      { label: 'Fotografer Lari', path: '/ekosistem/vendor-fotografer', icon: IconMdiCamera },
-      { label: 'Rate Card', path: '/rate-card', icon: IconHeroiconsMegaphone },
+      { label: 'Komunitas Lari', path: '/ekosistem/komunitas-lari', icon: navIcons.value.userGroup },
+      { label: 'Race Management', path: '/ekosistem/race-management', icon: navIcons.value.flag },
+      { label: 'Vendor Medali', path: '/ekosistem/vendor-medali', icon: navIcons.value.trophy },
+      { label: 'Vendor Jersey', path: '/ekosistem/vendor-jersey', icon: navIcons.value.tshirt },
+      { label: 'Fotografer Lari', path: '/ekosistem/vendor-fotografer', icon: navIcons.value.camera },
+      { label: 'Rate Card', path: '/rate-card', icon: navIcons.value.megaphone },
     ],
   },
-  { label: 'Artikel', path: '/blog', icon: IconHeroiconsNewspaper },
+  { label: 'Artikel', path: '/blog', icon: navIcons.value.newspaper },
   // Always show Submit Event; link resolves to login if not authenticated
-  { label: 'Submit Event', path: '/mitra/event/submit', icon: IconHeroiconsDocumentPlus },
+  { label: 'Submit Event', path: '/mitra/event/submit', icon: navIcons.value.documentPlus },
 ])
 
 const filteredNavigationItems = computed(() => navigationItems.value)
@@ -319,7 +335,7 @@ const resolveLink = (item: NavigationItem) => {
                       class="flex items-center gap-3 rounded-xl px-3 py-2 text-white transition hover:text-secondary"
                       @click="userMenuOpen = false; openDropdown = null"
                     >
-                      <IconHeroiconsDocumentPlus class="h-5 w-5" />
+                      <component :is="navIcons.value.documentPlus" class="h-5 w-5" />
                       <span>Submit Event</span>
                     </NuxtLink>
                     <button
@@ -496,7 +512,7 @@ const resolveLink = (item: NavigationItem) => {
                   class="flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3 text-sm font-medium text-white/80 transition hover:bg-secondary hover:text-primary"
                   @click="isMenuOpen = false"
                 >
-                  <IconHeroiconsDocumentPlus class="h-5 w-5" />
+                  <component :is="navIcons.documentPlus" class="h-5 w-5" />
                   <span>Submit Event</span>
                 </NuxtLink>
                 <UiAppButton

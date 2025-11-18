@@ -16,11 +16,20 @@ interface NavItem {
 
 const route = useRoute()
 
+// Store icons in constants to ensure they're available during SSR
+// This prevents "is not defined" errors, especially for IconHeroiconsDocumentPlus
+const sidebarIcons = {
+  dashboard: IconHeroiconsRectangleGroup,
+  documentPlus: IconHeroiconsDocumentPlus,
+  calendar: IconHeroiconsCalendarDays,
+  userCircle: IconHeroiconsUserCircle,
+} as const
+
 const navItems = ref<NavItem[]>([
-  { label: 'Dashboard', path: '/mitra/dashboard', icon: IconHeroiconsRectangleGroup, description: 'Ringkasan event Anda' },
-  { label: 'Kirim Event', path: '/mitra/event/submit', icon: IconHeroiconsDocumentPlus, description: 'Buat event baru' },
-  { label: 'Event Saya', path: '/mitra/my-events', icon: IconHeroiconsCalendarDays, description: 'Kelola event Anda' },
-  { label: 'Profil', path: '/mitra/profile', icon: IconHeroiconsUserCircle, description: 'Atur akun Anda' },
+  { label: 'Dashboard', path: '/mitra/dashboard', icon: sidebarIcons.dashboard, description: 'Ringkasan event Anda' },
+  { label: 'Kirim Event', path: '/mitra/event/submit', icon: sidebarIcons.documentPlus, description: 'Buat event baru' },
+  { label: 'Event Saya', path: '/mitra/my-events', icon: sidebarIcons.calendar, description: 'Kelola event Anda' },
+  { label: 'Profil', path: '/mitra/profile', icon: sidebarIcons.userCircle, description: 'Atur akun Anda' },
 ])
 
 const isActive = (path: string): boolean => route.path === path || route.path.startsWith(`${path}/`)
