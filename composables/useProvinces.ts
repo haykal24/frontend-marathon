@@ -19,14 +19,14 @@ export const useProvinces = () => {
    */
   const fetchProvinces = async (params?: Record<string, string | number | boolean>) => {
     try {
-      const response = await api.get<ApiResponse<Province[]>>('/provinces', {
-        params,
-      })
+    const response = await api.get<ApiResponse<Province[]>>('/provinces', {
+      params,
+    })
       
       // Handle different response formats
       if (response && 'data' in response) {
         const data = response.data
-        return {
+    return {
           data: Array.isArray(data) ? data : [],
         }
       }
@@ -47,10 +47,10 @@ export const useProvinces = () => {
    */
   const fetchActiveProvinces = async () => {
     try {
-      const response = await fetchProvinces()
-      if (!response || !response.data) {
-        return { data: [] }
-      }
+    const response = await fetchProvinces()
+    if (!response || !response.data) {
+      return { data: [] }
+    }
       
       const filtered = Array.isArray(response.data)
         ? response.data.filter(province => {

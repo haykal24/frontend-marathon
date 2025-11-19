@@ -111,8 +111,7 @@ defineExpose({
                       Eksplor Agenda Lari
                     </UiAppButton>
                     <UiAppButton
-                      v-if="heroBanners.length > 0 && heroBanners[0]?.target_url"
-                      :to="heroBanners[0].target_url"
+                      to="/rate-card"
                       variant="outline"
                       size="lg"
                       :icon="IconHeroiconsMegaphone20Solid"

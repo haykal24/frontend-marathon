@@ -237,7 +237,7 @@ const hasPackages = computed(() => ratePackages.value.length > 0)
                 variant="primary"
                 :icon="IconHeroiconsArrowTopRightOnSquare20Solid"
               >
-                Diskusikan via WhatsApp
+                WhatsApp
               </UiAppButton>
               <UiAppButton
                 v-if="contactEmail"
@@ -246,7 +246,7 @@ const hasPackages = computed(() => ratePackages.value.length > 0)
                 variant="secondary"
                 :icon="IconHeroiconsArrowRight20Solid"
               >
-                Email Kami
+                Email
               </UiAppButton>
               <UiAppButton
                 v-else
@@ -513,7 +513,7 @@ const hasPackages = computed(() => ratePackages.value.length > 0)
               size="md"
               :icon="IconHeroiconsArrowTopRightOnSquare20Solid"
             >
-              Konsultasi via WhatsApp
+              WhatsApp
             </UiAppButton>
             <UiAppButton
               v-if="contactEmail"
@@ -522,7 +522,7 @@ const hasPackages = computed(() => ratePackages.value.length > 0)
               size="md"
               :icon="IconHeroiconsArrowRight20Solid"
             >
-              Kirim Email
+              Email
             </UiAppButton>
           </div>
         </div>

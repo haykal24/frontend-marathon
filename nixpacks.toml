@@ -1,18 +1,24 @@
 # Nixpacks configuration for Dokploy deployment
 # This file helps Dokploy build the application correctly
+# Using Bun for faster installs and better performance
 
 [phases.setup]
 nixPkgs = ["nodejs_20"]
 
 [phases.install]
 cmds = [
-  "npm install --legacy-peer-deps",
-  "npm install --save-optional @oxc-parser/binding-linux-x64-gnu @oxc-transform/binding-linux-x64-gnu || echo 'Optional bindings already installed or not needed'"
+  "curl -fsSL https://bun.sh/install | bash",
+  "source $HOME/.bashrc || true",
+  "export PATH=\"$HOME/.bun/bin:$PATH\"",
+  "bun install --frozen-lockfile"
 ]
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = [
+  "export PATH=\"$HOME/.bun/bin:$PATH\"",
+  "bun run build"
+]
 
 [start]
-cmd = "npm run start"
+cmd = "export PATH=\"$HOME/.bun/bin:$PATH\" && bun run start"
 
