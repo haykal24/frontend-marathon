@@ -265,13 +265,9 @@ const shareX = () => {
                   v-if="post.banner"
                   :src="post.banner"
                   :alt="post.title"
-                  preset="card"
-                  width="800"
-                  height="600"
                   format="webp"
                   loading="lazy"
                   class="h-full w-full max-h-[440px] object-cover"
-                  sizes="(max-width: 1024px) 100vw, 66vw"
                 />
                 <div
                   v-else
@@ -448,12 +444,8 @@ const shareX = () => {
                       :src="related.banner"
                       :alt="related.title"
                       class="h-full w-full object-cover transition group-hover:scale-105"
-                      preset="avatar"
-                      width="64"
-                      height="64"
                       format="webp"
                       loading="lazy"
-                      sizes="64px"
                     />
                     <div
                       v-else

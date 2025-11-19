@@ -116,12 +116,9 @@ const sliderOptions = {
                 :src="eventType.image"
                 :alt="eventType.name"
                 class="h-full w-full object-cover"
-                preset="card"
-                width="500"
-                height="350"
                 format="webp"
+                sizes="(max-width: 768px) 100vw, 33vw"
                 loading="lazy"
-                sizes="(max-width: 1024px) 100vw, 500px"
               />
               <div
                 v-else

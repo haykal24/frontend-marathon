@@ -258,12 +258,7 @@ const getEventKey = (event: Event, index: number) => {
                               :src="event.image"
                               :alt="event.title"
                               class="h-12 w-12 rounded-lg object-cover"
-                              preset="avatar"
-                              width="48"
-                              height="48"
-                              format="webp"
                               loading="lazy"
-                              sizes="48px"
                             />
                           </div>
                           <div class="min-w-0 flex-1">

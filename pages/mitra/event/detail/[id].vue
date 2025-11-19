@@ -104,12 +104,6 @@ const formatSimpleDate = (value?: string | null) => {
                         :src="event.image"
                         :alt="event.title"
                         class="w-full h-auto rounded-lg max-h-96 object-contain border border-gray-200"
-                        preset="card"
-                        width="800"
-                        height="600"
-                        format="webp"
-                        loading="lazy"
-                        sizes="(max-width: 768px) 100vw, 50vw"
                       />
                       <p
                         v-else

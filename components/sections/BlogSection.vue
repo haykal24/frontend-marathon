@@ -123,12 +123,8 @@ const sliderOptions = {
                 :src="post.banner"
                 :alt="post.title"
                 class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                preset="card"
-                width="500"
-                height="300"
                 format="webp"
                 loading="lazy"
-                sizes="(max-width: 1024px) 100vw, 500px"
               />
               <div
                 v-else

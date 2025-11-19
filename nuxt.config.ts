@@ -198,40 +198,6 @@ export default defineNuxtConfig({
       'localhost',
       'dasbor.indonesiamarathon.com',
     ],
-    screens: {
-      xs: 320,
-      sm: 640,
-      md: 768,
-      lg: 1024,
-      xl: 1280,
-      xxl: 1536,
-    },
-    presets: {
-      avatar: {
-        modifiers: {
-          format: 'webp',
-          width: 150,
-          height: 150,
-          fit: 'cover',
-        },
-      },
-      card: {
-        modifiers: {
-          format: 'webp',
-          width: 800,
-          height: 600,
-          fit: 'cover',
-        },
-      },
-      hero: {
-        modifiers: {
-          format: 'webp',
-          width: 1920,
-          height: 1080,
-          fit: 'cover',
-        },
-      },
-    },
   },
 
   // Font Optimization (Saira & Fira Sans)

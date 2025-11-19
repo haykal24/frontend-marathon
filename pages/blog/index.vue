@@ -286,12 +286,8 @@ const loadMore = async () => {
                       :src="post.banner"
                       :alt="post.title"
                       class="w-full h-full object-cover"
-                      preset="avatar"
-                      width="128"
-                      height="128"
                       format="webp"
                       loading="lazy"
-                      sizes="128px"
                     />
                   </template>
                   <template v-else>

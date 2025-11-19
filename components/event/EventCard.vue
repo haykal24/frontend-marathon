@@ -86,9 +86,7 @@ const hasValidImage = computed(() => {
         :src="sanitizeMediaUrl(props.event.image || props.event.poster_webp_url)"
         :alt="props.event.title"
         class="h-full w-full object-cover"
-        sizes="sm:220px md:300px lg:350px"
-        width="400"
-        height="300"
+        sizes="(max-width: 768px) 100vw, 33vw"
         format="webp"
         loading="lazy"
       />
