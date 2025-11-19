@@ -97,16 +97,15 @@ const sliderOptions = {
         <SplideSlide
           v-for="event in eventsList"
           :key="event.id"
-          class="h-full"
         >
           <NuxtLink
             :to="`/event/${event.slug}`"
-            class="block h-full"
+            class="block h-full min-h-[280px]"
           >
             <EventCard
               :event="event"
               :show-cta="false"
-              class="h-full"
+              class="h-full min-h-[280px]"
             />
           </NuxtLink>
         </SplideSlide>
@@ -125,6 +124,18 @@ const sliderOptions = {
 <style scoped lang="postcss">
 .event-latest-splide {
   @apply relative pb-8;
+}
+
+.event-latest-splide :deep(.splide__track) {
+  @apply h-full;
+}
+
+.event-latest-splide :deep(.splide__list) {
+  @apply h-full;
+}
+
+.event-latest-splide :deep(.splide__slide) {
+  @apply h-auto;
 }
 
 .event-latest-splide :deep(.splide__pagination) {
