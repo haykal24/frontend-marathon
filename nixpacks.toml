@@ -1,0 +1,20 @@
+# Nixpacks configuration for Dokploy deployment
+# This file helps Dokploy build the application correctly
+# Using Bun for faster installs and better performance
+
+[phases.setup]
+nixPkgs = ["nodejs_24", "bun"]
+
+[phases.install]
+cmds = [
+  "bun install --frozen-lockfile"
+]
+
+[phases.build]
+cmds = [
+  "bun run build"
+]
+
+[start]
+cmd = "bun run start"
+

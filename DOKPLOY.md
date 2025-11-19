@@ -4,43 +4,45 @@
 
 Dokploy akan menggunakan konfigurasi berikut untuk build:
 
-1. **Node.js Version**: Node 20+ (dikonfigurasi di `package.json` field `engines`)
+1. **Node.js Version**: Node 24 (dikonfigurasi di `nixpacks.toml`)
 2. **Package Manager**: Bun (untuk install dan build yang lebih cepat)
 3. **Install Command**: `bun install --frozen-lockfile`
 4. **Build Command**: `bun run build`
 5. **Start Command**: `bun run start`
 
-## Konfigurasi di package.json
+## Konfigurasi di nixpacks.toml
 
-Semua konfigurasi deployment ada di `package.json`:
+Semua konfigurasi deployment ada di `nixpacks.toml`:
 
-```json
-{
-  "engines": {
-    "node": ">=20.0.0",
-    "bun": ">=1.0.0"
-  },
-  "scripts": {
-    "build": "nuxt build",
-    "start": "bun .output/server/index.mjs"
-  }
-}
+```toml
+[phases.setup]
+nixPkgs = ["nodejs_24", "bun"]
+
+[phases.install]
+cmds = [
+  "bun install --frozen-lockfile"
+]
+
+[phases.build]
+cmds = [
+  "bun run build"
+]
+
+[start]
+cmd = "bun run start"
 ```
 
-### Penjelasan Field `engines`
+### Penjelasan Konfigurasi
 
-Field `engines` di `package.json` digunakan untuk:
-- **Menspesifikasikan versi Node.js yang diperlukan**: `"node": ">=20.0.0"` berarti aplikasi memerlukan Node.js versi 20 atau lebih tinggi
-- **Menspesifikasikan versi Bun yang diperlukan**: `"bun": ">=1.0.0"` berarti aplikasi memerlukan Bun versi 1.0.0 atau lebih tinggi
+- **`[phases.setup]`**: Mendefinisikan paket yang diperlukan (Node.js 24 dan Bun)
+- **`[phases.install]`**: Menjalankan install dependencies menggunakan Bun dengan `--frozen-lockfile` untuk reproducible builds
+- **`[phases.build]`**: Menjalankan build aplikasi
+- **`[start]`**: Command untuk start aplikasi setelah deployment
 
-**Catatan tentang Node Version:**
-- Dokploy/Nixpacks akan membaca versi Node dari beberapa sumber (prioritas):
-  1. File `.nvmrc` atau `.node-version` (jika ada)
-  2. Field `engines.node` di `package.json`
-  3. Deteksi otomatis dari project structure
-- **Rekomendasi**: Gunakan Node 20 untuk kompatibilitas yang lebih baik dengan Nuxt 4 dan ekosistem Vue 3
-- Node 24 mungkin belum sepenuhnya didukung oleh semua tooling (Vite, Vue plugin, dll)
-- File `.nvmrc` dan `.node-version` dibuat untuk memastikan Dokploy menggunakan Node 20
+**Catatan tentang Node 24:**
+- Node 24 digunakan untuk performa dan fitur terbaru
+- Pastikan semua dependencies kompatibel dengan Node 24
+- Jika ada masalah kompatibilitas, pertimbangkan untuk kembali ke Node 20
 
 ## Environment Variables
 
@@ -57,8 +59,8 @@ PORT=3000
 
 ## Setup Dokploy
 
-1. **Tidak perlu file `nixpacks.toml`** - Dokploy akan otomatis membaca konfigurasi dari `package.json`
-2. **Install Bun**: Dokploy akan otomatis install Bun jika belum tersedia
+1. **File `nixpacks.toml`** - Dokploy akan membaca konfigurasi dari file ini (prioritas tertinggi)
+2. **Node.js 24 & Bun**: Keduanya akan diinstall otomatis dari Nixpacks
 3. **Build Process**: Dokploy akan menjalankan:
    - `bun install --frozen-lockfile` (install dependencies)
    - `bun run build` (build aplikasi)
@@ -94,10 +96,9 @@ Jika ada warning tentang Node.js version:
 
 ## Files Configuration
 
-- `package.json` - Konfigurasi build dan engines (Node.js & Bun version)
-- `.nvmrc` - File untuk memastikan versi Node.js yang digunakan (Node 20)
-- `.node-version` - File alternatif untuk versi Node.js (Node 20)
+- `nixpacks.toml` - Konfigurasi build untuk Dokploy/Nixpacks (Node.js 24 & Bun)
+- `package.json` - Konfigurasi project dan scripts
 - `.dockerignore` - File yang di-ignore saat build Docker
 
-**Catatan**: File `.nvmrc` dan `.node-version` membantu Dokploy/Nixpacks mendeteksi versi Node.js yang benar, karena `engines.node` di `package.json` tidak selalu dibaca dengan benar oleh semua build system.
+**Catatan**: File `nixpacks.toml` adalah sumber konfigurasi utama untuk Dokploy. Ini memiliki prioritas tertinggi dan akan digunakan untuk menentukan versi Node.js dan proses build.
 
