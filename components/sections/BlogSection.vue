@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useImage } from '#imports'
 import type { BlogPost } from '~/types/blog'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
 import IconHeroiconsSparkles20Solid from '~icons/heroicons/sparkles-20-solid'
@@ -9,6 +10,7 @@ import IconHeroiconsUserCircle20Solid from '~icons/heroicons/user-circle-20-soli
 import { useCurrentYear } from '~/composables/useCurrentYear'
 
 const { currentYear } = useCurrentYear()
+const $img = useImage()
 
 interface Props {
   posts: BlogPost[]
@@ -67,6 +69,16 @@ const sliderOptions = {
     },
   },
 }
+
+const buildPostImage = (src?: string | null) => {
+  if (!src) return ''
+  return $img(src, {
+    width: 1280,
+    height: 720,
+    format: 'webp',
+    quality: 80,
+  })
+}
 </script>
 
 <template>
@@ -118,13 +130,15 @@ const sliderOptions = {
             class="group flex h-full flex-col overflow-hidden rounded-2xl border border-secondary/40 bg-white"
           >
             <div class="relative h-48 overflow-hidden">
-              <NuxtImg
+              <img
                 v-if="post.banner"
-                :src="post.banner"
+                :src="buildPostImage(post.banner)"
                 :alt="post.title"
                 class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                format="webp"
                 loading="lazy"
+                decoding="async"
+                width="1280"
+                height="720"
               />
               <div
                 v-else

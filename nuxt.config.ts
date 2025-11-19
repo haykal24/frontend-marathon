@@ -198,6 +198,16 @@ export default defineNuxtConfig({
       'localhost',
       'dasbor.indonesiamarathon.com',
     ],
+    // Perbaiki srcset generation - hanya generate 1x density untuk menghindari error
+    densities: [1],
+    screens: {
+      xs: 320,
+      sm: 640,
+      md: 768,
+      lg: 1024,
+      xl: 1280,
+      xxl: 1536,
+    },
   },
 
   // Font Optimization (Saira & Fira Sans)

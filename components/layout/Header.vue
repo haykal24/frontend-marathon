@@ -23,7 +23,6 @@ import IconHeroiconsRectangleGroup from '~icons/heroicons/rectangle-group'
 
 import { useAuth } from '~/composables/useAuth'
 import { useSiteSettings } from '~/composables/useSiteSettings'
-import { validateAnchorText, detectDuplicateAnchors, type InternalLink } from '~/composables/useInternalLinking'
 
 interface NavigationItem {
   label: string
@@ -166,33 +165,6 @@ watch(
 onMounted(() => {
   updateActiveDropdown()
   document.addEventListener('click', onGlobalClick)
-  
-  // SITELINK VALIDATION (development only)
-  if (process.env.NODE_ENV === 'development') {
-    // Convert navigationItems to InternalLink format for validation
-    const linksForValidation: InternalLink[] = navigationItems.value.map(item => ({
-      text: item.label,
-      href: item.path,
-    }))
-    
-    // Validate anchor text quality (silent in production)
-    if (import.meta.dev) {
-    linksForValidation.forEach(link => {
-      const validation = validateAnchorText(link.text)
-      if (!validation.isValid) {
-        validation.warnings.forEach(w => console.warn(`[Header Nav] ${w}`))
-      }
-    })
-    
-    // Detect duplicate anchors
-    const dupCheck = detectDuplicateAnchors(linksForValidation)
-    if (dupCheck.hasDuplicates) {
-      console.warn(
-        '[Header Nav] ⚠️ Duplicate anchor text detected in main navigation. This may affect Google Sitelinks quality.'
-      )
-      }
-    }
-  }
 })
 
 const resolveLink = (item: NavigationItem) => {

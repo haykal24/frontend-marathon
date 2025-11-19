@@ -183,6 +183,9 @@ const onVerifyLogin = async () => {
               preload
               loading="eager"
               fetch-priority="high"
+              width="960"
+              height="1080"
+              densities="x1"
             />
             <div
               v-else

@@ -144,6 +144,11 @@ declare module 'nuxt/schema' {
       quality?: number
       format?: string[]
       domains?: string[]
+      screens?: Record<string, number>
+      densities?: number[]
+      ipx?: {
+        modifiers?: Record<string, any>
+      }
     }
     // @nuxtjs/partytown module
     partytown?: {

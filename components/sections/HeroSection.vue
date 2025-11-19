@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useImage } from '#imports'
 import type { AdBanner } from '~/types/ad'
 import type { Event } from '~/types/event'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
@@ -16,6 +17,7 @@ import {
 import { useCurrentYear } from '~/composables/useCurrentYear'
 
 const { currentYear } = useCurrentYear()
+const $img = useImage()
 
 interface Props {
   featuredEvents?: Event[]
@@ -38,7 +40,7 @@ const hasHeroContent = computed(
 const splideOptions = {
   type: 'loop',
   autoplay: true,
-  interval: 6000,
+  interval: 3000,
   pauseOnHover: true,
   arrows: false,
   pagination: true,
@@ -52,6 +54,19 @@ defineExpose({
   hasHeroContent,
   splideOptions,
 })
+
+const buildHeroImageUrl = (
+  src?: string | null,
+  options: { width?: number; height?: number } = {}
+) => {
+  if (!src) return ''
+  return $img(sanitizeMediaUrl(src), {
+    width: options.width ?? 1920,
+    height: options.height ?? 1080,
+    format: 'webp',
+    quality: 80,
+  })
+}
 </script>
 
 <template>
@@ -68,14 +83,16 @@ defineExpose({
             <div
               class="relative flex min-h-screen lg:min-h-0 lg:h-full bg-primary text-white pt-16"
             >
-              <NuxtImg
+              <img
                 v-if="heroBanners.length > 0 && heroBanners[0]?.image"
-                :src="sanitizeMediaUrl(heroBanners[0]?.image)"
+                :src="buildHeroImageUrl(heroBanners[0]?.image)"
                 :alt="heroBanners[0].name"
                 class="absolute inset-0 h-full w-full object-cover"
-                sizes="100vw"
-                format="webp"
+                width="1920"
+                height="1080"
                 loading="eager"
+                decoding="async"
+                fetchpriority="high"
               />
               <div
                 v-else
@@ -132,14 +149,16 @@ defineExpose({
             <div
               class="relative flex min-h-screen lg:min-h-0 lg:h-full bg-primary text-white pt-16"
             >
-              <NuxtImg
+              <img
                 v-if="event.image"
-                :src="sanitizeMediaUrl(event.image)"
+                :src="buildHeroImageUrl(event.image)"
                 :alt="event.title"
                 class="absolute inset-0 h-full w-full object-cover"
-                format="webp"
-                sizes="100vw"
+                width="1920"
+                height="1080"
                 loading="eager"
+                decoding="async"
+                fetchpriority="high"
               />
               <div
                 v-else
@@ -186,14 +205,15 @@ defineExpose({
                           <IconHeroiconsSparkles20Solid class="h-4 w-4" />
                           Event Pilihan
                         </span>
-                        <NuxtImg
+                        <img
                           v-if="event.image"
-                          :src="sanitizeMediaUrl(event.image)"
+                          :src="buildHeroImageUrl(event.image, { width: 640, height: 400 })"
                           :alt="event.title"
                           class="h-full w-full object-cover"
-                          format="webp"
-                          sizes="(max-width: 1024px) 50vw, 320px"
+                          width="640"
+                          height="400"
                           loading="lazy"
+                          decoding="async"
                         />
                         <div
                           v-else

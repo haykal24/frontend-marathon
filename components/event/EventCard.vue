@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useImage } from '#imports'
 import type { Event } from '~/types/event'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
 import IconHeroiconsCalendarDays20Solid from '~icons/heroicons/calendar-days-20-solid'
@@ -31,6 +32,7 @@ const containerToneClasses = computed(() => {
 
   return 'border border-secondary bg-surface'
 })
+const $img = useImage()
 
 // Check if event has valid image (not null, not empty, not placeholder)
 const hasValidImage = computed(() => {
@@ -45,6 +47,16 @@ const hasValidImage = computed(() => {
   
   return true
 })
+
+const buildCardImage = (src?: string | null) => {
+  if (!src) return ''
+  return $img(sanitizeMediaUrl(src), {
+    width: 800,
+    height: 600,
+    format: 'webp',
+    quality: 80,
+  })
+}
 </script>
 
 <template>
@@ -81,14 +93,15 @@ const hasValidImage = computed(() => {
       </div>
 
       <!-- Image jika ada dan valid (tidak placeholder) -->
-      <NuxtImg
+      <img
         v-if="hasValidImage"
-        :src="sanitizeMediaUrl(props.event.image || props.event.poster_webp_url)"
+        :src="buildCardImage(props.event.image || props.event.poster_webp_url)"
         :alt="props.event.title"
         class="h-full w-full object-cover"
-        sizes="(max-width: 768px) 100vw, 33vw"
-        format="webp"
         loading="lazy"
+        decoding="async"
+        width="800"
+        height="600"
       />
 
       <!-- Fallback dengan bg-primary gradient (konsisten dengan EventTypeSection/BlogSection) -->
