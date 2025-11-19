@@ -152,7 +152,6 @@ const filters = ref({
 
 const sortOptions = [
   { value: 'latest', label: 'Terbaru' },
-  { value: 'upcoming', label: 'Akan Datang' },
   { value: 'featured', label: 'Event Pilihan' },
 ]
 
@@ -209,7 +208,7 @@ const eventTypeOptions = computed(() => {
 async function loadEvents(page = 1, append = false) {
   pending.value = true
   try {
-    const sortValue = filters.value.sort as 'latest' | 'upcoming' | 'popular'
+    const sortValue = filters.value.sort as 'latest' | 'featured'
     // Handle multiple filters - take first value if array
     const typeValue = Array.isArray(filters.value.type) ? filters.value.type[0] : filters.value.type
     const provinceValue = Array.isArray(filters.value.province)
@@ -220,6 +219,8 @@ async function loadEvents(page = 1, append = false) {
       page,
       per_page: 12,
       sort: sortValue || 'latest',
+      order_by: 'event_date',
+      order: 'desc',
       status: 'published',
       search: filters.value.search || undefined,
       month: filters.value.month || undefined,
@@ -364,8 +365,8 @@ function initializeFiltersFromQuery() {
   // Set sort filter
   if (query.sort) {
     const sortValue = Array.isArray(query.sort) ? query.sort[0] : query.sort || ''
-    if (sortValue && ['latest', 'upcoming', 'featured'].includes(sortValue)) {
-      filters.value.sort = sortValue as 'latest' | 'upcoming' | 'featured'
+    if (sortValue && ['latest', 'featured'].includes(sortValue)) {
+      filters.value.sort = sortValue as 'latest' | 'featured'
     }
   }
 }

@@ -99,12 +99,27 @@ export default defineNuxtConfig({
 
   // Sitemap Configuration (@nuxtjs/seo with dynamic backend API)
   sitemap: {
-    sources: [
-      '/api/__sitemap__/pages-urls',
-      '/api/__sitemap__/events-urls',
-      '/api/__sitemap__/blog-urls',
-      '/api/__sitemap__/categories-urls',
-    ],
+    // Manual chunking dengan sources terpisah per kategori
+    // Backend mengirim field `_sitemap` dan frontend filter berdasarkan itu
+    // Result: /pages-sitemap.xml, /events-sitemap.xml, /blog-sitemap.xml, /categories-sitemap.xml
+    
+    // Define manual sitemaps dengan sources terpisah
+    sitemaps: {
+      pages: {
+        sources: ['/api/__sitemap__/pages-urls'],
+      },
+      events: {
+        sources: ['/api/__sitemap__/events-urls'],
+      },
+      blog: {
+        sources: ['/api/__sitemap__/blog-urls'],
+      },
+      categories: {
+        sources: ['/api/__sitemap__/categories-urls'],
+      },
+    },
+    
+    // General options
     gzip: true,
     xsl: false,
     discoverImages: true,

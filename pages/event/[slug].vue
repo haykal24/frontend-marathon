@@ -217,6 +217,27 @@ const getCombinedEventMeta = (): string => {
   return allLabels.join(', ')
 }
 
+const normalizePhoneNumber = (value: string): string => {
+  if (!value) return ''
+  const digits = value.replace(/\D/g, '')
+  if (!digits) return ''
+  if (digits.startsWith('62')) return digits
+  if (digits.startsWith('0')) return `62${digits.slice(1)}`
+  if (digits.startsWith('8')) return `62${digits}`
+  return digits
+}
+
+const buildWhatsappUrl = (value: string): string | null => {
+  const normalized = normalizePhoneNumber(value)
+  return normalized ? `https://wa.me/${normalized}` : null
+}
+
+const buildTelUrl = (value: string): string | null => {
+  if (!value) return null
+  const cleaned = value.replace(/[^\d+]/g, '')
+  return cleaned ? `tel:${cleaned}` : null
+}
+
 // --- Share Functionality ---
 const shareUrl = computed(() => `${config.public.siteUrl}/event/${slug}`)
 const shareText = computed(() => `${eventData.value.title} - ${eventData.value.location_name}`)
@@ -452,8 +473,8 @@ const allContactItems = computed(() => {
                 >
                   <!-- WhatsApp -->
                   <a
-                    v-if="item.label.toLowerCase().includes('whatsapp')"
-                    :href="`https://wa.me/${item.value.replace(/\D/g, '')}`"
+                    v-if="item.label.toLowerCase().includes('whatsapp') && buildWhatsappUrl(item.value)"
+                    :href="buildWhatsappUrl(item.value) || undefined"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="flex items-center gap-3 text-gray-600 hover:text-secondary font-medium text-sm w-full"
@@ -461,6 +482,13 @@ const allContactItems = computed(() => {
                     <IconMdiWhatsapp class="h-5 w-5 text-[#25D366] flex-shrink-0" />
                     {{ item.value }}
                   </a>
+                  <div
+                    v-else-if="item.label.toLowerCase().includes('whatsapp')"
+                    class="flex items-center gap-3 text-gray-600 font-medium text-sm w-full"
+                  >
+                    <IconMdiWhatsapp class="h-5 w-5 text-[#25D366] flex-shrink-0" />
+                    {{ item.value }}
+                  </div>
                   <!-- Email -->
                   <a
                     v-else-if="item.label.toLowerCase().includes('email')"
@@ -481,7 +509,18 @@ const allContactItems = computed(() => {
                     <IconMdiInstagram class="h-5 w-5 text-[#E1306C] flex-shrink-0" />
                     @{{ item.value.replace('@', '') }}
                   </a>
-                  <!-- Other/Phone -->
+                  <!-- Phone -->
+                  <a
+                    v-else-if="['phone', 'telepon', 'telp', 'contact'].some(keyword =>
+                      item.label.toLowerCase().includes(keyword),
+                    ) && buildTelUrl(item.value)"
+                    :href="buildTelUrl(item.value) || undefined"
+                    class="flex items-center gap-3 text-gray-600 hover:text-secondary font-medium text-sm w-full"
+                  >
+                    <IconMdiPhone class="h-5 w-5 text-gray-600 flex-shrink-0" />
+                    {{ item.value }}
+                  </a>
+                  <!-- Other -->
                   <div
                     v-else
                     class="flex items-center gap-3 text-gray-600 font-medium text-sm w-full"

@@ -21,7 +21,9 @@ export const useEvents = () => {
     category?: string
     status?: 'published' | 'pending_review' | 'draft'
     search?: string
-    sort?: 'latest' | 'upcoming' | 'popular'
+    sort?: 'latest' | 'featured'
+    order_by?: string
+    order?: 'asc' | 'desc'
     include?: string[]
   }) => {
     const queryParams = new URLSearchParams()
@@ -35,7 +37,9 @@ export const useEvents = () => {
     if (params?.category) queryParams.append('category', params.category)
     if (params?.status) queryParams.append('status', params.status)
     if (params?.search) queryParams.append('search', params.search)
-    if (params?.sort) queryParams.append('sort', params.sort)
+    if (params?.sort && params.sort !== 'latest') queryParams.append('sort', params.sort)
+    if (params?.order_by) queryParams.append('order_by', params.order_by)
+    if (params?.order) queryParams.append('order', params.order)
     if (params?.include?.length) queryParams.append('include', params.include.join(','))
 
     const query = queryParams.toString()
