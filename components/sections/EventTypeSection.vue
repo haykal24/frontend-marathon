@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useImage } from '#imports'
 import type { EventType, Event } from '~/types/event'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
 import IconHeroiconsSparkles20Solid from '~icons/heroicons/sparkles-20-solid'
@@ -10,6 +11,7 @@ import { formatEventDate, formatEventLocation } from '~/utils/format'
 import { useCurrentYear } from '~/composables/useCurrentYear'
 
 const { currentYear } = useCurrentYear()
+const $img = useImage()
 
 interface Props {
   eventTypes: EventType[]
@@ -70,6 +72,16 @@ const sliderOptions = {
     },
   },
 }
+
+const buildTypeImage = (src?: string | null) => {
+  if (!src) return ''
+  return $img(src, {
+    width: 1280,
+    height: 720,
+    format: 'webp',
+    quality: 80,
+  })
+}
 </script>
 
 <template>
@@ -119,14 +131,15 @@ const sliderOptions = {
             class="flex h-full flex-col overflow-hidden rounded-2xl border border-secondary/80 bg-white/85"
           >
             <div class="relative h-52 overflow-hidden">
-              <NuxtImg
+              <img
                 v-if="eventType.image"
-                :src="eventType.image"
+                :src="buildTypeImage(eventType.image)"
                 :alt="eventType.name"
                 class="h-full w-full object-cover"
-                format="webp"
-                sizes="(max-width: 768px) 100vw, 33vw"
                 loading="lazy"
+                decoding="async"
+                width="1280"
+                height="720"
               />
               <div
                 v-else
