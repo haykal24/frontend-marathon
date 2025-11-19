@@ -90,7 +90,12 @@ export const useHomepageData = () => {
       const eventsByType: Record<string, Event[]> = {}
       const cleanEventTypes = extractList<EventType>(eventTypes as ApiListResponse<EventType>)
       if (cleanEventTypes.length > 0) {
-        const topTypes = cleanEventTypes.slice(0, 3)
+        // Sort by event_count (descending) and take top 6
+        const topTypes = cleanEventTypes
+          .filter(type => (type.event_count ?? 0) > 0)
+          .sort((a, b) => (b.event_count ?? 0) - (a.event_count ?? 0))
+          .slice(0, 6)
+        
         const typeFetchResults = await Promise.allSettled(
           topTypes.map(type => fetchEventsByType(type.slug, 2))
         )

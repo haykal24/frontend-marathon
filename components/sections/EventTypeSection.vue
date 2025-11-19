@@ -2,6 +2,10 @@
 import { computed } from 'vue'
 import type { EventType, Event } from '~/types/event'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
+import IconHeroiconsSparkles20Solid from '~icons/heroicons/sparkles-20-solid'
+import IconHeroiconsTag20Solid from '~icons/heroicons/tag-20-solid'
+import IconHeroiconsCalendarDays20Solid from '~icons/heroicons/calendar-days-20-solid'
+import IconHeroiconsMapPin20Solid from '~icons/heroicons/map-pin-20-solid'
 import { formatEventDate, formatEventLocation } from '~/utils/format'
 import { useCurrentYear } from '~/composables/useCurrentYear'
 
@@ -28,7 +32,11 @@ const getTypeLabel = (slug: string) => {
 
 const getSampleEvents = (slug: string) => (eventsByType.value?.[slug] ?? []).slice(0, 2)
 
-const getEventCount = (slug: string) => eventsByType.value?.[slug]?.length ?? 0
+const getEventCount = (slug: string) => {
+  const eventType = eventTypes.value.find((t: EventType) => t.slug === slug)
+  // Use event_count from API if available, otherwise fallback to sample count
+  return eventType?.event_count ?? eventsByType.value?.[slug]?.length ?? 0
+}
 
 const sliderOptions = {
   type: 'loop',

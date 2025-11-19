@@ -42,7 +42,7 @@ const headerBgUrl = computed(() =>
 
 const sliderOptions = {
   type: 'loop',
-  autoplay: false,
+  autoplay: true,
   interval: 6000,
   pauseOnHover: true,
   arrows: false,

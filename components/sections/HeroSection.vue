@@ -37,7 +37,7 @@ const hasHeroContent = computed(
 
 const splideOptions = {
   type: 'loop',
-  autoplay: false,
+  autoplay: true,
   interval: 6000,
   pauseOnHover: true,
   arrows: false,
