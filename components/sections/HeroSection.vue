@@ -73,9 +73,13 @@ defineExpose({
                 :src="sanitizeMediaUrl(heroBanners[0]?.image)"
                 :alt="heroBanners[0].name"
                 class="absolute inset-0 h-full w-full object-cover"
-                sizes="100vw"
+                preset="hero"
+                width="1920"
+                height="1080"
                 format="webp"
                 loading="eager"
+                sizes="100vw"
+                :img-attrs="{ fetchpriority: 'high' }"
               />
               <div
                 v-else
@@ -137,9 +141,13 @@ defineExpose({
                 :src="sanitizeMediaUrl(event.image)"
                 :alt="event.title"
                 class="absolute inset-0 h-full w-full object-cover"
+                preset="hero"
+                width="1920"
+                height="1080"
                 format="webp"
-                sizes="100vw"
                 loading="eager"
+                sizes="100vw"
+                :img-attrs="{ fetchpriority: 'high' }"
               />
               <div
                 v-else
@@ -191,9 +199,12 @@ defineExpose({
                           :src="sanitizeMediaUrl(event.image)"
                           :alt="event.title"
                           class="h-full w-full object-cover"
+                          preset="card"
+                          width="400"
+                          height="300"
                           format="webp"
-                          sizes="(max-width: 1024px) 50vw, 320px"
                           loading="lazy"
+                          sizes="(max-width: 1024px) 100vw, 320px"
                         />
                         <div
                           v-else

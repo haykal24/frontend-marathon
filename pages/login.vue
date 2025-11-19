@@ -178,8 +178,12 @@ const onVerifyLogin = async () => {
               :src="authImage"
               alt="Auth Illustration"
               class="h-full w-full object-cover"
+              preset="card"
+              width="800"
+              height="1200"
               format="webp"
               sizes="50vw"
+              loading="lazy"
             />
             <div
               v-else
@@ -216,7 +220,11 @@ const onVerifyLogin = async () => {
                       :src="logo"
                       alt="Logo"
                       class="h-16 w-auto"
+                      width="200"
+                      height="64"
                       format="webp"
+                      loading="eager"
+                      fetchpriority="high"
                     />
                   </NuxtLink>
                 </div>

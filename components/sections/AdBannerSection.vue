@@ -157,8 +157,12 @@ defineExpose({
                       :src="sanitizeMediaUrl(banner.image)"
                       :alt="banner.name"
                       class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+                      preset="card"
+                      width="800"
+                      height="600"
                       format="webp"
                       loading="lazy"
+                      sizes="(max-width: 1024px) 100vw, 66vw"
                     />
                     <div
                       v-else
@@ -188,8 +192,12 @@ defineExpose({
                   :src="sanitizeMediaUrl(singleMainBanner.image)"
                   :alt="singleMainBanner.name"
                   class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+                  preset="card"
+                  width="800"
+                  height="600"
                   format="webp"
                   loading="lazy"
+                  sizes="(max-width: 1024px) 100vw, 66vw"
                 />
                 <div
                   v-else
@@ -242,8 +250,12 @@ defineExpose({
                       :src="sanitizeMediaUrl(banner.image)"
                       :alt="banner.name"
                       class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+                      preset="card"
+                      width="400"
+                      height="300"
                       format="webp"
                       loading="lazy"
+                      sizes="(max-width: 1024px) 100vw, 33vw"
                     />
                     <div
                       v-else
@@ -272,8 +284,12 @@ defineExpose({
                   :src="sanitizeMediaUrl(slot.banners[0]!.image)"
                   :alt="slot.banners[0]?.name ?? 'Banner Promo'"
                   class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+                  preset="card"
+                  width="400"
+                  height="300"
                   format="webp"
                   loading="lazy"
+                  sizes="(max-width: 1024px) 100vw, 33vw"
                 />
                 <div
                   v-else
@@ -320,8 +336,12 @@ defineExpose({
                 :src="sanitizeMediaUrl(banner.image)"
                 :alt="banner.name"
                 class="h-72 w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+                preset="card"
+                width="600"
+                height="400"
                 format="webp"
                 loading="lazy"
+                sizes="100vw"
               />
               <div
                 v-else

@@ -215,8 +215,11 @@ const resolveLink = (item: NavigationItem) => {
             :src="siteLogo"
             :alt="siteName"
             class="h-10 w-auto"
+            width="200"
+            height="40"
             format="webp"
-            loading="lazy"
+            loading="eager"
+            fetchpriority="high"
           />
         </NuxtLink>
 

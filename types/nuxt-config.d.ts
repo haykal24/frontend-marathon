@@ -144,6 +144,65 @@ declare module 'nuxt/schema' {
       quality?: number
       format?: string[]
       domains?: string[]
+      screens?: Record<string, number>
+      presets?: Record<string, {
+        modifiers?: {
+          format?: string
+          width?: number
+          height?: number
+          fit?: 'contain' | 'cover' | 'fill' | 'inside' | 'outside'
+          quality?: number
+        }
+      }>
+      densities?: number[]
+      alias?: Record<string, string>
+      ipx?: {
+        maxAge?: number
+        dir?: string
+      }
+      cloudinary?: {
+        baseURL?: string
+      }
+      cloudflare?: {
+        baseURL?: string
+      }
+      imagekit?: {
+        baseURL?: string
+      }
+      unsplash?: {
+        baseURL?: string
+      }
+      twicpics?: {
+        baseURL?: string
+      }
+      storyblok?: {
+        baseURL?: string
+      }
+      fastly?: {
+        baseURL?: string
+      }
+      imgix?: {
+        baseURL?: string
+      }
+      netlify?: {
+        baseURL?: string
+      }
+      preload?: boolean
+      inject?: boolean
+      staticFilename?: string
+      staticBase?: string
+      staticDir?: string
+      staticSizes?: number[]
+      staticExtensions?: string[]
+      staticFallback?: boolean
+      staticNoPrefix?: boolean
+      staticNoCache?: boolean
+      staticCache?: boolean
+      staticCacheMaxAge?: number
+      staticCacheHeaders?: Record<string, string>
+      staticCacheControl?: string
+      staticCachePublic?: boolean
+      staticCacheImmutable?: boolean
     }
     // @nuxtjs/partytown module
     partytown?: {

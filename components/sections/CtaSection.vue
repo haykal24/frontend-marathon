@@ -130,8 +130,12 @@ defineExpose({
               :src="bannerImage"
               :alt="banner?.name ?? 'Promo Partner'"
               class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-              loading="lazy"
+              preset="card"
+              width="600"
+              height="600"
               format="webp"
+              loading="lazy"
+              sizes="(max-width: 1024px) 100vw, 40vw"
             />
           </NuxtLink>
           <div
@@ -143,8 +147,12 @@ defineExpose({
               :src="bannerImage"
               :alt="banner?.name ?? 'Promo Partner'"
               class="h-full w-full object-cover"
-              loading="lazy"
+              preset="card"
+              width="600"
+              height="600"
               format="webp"
+              loading="lazy"
+              sizes="(max-width: 1024px) 100vw, 40vw"
             />
           </div>
         </div>
