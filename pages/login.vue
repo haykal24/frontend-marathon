@@ -180,6 +180,9 @@ const onVerifyLogin = async () => {
               class="h-full w-full object-cover"
               format="webp"
               sizes="50vw"
+              preload
+              loading="eager"
+              fetch-priority="high"
             />
             <div
               v-else
