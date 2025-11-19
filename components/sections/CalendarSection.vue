@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
+import IconHeroiconsCalendarDays20Solid from '~icons/heroicons/calendar-days-20-solid'
+import IconMdiChartDonut from '~icons/mdi/chart-donut'
+import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
 import { useCurrentYear } from '~/composables/useCurrentYear'
 
 const { currentYear: dynamicCurrentYear } = useCurrentYear()
@@ -80,6 +83,21 @@ const busiestMonth = computed(() => {
 })
 
 const showYearSelector = computed(() => availableYears.value.length > 1)
+const yearOptions = computed(() =>
+  availableYears.value.map(year => ({
+    value: year,
+    label: `${year}`,
+  })),
+)
+
+const selectedYearModel = computed<number>({
+  get: () => selectedYear.value,
+  set: value => {
+    if (typeof value === 'number' && availableYears.value.includes(value)) {
+      selectedYear.value = value
+    }
+  },
+})
 </script>
 
 <template>
@@ -98,44 +116,71 @@ const showYearSelector = computed(() => availableYears.value.length > 1)
           >
             {{ title }} {{ selectedYear }}
           </h2>
-          <p class="text-sm leading-relaxed text-gray-600 lg:text-base">
+          <p class="text-sm leading-relaxed text-gray-600 lg:text-base max-w-xl">
             Jelajahi jadwal event lari sepanjang tahun {{ selectedYear }}. Temukan event running di
             bulanmu dan catat race favorit untuk persiapan terbaik.
           </p>
         </div>
-        <div class="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+        <div class="flex flex-row flex-wrap items-center gap-3 sm:justify-end w-full sm:w-auto">
           <div
             v-if="showYearSelector"
-            class="flex items-center gap-2 rounded-2xl border border-secondary/60 bg-white px-3 py-2"
+            class="relative flex-1 sm:flex-none sm:w-[200px]"
           >
-            <label
-              class="text-xs font-semibold uppercase tracking-wide text-gray-500"
-              for="calendar-year-select"
+            <Listbox
+              v-model="selectedYearModel"
+              as="div"
+              class="relative"
             >
-              Tahun
-            </label>
-            <select
-              id="calendar-year-select"
-              v-model.number="selectedYear"
-              class="rounded-xl border border-secondary/60 bg-white px-3 py-1.5 text-sm focus:border-secondary focus:outline-none focus:ring-1 focus:ring-secondary/20"
-            >
-              <option
-                v-for="year in availableYears"
-                :key="year"
-                :value="year"
+              <ListboxButton
+                class="relative w-full cursor-default rounded-lg border border-secondary/60 bg-white py-2.5 pl-3 pr-10 text-left text-sm font-medium text-primary focus:outline-none focus-visible:border-secondary focus-visible:ring-2 focus-visible:ring-secondary/20"
               >
-                {{ year }}
-              </option>
-            </select>
+                <span class="block truncate">{{ selectedYear }}</span>
+                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                  <IconHeroiconsArrowRight20Solid class="h-4 w-4 rotate-90 text-gray-400" />
+                </span>
+              </ListboxButton>
+              <transition
+                enter-active-class="transition duration-200 ease-out"
+                enter-from-class="translate-y-1 opacity-0"
+                enter-to-class="translate-y-0 opacity-100"
+                leave-active-class="transition duration-150 ease-in"
+                leave-from-class="translate-y-0 opacity-100"
+                leave-to-class="translate-y-1 opacity-0"
+              >
+                <ListboxOptions
+                  class="absolute right-0 z-30 mt-2 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-sm shadow-lg ring-1 ring-secondary/40 focus:outline-none"
+                >
+                  <ListboxOption
+                    v-for="option in yearOptions"
+                    :key="option.value"
+                    v-slot="{ active, selected }"
+                    :value="option.value"
+                    as="template"
+                  >
+                    <li
+                      :class="[
+                        active ? 'bg-secondary/10 text-primary' : 'text-gray-900',
+                        'cursor-pointer select-none px-3 py-2',
+                      ]"
+                    >
+                      <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
+                        {{ option.label }}
+                      </span>
+                    </li>
+                  </ListboxOption>
+                </ListboxOptions>
+              </transition>
+            </Listbox>
           </div>
           <UiAppButton
             to="/event"
             variant="primary"
             size="sm"
-            class="self-start shrink-0 lg:w-auto"
+            class="flex-1 sm:flex-none sm:w-auto"
             :icon="IconHeroiconsArrowRight20Solid"
           >
-            Jelajah Semua Event
+            <span class="hidden sm:inline">Jelajah Semua Event</span>
+            <span class="sm:hidden">Semua Event</span>
           </UiAppButton>
         </div>
       </div>
@@ -184,7 +229,7 @@ const showYearSelector = computed(() => availableYears.value.length > 1)
           >
             <h3 class="flex items-center gap-3 text-lg font-bold text-primary">
               <IconMdiChartDonut class="h-6 w-6 text-secondary" />
-              Statistik {{ currentYear }}
+              Statistik {{ selectedYear }}
             </h3>
             <div class="mt-4 space-y-4">
               <div

@@ -23,6 +23,8 @@ const extractList = <T>(payload: ApiListResponse<T> | null): T[] => {
 }
 
 export const useHomepageData = () => {
+  const { currentYear } = useCurrentYear()
+
   const {
     fetchLatestEvents,
     fetchEventsByType,
@@ -53,7 +55,6 @@ export const useHomepageData = () => {
         fetchResponsiveBanners('banner_main'),
         fetchResponsiveBanners('sidebar_1'),
         fetchResponsiveBanners('sidebar_2'),
-        fetchCalendarStats(), // Fetch calendar stats (count per month)
       ])
 
       const latestEvents = results[0].status === 'fulfilled' ? results[0].value : null
@@ -75,17 +76,38 @@ export const useHomepageData = () => {
         results[9].status === 'fulfilled'
           ? (results[9].value as ResponsiveAdBanners)
           : { desktop: [], mobile: [] }
-      const calendarStatsResult = results[10].status === 'fulfilled' ? results[10].value : null
-
       const ctaBanner =
         extractList<AdBanner>(ctaBannerResult as ApiListResponse<AdBanner>).length > 0
           ? extractList<AdBanner>(ctaBannerResult as ApiListResponse<AdBanner>)[0]
           : null
 
+      const calendarYears = Array.from(
+        new Set([currentYear.value - 1, currentYear.value, currentYear.value + 1].filter(year => year > 0)),
+      )
+
+      const calendarStatsResponses = await Promise.allSettled(
+        calendarYears.map(async year => {
+          const stats = await fetchCalendarStats(year)
+          return {
+            year,
+            stats: stats?.data && typeof stats.data === 'object' ? stats.data : {},
+          }
+        }),
+      )
+
+      const calendarStatsByYear: Record<number, Record<number, number>> = {}
+      calendarStatsResponses.forEach(result => {
+        if (result.status === 'fulfilled') {
+          calendarStatsByYear[result.value.year] = result.value.stats
+        }
+      })
+
+      const fallbackYear = calendarYears.includes(currentYear.value)
+        ? currentYear.value
+        : calendarYears[0]
+
       const calendarStats =
-        calendarStatsResult?.data && typeof calendarStatsResult.data === 'object'
-          ? calendarStatsResult.data
-          : {}
+        (fallbackYear !== undefined ? calendarStatsByYear[fallbackYear] : undefined) ?? {}
 
       const eventsByType: Record<string, Event[]> = {}
       const cleanEventTypes = extractList<EventType>(eventTypes as ApiListResponse<EventType>)
@@ -147,6 +169,7 @@ export const useHomepageData = () => {
         eventsByType,
         eventsByProvince,
         calendarStats,
+        calendarStatsByYear,
       }
     },
     {
@@ -210,6 +233,11 @@ export const useHomepageData = () => {
     ),
     calendarStats: computed(
       () => (homepageData.value?.calendarStats as Record<number, number>) ?? {}
+    ),
+    calendarStatsByYear: computed(
+      () =>
+        (homepageData.value?.calendarStatsByYear as Record<number, Record<number, number>>) ??
+        undefined
     ),
   }
 }

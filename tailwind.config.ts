@@ -57,7 +57,7 @@ const config: Config = {
             fontSize: '1rem',
             '*, ::before, ::after': {
               borderColor: theme('colors.secondary.200'),
-            },
+  },
             p: {
               color: theme('colors.gray.600'),
               marginTop: '1em',

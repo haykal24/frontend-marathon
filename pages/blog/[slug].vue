@@ -42,6 +42,26 @@ const { data: postResponse, error: postError } = await useAsyncData<{ data: Blog
 )
 
 const post = computed(() => postResponse.value?.data ?? null)
+const $img = useImage()
+
+const buildImageUrl = (
+  src?: string | null,
+  modifiers: Record<string, number | string> = {},
+) => {
+  if (!src) return null
+  return $img(src, {
+    format: 'webp',
+    quality: 80,
+    ...modifiers,
+  })
+}
+
+const blogBannerImage = computed(() =>
+  buildImageUrl(post.value?.banner, { width: 1200, height: 630 }),
+)
+
+const getRelatedBannerImage = (src?: string | null) =>
+  buildImageUrl(src, { width: 160, height: 160 })
 
 if (postError.value || !post.value) {
   throw createError({ statusCode: 404, statusMessage: 'Artikel tidak ditemukan', fatal: true })
@@ -261,14 +281,17 @@ const shareX = () => {
             <div class="rounded-2xl border border-secondary/30 bg-white shadow-sm overflow-hidden">
               <!-- Thumbnail with Category Overlay -->
               <figure class="relative overflow-hidden">
-                <NuxtImg
-                  v-if="post.banner"
-                  :src="post.banner"
+                <img
+                  v-if="blogBannerImage"
+                  :src="blogBannerImage"
                   :alt="post.title"
-                  format="webp"
-                  loading="lazy"
                   class="h-full w-full max-h-[440px] object-cover"
-                />
+                  width="1200"
+                  height="630"
+                  loading="lazy"
+                  decoding="async"
+                  fetchPriority="low"
+                >
                 <div
                   v-else
                   class="flex h-[260px] w-full items-center justify-center bg-gradient-to-br from-primary via-primary/80 to-black text-white sm:h-[320px]"
@@ -437,14 +460,17 @@ const shareX = () => {
                   class="group flex gap-3 rounded-xl border border-secondary/30 bg-white/70 p-2 transition hover:border-secondary/60 hover:bg-secondary/5"
                 >
                   <div class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-secondary/10">
-                    <NuxtImg
-                      v-if="related.banner"
-                      :src="related.banner"
+                    <img
+                      v-if="getRelatedBannerImage(related.banner)"
+                      :src="getRelatedBannerImage(related.banner) ?? undefined"
                       :alt="related.title"
                       class="h-full w-full object-cover transition group-hover:scale-105"
-                      format="webp"
+                      width="160"
+                      height="160"
                       loading="lazy"
-                    />
+                      decoding="async"
+                      fetchPriority="low"
+                    >
                     <div
                       v-else
                       class="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary via-primary/60 to-black text-xs text-white font-semibold"

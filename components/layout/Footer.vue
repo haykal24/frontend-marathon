@@ -223,6 +223,8 @@ const getSocialHoverClasses = (label: string) => {
               :src="footerLogo"
               :alt="siteName"
               class="h-16 w-auto"
+              :width="240"
+              :height="80"
               format="webp"
               loading="lazy"
             />
@@ -231,6 +233,8 @@ const getSocialHoverClasses = (label: string) => {
                 src="/logo.png"
                 alt="indonesiamarathon.com"
                 class="h-16 w-auto"
+                :width="240"
+                :height="80"
                 format="webp"
                 loading="lazy"
               />

@@ -51,6 +51,9 @@ const promoBannersMobile = computed<AdBanner[]>(() => {
   return combined.length > 0 ? combined : promoBanners.value
 })
 const calendarStats = computed<Record<number, number>>(() => homepage.calendarStats.value ?? {})
+const calendarStatsByYear = computed<
+  Record<number, Record<number, number>> | undefined
+>(() => homepage.calendarStatsByYear.value)
 
 defineExpose({
   pending,
@@ -63,6 +66,7 @@ defineExpose({
   latestEvents,
   provinces,
   calendarStats,
+  calendarStatsByYear,
   blogPosts,
   ctaBanner,
 })
@@ -147,7 +151,10 @@ defineExpose({
       />
 
       <!-- Calendar Section -->
-      <SectionsCalendarSection :stats="calendarStats" />
+      <SectionsCalendarSection
+        :stats="calendarStats"
+        :stats-by-year="calendarStatsByYear"
+      />
 
       <!-- CTA Section -->
       <SectionsCtaSection :banner="ctaBanner" />

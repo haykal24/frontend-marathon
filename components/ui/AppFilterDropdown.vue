@@ -14,10 +14,12 @@ interface Props {
   options: Option[]
   placeholder: string
   multiple?: boolean
+  buttonClass?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   multiple: false,
+  buttonClass: '',
 })
 
 const emit = defineEmits<{
@@ -69,7 +71,10 @@ const handleChange = (value: string | number) => {
   >
     <div class="relative w-full">
       <ListboxButton
-        class="relative w-full cursor-default rounded-lg border border-secondary/60 bg-white py-2.5 pl-3 pr-10 text-left h-10 focus:outline-none focus-visible:border-secondary focus-visible:ring-2 focus-visible:ring-secondary/20 sm:text-sm"
+        :class="[
+          'relative w-full cursor-default rounded-lg border border-secondary/60 bg-white py-2.5 pl-3 pr-10 text-left h-10 focus:outline-none focus-visible:border-secondary focus-visible:ring-2 focus-visible:ring-secondary/20 sm:text-sm',
+          props.buttonClass,
+        ]"
       >
         <span class="block truncate">{{ displayLabel }}</span>
         <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
@@ -127,7 +132,10 @@ const handleChange = (value: string | number) => {
   >
     <div class="relative w-full">
       <ListboxButton
-        class="relative w-full cursor-default rounded-lg border border-secondary/60 bg-white py-2.5 pl-3 pr-10 text-left h-10 focus:outline-none focus-visible:border-secondary focus-visible:ring-2 focus-visible:ring-secondary/20 sm:text-sm"
+        :class="[
+          'relative w-full cursor-default rounded-lg border border-secondary/60 bg-white py-2.5 pl-3 pr-10 text-left h-10 focus:outline-none focus-visible:border-secondary focus-visible:ring-2 focus-visible:ring-secondary/20 sm:text-sm',
+          props.buttonClass,
+        ]"
       >
         <span class="block truncate">{{ displayLabel }}</span>
         <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">

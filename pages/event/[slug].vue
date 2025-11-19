@@ -97,6 +97,26 @@ const pillarKeyword = computed(() => {
 
 // --- Computed Event (Type-safe for template) ---
 const eventData = computed<Event>(() => event.value as Event)
+const $img = useImage()
+
+const buildImageUrl = (
+  src?: string | null,
+  modifiers: Record<string, number | string> = {}
+) => {
+  if (!src) return null
+  return $img(src, {
+    format: 'webp',
+    quality: 80,
+    ...modifiers,
+  })
+}
+
+const eventPosterImage = computed(() =>
+  buildImageUrl(eventData.value?.poster_webp_url || eventData.value?.image, {
+    width: 720,
+    height: 720,
+  }),
+)
 
 // --- Breadcrumb Items ---
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
@@ -539,17 +559,19 @@ const allContactItems = computed(() => {
           <div class="sticky top-24 space-y-6">
             <!-- Event Thumbnail (Full Width, No Padding) -->
             <div
-              v-if="eventData.poster_webp_url || eventData.image"
+              v-if="eventPosterImage"
               class="rounded-2xl overflow-hidden border border-secondary"
             >
-              <NuxtImg
-                :src="eventData.poster_webp_url || eventData.image || undefined"
+              <img
+                :src="eventPosterImage"
                 :alt="eventData.title"
                 class="w-full h-auto object-cover"
-                format="webp"
+                width="720"
+                height="720"
                 loading="lazy"
-                sizes="(max-width: 1024px) 100vw, 33vw"
-              />
+                decoding="async"
+                fetchPriority="low"
+              >
             </div>
 
             <!-- Registration CTA -->

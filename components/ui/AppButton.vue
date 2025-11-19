@@ -88,9 +88,9 @@ const isExternal = computed(() => Boolean(sanitizedTo.value && props.external))
 const componentTag = computed(() => (isExternal.value ? 'a' : 'button'))
 
 const sizeClasses: Record<typeof props.size, string> = {
-  sm: 'px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em]',
-  md: 'px-5 py-2 text-sm font-semibold',
-  lg: 'px-6 py-2 text-base font-semibold',
+  sm: 'px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em]',
+  md: 'px-5 py-2.5 text-sm font-semibold',
+  lg: 'px-6 py-3 text-base font-semibold',
 }
 
 const variantClasses: Record<typeof props.variant, string> = {

@@ -25,6 +25,22 @@ const { fetchResponsiveBanners } = useAdBanners()
 
 // --- Data & Filtering ---
 const posts = ref<BlogPost[]>([])
+const $img = useImage()
+
+const buildImageUrl = (
+  src?: string | null,
+  modifiers: Record<string, number | string> = {},
+) => {
+  if (!src) return null
+  return $img(src, {
+    format: 'webp',
+    quality: 80,
+    ...modifiers,
+  })
+}
+
+const getPostCardImage = (src?: string | null) =>
+  buildImageUrl(src, { width: 256, height: 256 })
 const categories = ref<BlogCategory[]>([])
 const currentPage = ref(1)
 const lastPage = ref(1)
@@ -282,13 +298,17 @@ const loadMore = async () => {
                 <!-- Post Image -->
                 <div class="flex-shrink-0 w-32 h-32 rounded-xl overflow-hidden bg-gray-100">
                   <template v-if="post.banner">
-                    <NuxtImg
-                      :src="post.banner"
+                    <img
+                      v-if="getPostCardImage(post.banner)"
+                      :src="getPostCardImage(post.banner) ?? undefined"
                       :alt="post.title"
                       class="w-full h-full object-cover"
-                      format="webp"
+                      width="256"
+                      height="256"
                       loading="lazy"
-                    />
+                      decoding="async"
+                      fetchPriority="low"
+                    >
                   </template>
                   <template v-else>
                     <div
