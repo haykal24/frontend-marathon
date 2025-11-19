@@ -385,8 +385,15 @@ const allContactItems = computed(() => {
             </h2>
 
             <!-- Description -->
-            <p class="lg:text-base text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-              {{ eventData.description }}
+            <div v-if="eventData.description" class="rich-content">
+              <!-- eslint-disable-next-line vue/no-v-html -->
+              <div v-html="eventData.description" />
+            </div>
+            <p
+              v-else
+              class="lg:text-base text-sm text-gray-500 leading-relaxed"
+            >
+              Deskripsi event belum tersedia.
             </p>
 
             <!-- Divider -->

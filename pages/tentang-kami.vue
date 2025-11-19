@@ -95,7 +95,7 @@ useSchemaOrg([
           </div>
           <div
             v-if="renderedContent"
-            class="prose prose-lg mt-8 max-w-none text-gray-700"
+            class="rich-content mt-8"
             v-html="renderedContent"
           />
           <!-- eslint-enable vue/no-v-html -->

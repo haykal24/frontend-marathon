@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useImage } from '#imports'
 import type { Province } from '~/types/event'
 import { useCurrentYear } from '~/composables/useCurrentYear'
 
@@ -6,9 +8,21 @@ interface Props {
   provinces: Province[]
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 const { currentYear } = useCurrentYear()
+const $img = useImage()
+const provinces = computed(() => props.provinces ?? [])
+
+const buildProvinceImage = (src?: string | null) => {
+  if (!src) return ''
+  return $img(src, {
+    width: 1200,
+    height: 800,
+    format: 'webp',
+    quality: 80,
+  })
+}
 </script>
 
 <template>
@@ -37,14 +51,15 @@ const { currentYear } = useCurrentYear()
           :to="`/event?province=${province.slug}`"
           class="group relative h-64 overflow-hidden rounded-2xl bg-primary"
         >
-          <NuxtImg
+          <img
             v-if="province.thumbnail"
-            :src="province.thumbnail"
+            :src="buildProvinceImage(province.thumbnail)"
             :alt="province.name"
             class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-            format="webp"
-            sizes="(max-width: 768px) 100vw, 33vw"
             loading="lazy"
+            decoding="async"
+            width="1200"
+            height="800"
           />
           <div
             v-else

@@ -394,9 +394,7 @@ const shareX = () => {
                 <div class="border-t border-secondary/50" />
 
                 <!-- Article Content -->
-                <article
-                  class="text-sm lg:text-base prose prose-base max-w-none text-gray-700 prose-headings:text-primary prose-a:text-secondary prose-blockquote:border-secondary/40 prose-img:rounded-2xl prose-ol:list-decimal prose-ul:list-disc"
-                >
+                <article class="rich-content">
                   <!-- eslint-disable-next-line vue/no-v-html -->
                   <div v-html="post.content" />
                 </article>

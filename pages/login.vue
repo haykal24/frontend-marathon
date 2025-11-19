@@ -4,6 +4,7 @@ import { useRoute, useRouter } from '#app'
 import { useOtp } from '~/composables/useOtp'
 import { useSeoMetaDynamic } from '~/composables/useSeoMeta'
 import { useSiteSettings } from '~/composables/useSiteSettings'
+import { useImage } from '#imports'
 import IconHeroiconsArrowLeft20Solid from '~icons/heroicons/arrow-left-20-solid'
 import IconHeroiconsDevicePhoneMobile20Solid from '~icons/heroicons/device-phone-mobile-20-solid'
 import IconHeroiconsUserPlus20Solid from '~icons/heroicons/user-plus-20-solid'
@@ -19,6 +20,7 @@ useSeoMetaDynamic({
 })
 
 const route = useRoute()
+const $img = useImage()
 const phone = ref('')
 const code = ref('')
 const name = ref('')
@@ -39,6 +41,26 @@ const authImage = computed(() =>
 )
 
 const logo = computed(() => siteSettings.getImage('logo', null) ?? '/logo.png')
+
+const buildAuthImage = (src?: string | null, options: { width?: number; height?: number } = {}) => {
+  if (!src) return ''
+  return $img(src, {
+    width: options.width ?? 960,
+    height: options.height ?? 1080,
+    format: 'webp',
+    quality: 80,
+  })
+}
+
+const buildLogoImage = (src?: string | null) => {
+  if (!src) return '/logo.png'
+  return $img(src, {
+    width: 320,
+    height: 120,
+    format: 'webp',
+    quality: 80,
+  })
+}
 
 const onSend = async () => {
   errorMessage.value = null
@@ -173,19 +195,16 @@ const onVerifyLogin = async () => {
         <div class="grid grid-cols-1 lg:grid-cols-2 h-full min-h-0">
           <!-- Left: Image (neutral surface, scrollable when overflow) -->
           <div class="relative hidden lg:block min-h-0 overflow-y-auto">
-            <NuxtImg
+            <img
               v-if="authImage"
-              :src="authImage"
+              :src="buildAuthImage(authImage)"
               alt="Auth Illustration"
               class="h-full w-full object-cover"
-              format="webp"
-              sizes="50vw"
-              preload
-              loading="eager"
-              fetch-priority="high"
               width="960"
               height="1080"
-              densities="x1"
+              loading="eager"
+              decoding="async"
+              fetchpriority="high"
             />
             <div
               v-else
@@ -218,11 +237,12 @@ const onVerifyLogin = async () => {
                     to="/"
                     class="inline-flex items-center justify-center px-3 py-2"
                   >
-                    <NuxtImg
-                      :src="logo"
+                    <img
+                      :src="buildLogoImage(logo)"
                       alt="Logo"
                       class="h-16 w-auto"
-                      format="webp"
+                      loading="lazy"
+                      decoding="async"
                     />
                   </NuxtLink>
                 </div>

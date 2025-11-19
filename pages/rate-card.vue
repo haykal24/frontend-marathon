@@ -211,7 +211,7 @@ const hasPackages = computed(() => ratePackages.value.length > 0)
             <!-- eslint-disable-next-line vue/no-v-html -->
             <div
               v-if="rateCardHeroContent"
-              class="text-sm lg:text-base prose prose-sm lg:prose-base max-w-none text-gray-600"
+              class="rich-content text-sm lg:text-base"
               v-html="rateCardHeroContent"
             />
             <div

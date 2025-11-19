@@ -42,8 +42,32 @@ export const useStaticPage = async (slug: string, options?: UseStaticPageOptions
       siteSettings.getSetting<string>('twitter_handle', '@indonesiamarathon') ?? '@indonesiamarathon'
     const tiktokHandle =
       siteSettings.getSetting<string>('tiktok_handle', '@indonesiamarathon') ?? '@indonesiamarathon'
-    const lastUpdated =
-      siteSettings.getSetting<string>('privacy_last_updated', new Date().toISOString()) ?? new Date().toISOString()
+    const lastUpdatedRaw =
+      siteSettings.getSetting<string>('privacy_last_updated', new Date().toISOString()) ??
+      new Date().toISOString()
+
+    const formatLastUpdated = (value: string) => {
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) {
+        return value
+      }
+
+      try {
+        const formatted = new Intl.DateTimeFormat('id-ID', {
+          timeZone: 'Asia/Jakarta',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+        }).format(date)
+
+        return `${formatted} WIB`
+      } catch {
+        return `${date.toLocaleDateString('id-ID')} ${date.toLocaleTimeString('id-ID')} WIB`
+      }
+    }
 
     return {
       site_name: siteName,
@@ -55,7 +79,7 @@ export const useStaticPage = async (slug: string, options?: UseStaticPageOptions
       facebook_url: facebookUrl,
       twitter_handle: twitterHandle,
       tiktok_handle: tiktokHandle,
-      last_updated: lastUpdated,
+      last_updated: formatLastUpdated(lastUpdatedRaw),
       current_year: String(currentYear.value),
     }
   })
@@ -79,22 +103,26 @@ export const useStaticPage = async (slug: string, options?: UseStaticPageOptions
 
   const { data, pending, error, refresh } = await useAsyncData(`static-page-${slug}`, fetchPage, { server: true })
 
-  const page = computed<StaticPageResponse | null>(() => data.value ?? null)
-  const title = computed(() => page.value?.title ?? defaultTitle)
-  const seoTitle = computed(() => page.value?.seo_title ?? `${title.value} - ${basePlaceholders.value.site_name}`)
-  const seoDescription = computed(() => page.value?.seo_description ?? defaultDescription)
-
-  const renderedContent = computed<string | null>(() => {
-    if (!page.value?.content) {
-      return null
-    }
-    let content = page.value.content
+  const applyPlaceholders = (input?: string | null): string | null => {
+    if (!input) return input ?? null
+    let content = input
     Object.entries(mergedPlaceholders.value).forEach(([key, value]) => {
       const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'gi')
       content = content.replace(regex, value)
     })
     return content
-  })
+  }
+
+  const page = computed<StaticPageResponse | null>(() => data.value ?? null)
+  const title = computed(() => applyPlaceholders(page.value?.title) ?? defaultTitle)
+  const seoTitle = computed(
+    () => applyPlaceholders(page.value?.seo_title) ?? `${title.value} - ${basePlaceholders.value.site_name}`
+  )
+  const seoDescription = computed(
+    () => applyPlaceholders(page.value?.seo_description ?? defaultDescription) ?? defaultDescription
+  )
+
+  const renderedContent = computed<string | null>(() => applyPlaceholders(page.value?.content))
 
   return {
     page,

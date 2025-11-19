@@ -71,11 +71,11 @@
 
 @layer components {
   .badge-modern {
-    @apply inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-xs font-semibold uppercase tracking-wider text-primary shadow-sm transition-all hover:shadow-md hover:brightness-105;
+    @apply inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-xs font-semibold uppercase tracking-wider text-primary transition-all hover:brightness-105;
   }
 
   .badge-label {
-    @apply inline-flex items-center gap-2 bg-secondary px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary shadow-md;
+    @apply inline-flex items-center gap-2 bg-secondary px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary;
   }
 
   .layout-container {
@@ -147,6 +147,10 @@
 
   .page-header-overlay .breadcrumb-container span.current {
     @apply text-secondary;
+  }
+
+  .rich-content {
+    @apply text-sm lg:text-base prose prose-base sm:prose-lg max-w-none text-gray-700;
   }
 }
 

@@ -119,7 +119,7 @@ const formatSimpleDate = (value?: string | null) => {
                     </dt>
                     <dd
                       v-if="event?.description"
-                      class="mt-1 text-sm text-gray-900 prose prose-sm max-w-none"
+                      class="mt-1 rich-content"
                       v-html="event.description"
                     />
                     <dd

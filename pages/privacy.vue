@@ -96,7 +96,7 @@ useSchemaOrg([
           </div>
           <div
             v-else
-            class="prose prose-gray max-w-none text-gray-700 leading-relaxed"
+            class="rich-content"
             v-html="renderedContent ?? ''"
           />
         </div>
