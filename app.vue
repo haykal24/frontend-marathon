@@ -7,6 +7,7 @@
 
 <script setup lang="ts">
 import { useSchemaOrg, defineOrganization } from '#imports'
+import { useSplideAriaCleanup } from '~/composables/useSplideAriaCleanup'
 
 const config = useRuntimeConfig()
 const siteConfig = useSiteConfig()
@@ -65,6 +66,8 @@ useSchemaOrg([
     ],
   }),
 ])
+
+useSplideAriaCleanup()
 
 useHead({
   // 1. TEMPLATE JUDUL (SANGAT PENTING UNTUK SEO)

@@ -485,7 +485,7 @@ const loadMore = async () => {
                   Subscribe
                 </UiAppButton>
               </div>
-              <p class="mt-3 text-[11px] text-gray-400">
+              <p class="mt-3 text-[11px] text-gray-500">
                 Kami kirim 1x seminggu. Gratis. Bisa berhenti kapan saja.
               </p>
             </div>

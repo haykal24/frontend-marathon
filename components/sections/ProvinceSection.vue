@@ -44,7 +44,7 @@ const buildProvinceImage = (src?: string | null) => {
         </p>
       </div>
 
-      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <NuxtLink
           v-for="province in provinces"
           :key="province.id"

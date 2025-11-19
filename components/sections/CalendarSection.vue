@@ -154,7 +154,7 @@ const showYearSelector = computed(() => availableYears.value.length > 1)
               :class="
                 month.eventCount > 0
                   ? 'border-secondary bg-surface'
-                  : 'border-secondary/40 bg-gray-100/70'
+                  : 'border-gray bg-surface/30'
               "
             >
               <div>
@@ -169,8 +169,8 @@ const showYearSelector = computed(() => availableYears.value.length > 1)
                 class="mt-3 text-xs font-semibold uppercase tracking-wider"
                 :class="[
                   month.eventCount > 0
-                    ? 'text-gray-500 group-hover:text-secondary'
-                    : 'text-gray-400',
+                    ? 'text-gray-600 group-hover:text-secondary'
+                    : 'text-gray-600',
                 ]"
               >
                 {{ month.eventCount }} Event
@@ -221,9 +221,9 @@ const showYearSelector = computed(() => availableYears.value.length > 1)
 
       <div
         v-else
-        class="rounded-2xl border border-dashed border-secondary/40 bg-surface px-6 py-10 text-center text-gray-500"
+        class="rounded-2xl border border-dashed border-secondary/40 bg-surface px-6 py-10 text-center text-gray-600"
       >
-        <IconHeroiconsCalendarDays20Solid class="mx-auto h-10 w-10 text-gray-400" />
+        <IconHeroiconsCalendarDays20Solid class="mx-auto h-10 w-10 text-gray-500" />
         <p class="mt-4 text-base font-medium">
           Belum ada event terjadwal saat ini.
         </p>

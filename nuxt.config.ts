@@ -5,11 +5,8 @@ import IconsResolver from 'unplugin-icons/resolver'
 import Components from 'unplugin-vue-components/vite'
 
 export default defineNuxtConfig({
-  compatibilityDate: '2025-11-18',
+  compatibilityDate: '2024-11-19',
   devtools: { enabled: false },
-  // nitro: {
-  //   compatibilityDate: '2025-11-14',
-  // },
 
   experimental: {
     asyncEntry: true,
@@ -17,6 +14,7 @@ export default defineNuxtConfig({
     crossOriginPrefetch: true,
     viewTransition: true,
     componentIslands: true,
+    headNext: true,
     defaults: {
       nuxtLink: {
         prefetchOn: {
@@ -28,32 +26,25 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
-    // Homepage: SWR (1 jam) - Data dari backend API
+    '/**': {
+      headers: {
+        'X-Frame-Options': 'SAMEORIGIN',
+        'X-Content-Type-Options': 'nosniff',
+        'X-XSS-Protection': '1; mode=block',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+      },
+    },
     '/': { swr: 3600 },
-
-    // Event Listing: SWR (30 menit) - Data bisa update tapi tidak terlalu sering
     '/event': { swr: 1800 },
-
-    // Event Detail: SWR (10 menit) - Bisa ada update status, harga, dll
     '/event/**': { swr: 600 },
-
-    // Blog Listing: SWR (1 jam) - Konten blog tidak terlalu sering update
     '/blog': { swr: 3600 },
-
-    // Blog Detail: SWR (1 jam) - Artikel jarang diupdate setelah publish
-    '/blog/**': { swr: 3600 },
-
-    // Direktori: SWR (2 jam) - Data vendor/komunitas relatif stabil
+    '/blog/**': { swr: 86400 },
     '/ekosistem/**': { swr: 7200 },
-
-    // Static Pages: SWR (1 jam) - Data dari backend tapi jarang berubah
-    '/tentang-kami': { swr: 3600 },
-    '/kontak': { swr: 3600 },
+    '/tentang-kami': { swr: 86400 },
+    '/kontak': { swr: 86400 },
     '/rate-card': { swr: 3600 },
-
-    // Admin/API routes: No SSR (client-side only)
     '/admin/**': { ssr: false },
-    '/api/**': { ssr: false },
+    '/api/**': { ssr: false, cors: true },
   },
 
   // Site Meta Configuration (Centralized for @nuxtjs/seo)
@@ -81,7 +72,8 @@ export default defineNuxtConfig({
       Components({
         resolvers: [
           IconsResolver({
-            prefix: 'Icon', // Menggunakan <Icon...>
+            prefix: 'Icon',
+            enabledCollections: ['mdi', 'heroicons', 'logos'],
           }),
         ],
         dts: true,
@@ -90,26 +82,14 @@ export default defineNuxtConfig({
         autoInstall: true,
         compiler: 'vue3',
         defaultClass: 'inline-block',
+        scale: 1.2,
       }),
     ],
-    optimizeDeps: {
-      include: [
-        '@iconify/vue',
-      ],
-    },
-    ssr: {
-      noExternal: [
-        '@iconify/vue',
-        'unplugin-icons',
-      ],
-    },
   },
 
   // Runtime Config (API Base URL dari environment variables)
   runtimeConfig: {
     apiBase: process.env.NUXT_API_BASE || 'http://localhost:8000/api/v1',
-    siteUrl: process.env.NUXT_SITE_URL || 'http://localhost:3000',
-    appName: process.env.NUXT_APP_NAME || 'Marathon Indonesia',
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api/v1',
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
@@ -119,27 +99,12 @@ export default defineNuxtConfig({
 
   // Sitemap Configuration (@nuxtjs/seo with dynamic backend API)
   sitemap: {
-    // Manual chunking dengan sources terpisah per kategori
-    // Backend mengirim field `_sitemap` dan frontend filter berdasarkan itu
-    // Result: /pages-sitemap.xml, /events-sitemap.xml, /blog-sitemap.xml, /categories-sitemap.xml
-    
-    // Define manual sitemaps dengan sources terpisah
-    sitemaps: {
-      pages: {
-        sources: ['/api/__sitemap__/pages-urls'],
-      },
-      events: {
-        sources: ['/api/__sitemap__/events-urls'],
-      },
-      blog: {
-        sources: ['/api/__sitemap__/blog-urls'],
-      },
-      categories: {
-        sources: ['/api/__sitemap__/categories-urls'],
-      },
-    },
-    
-    // General options
+    sources: [
+      '/api/__sitemap__/pages-urls',
+      '/api/__sitemap__/events-urls',
+      '/api/__sitemap__/blog-urls',
+      '/api/__sitemap__/categories-urls',
+    ],
     gzip: true,
     xsl: false,
     discoverImages: true,
@@ -166,7 +131,7 @@ export default defineNuxtConfig({
     breadcrumbs: true,
     // Enable Link Checker
     linkChecker: {
-      enabled: true,
+      enabled: process.env.NODE_ENV !== 'production',
       failOnError: false, // Don't fail build on broken links, just warn
     },
   },
@@ -193,13 +158,13 @@ export default defineNuxtConfig({
   image: {
     provider: 'ipx',
     quality: 80,
-    format: ['webp'],
+    format: ['webp', 'avif'],
     domains: [
       'localhost',
       'dasbor.indonesiamarathon.com',
+      'indonesiamarathon.com',
     ],
-    // Perbaiki srcset generation - hanya generate 1x density untuk menghindari error
-    densities: [1],
+    densities: [1, 2],
     screens: {
       xs: 320,
       sm: 640,
@@ -215,14 +180,13 @@ export default defineNuxtConfig({
 
   // Partytown Configuration (untuk third-party scripts)
   partytown: {
-    forward: ['dataLayer.push'],
-    lib: '/~partytown/',
+    forward: ['dataLayer.push', 'fbq'],
   },
 
   // TailwindCSS Configuration
   tailwindcss: {
     cssPath: '~/assets/css/main.css',
-    exposeConfig: true,
+    exposeConfig: false,
   },
 
   // Fontaine Configuration (Font Optimization)
@@ -256,6 +220,10 @@ export default defineNuxtConfig({
           crossorigin: 'anonymous',
         },
         {
+          rel: 'preconnect',
+          href: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000',
+        },
+        {
           rel: 'stylesheet',
           href: 'https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800&family=Fira+Sans:wght@300;400;500;600;700&display=swap',
         },
@@ -270,10 +238,11 @@ export default defineNuxtConfig({
 
   // Nitro Configuration
   nitro: {
-    // Bundle dependencies (Nuxt 4 bundles automatically, but ensure node_modules are included)
+    compressPublicAssets: true,
     experimental: {
       wasm: true,
     },
+    timing: false,
     prerender: {
       // Don't fail build on prerender errors (allow build to continue)
       failOnError: false,
