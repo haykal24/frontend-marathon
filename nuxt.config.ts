@@ -168,8 +168,7 @@ export default defineNuxtConfig({
   // Hanya block path yang memang ada di frontend dan perlu dilindungi
   robots: {
     disallow: [
-      '/api/',       // API endpoints (tidak ada, tapi untuk jaga-jaga)
-      '/_nuxt/',     // Nuxt internal assets
+      '/_nuxt/',     // Nuxt internal assets (wajib di-block)
       '/mitra/',     // Partner dashboard (private area, memerlukan login)
       '/login',      // Login page (tidak perlu di-index)
     ],

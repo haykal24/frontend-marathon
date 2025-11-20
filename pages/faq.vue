@@ -44,23 +44,8 @@
           </div>
         </div>
 
-        <!-- Loading State -->
-        <div
-          v-if="isLoading"
-          class="space-y-4"
-        >
-          <div
-            v-for="i in 4"
-            :key="i"
-            class="h-24 rounded-2xl border border-secondary/20 bg-white/70 shadow-sm animate-pulse"
-          />
-        </div>
-
         <!-- FAQ Accordion -->
-        <div
-          v-else
-          class="space-y-4"
-        >
+        <div class="space-y-4">
           <div
             v-for="(faq, index) in filteredFAQs"
             :key="faq.id"
@@ -138,6 +123,30 @@ useSeoMetaDynamic({
 
 // SEO: OG Image menggunakan fallback og.webp (static page)
 
+// State
+const selectedCategory = ref<string>('marathon')
+const expandedIndex = ref<number | null>(0)
+
+// Fetch data di server-side untuk SEO
+const { data: faqsData } = await useAsyncData('faqs-all', () => fetchFAQs({ per_page: 100 }))
+const { data: categoriesData } = await useAsyncData('faq-categories', () => fetchFAQCategories())
+
+const faqs = computed(() => faqsData.value?.data ?? [])
+const categories = computed(() => {
+  const cats = categoriesData.value?.data ?? []
+  return cats.filter((cat): cat is string => typeof cat === 'string' && cat.length > 0)
+})
+
+// Set default category if not in list
+if (categories.value.length > 0 && !categories.value.includes(selectedCategory.value)) {
+  selectedCategory.value = categories.value[0] ?? 'marathon'
+}
+
+// Computed
+const filteredFAQs = computed(() =>
+  faqs.value.filter(faq => !selectedCategory.value || faq.category === selectedCategory.value)
+)
+
 // SEO: Schema.org FAQPage untuk rich results di Google
 // CRITICAL: FAQPage schema harus memiliki mainEntity dengan Question/Answer array
 // untuk memenuhi Google's FAQ rich results requirements
@@ -147,7 +156,7 @@ useSchemaOrg([
     name: 'FAQ - Tanya Jawab Seputar Lari Marathon',
     description: 'Tanya jawab lengkap tentang marathon, pace, fun run, trail run, dan informasi event lari.',
     mainEntity: computed(() =>
-      filteredFAQs.value.map(faq => ({
+      faqs.value.map(faq => ({
         '@type': 'Question',
         name: faq.question,
         acceptedAnswer: {
@@ -158,13 +167,6 @@ useSchemaOrg([
     ),
   }),
 ])
-
-// State
-const faqs = ref<FAQ[]>([])
-const categories = ref<string[]>([])
-const selectedCategory = ref<string>('marathon')
-const expandedIndex = ref<number | null>(0)
-const isLoading = ref(false)
 
 // Header
 const headerBg = computed(
@@ -184,11 +186,6 @@ const breadcrumbItems = computed<BreadcrumbItem[]>(() => [{ text: 'FAQ', link: n
 // SEO: BreadcrumbList Schema.org untuk rich results
 useBreadcrumbSchema(breadcrumbItems)
 
-// Computed
-const filteredFAQs = computed(() =>
-  faqs.value.filter(faq => !selectedCategory.value || faq.category === selectedCategory.value)
-)
-
 // Methods
 const toggleFAQ = (index: number) => {
   expandedIndex.value = expandedIndex.value === index ? null : index
@@ -207,40 +204,4 @@ const formatCategoryName = (cat: string): string => {
   }
   return names[cat] || cat
 }
-
-// Fetch data
-const loadFAQs = async () => {
-  isLoading.value = true
-  try {
-    const response = await fetchFAQs({ per_page: 100 })
-    if (response.success) {
-      faqs.value = response.data
-    }
-  } catch (error) {
-    console.error('Error loading FAQs:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const loadCategories = async () => {
-  try {
-    const response = await fetchFAQCategories()
-    if (response.success) {
-      categories.value = (response.data ?? []).filter(
-        (cat): cat is string => typeof cat === 'string' && cat.length > 0
-      )
-      if (!categories.value.includes(selectedCategory.value) && categories.value.length > 0) {
-        selectedCategory.value = categories.value[0] ?? 'marathon'
-      }
-    }
-  } catch (error) {
-    console.error('Error loading FAQ categories:', error)
-  }
-}
-
-onMounted(() => {
-  loadCategories()
-  loadFAQs()
-})
 </script>

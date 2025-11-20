@@ -169,7 +169,11 @@ if (event.value) {
       startDate: evt.event_date,
       endDate: evt.event_end_date || evt.event_date,
       description: evt.seo_description || evt.description,
-      image: evt.poster_webp_url || evt.image,
+      
+      // FIX: Google Search Console - image field harus ada
+      // Gunakan poster event, fallback ke OG image default
+      image: evt.poster_webp_url || evt.image || `${config.public.siteUrl}/og.webp`,
+      
       location: {
         '@type': 'Place',
         name: evt.location_name,
@@ -180,9 +184,18 @@ if (event.value) {
           addressCountry: 'ID',
         },
       },
+      
+      // Organizer (event organizer/penyelenggara)
       organizer: evt.organizer_name
         ? { '@type': 'Organization', name: evt.organizer_name }
         : undefined,
+      
+      // FIX: Google Search Console - performer field (siapa yang "perform" di event)
+      // Untuk event lari, performer adalah peserta (runners), tapi kita bisa set ke organizer
+      performer: evt.organizer_name
+        ? { '@type': 'Organization', name: evt.organizer_name }
+        : { '@type': 'Organization', name: 'Indonesian Marathon Community' },
+      
       eventStatus: 'https://schema.org/EventScheduled',
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
       url: `${config.public.siteUrl}/event/${slug}`,
