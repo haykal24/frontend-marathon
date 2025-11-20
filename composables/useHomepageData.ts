@@ -37,6 +37,10 @@ export const useHomepageData = () => {
   const { fetchLatestBlogPosts } = useBlogPosts()
   const { fetchBannersBySlot, fetchResponsiveBanners } = useAdBanners()
 
+  // OPTIMASI: Gunakan useState untuk persistent cache di client-side
+  // Cache ini akan bertahan selama session dan instant pada back navigation
+  const cachedHomepageData = useState<any>('homepage-cache', () => null)
+
   const {
     data: homepageData,
     error: _error,
@@ -44,6 +48,11 @@ export const useHomepageData = () => {
   } = useAsyncData(
     'homepage-overview',
     async () => {
+      // OPTIMASI: Gunakan cache jika ada (instant loading untuk back navigation)
+      if (cachedHomepageData.value && import.meta.client) {
+        return cachedHomepageData.value
+      }
+
       const results = await Promise.allSettled([
         fetchLatestEvents(6),
         fetchActiveEventTypes(),
@@ -155,7 +164,7 @@ export const useHomepageData = () => {
       }
 
       // We return the raw results here
-      return {
+      const result = {
         latestEvents,
         eventTypes,
         provinces,
@@ -171,10 +180,36 @@ export const useHomepageData = () => {
         calendarStats,
         calendarStatsByYear,
       }
+
+      // OPTIMASI: Simpan ke cache untuk instant back navigation
+      if (import.meta.client) {
+        cachedHomepageData.value = result
+      }
+
+      return result
     },
     {
       server: true,
       lazy: false,
+      // OPTIMASI: Aggressive client-side caching untuk homepage
+      // Data homepage akan di-cache secara permanen di client-side untuk instant navigation
+      // SWR di routeRules akan handle revalidation di background
+      dedupe: 'defer',
+      getCachedData: (key) => {
+        const nuxtApp = useNuxtApp()
+        
+        // Prioritas cache dari payload (SSR/prerender)
+        if (nuxtApp.payload.data[key] !== undefined) {
+          return nuxtApp.payload.data[key]
+        }
+        
+        // Fallback ke static data
+        if (nuxtApp.static?.data?.[key] !== undefined) {
+          return nuxtApp.static.data[key]
+        }
+        
+        return undefined
+      },
     }
   )
 

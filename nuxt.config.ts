@@ -59,7 +59,8 @@ export default defineNuxtConfig({
   modules: [
     '@nuxtjs/seo', // SEO optimization (meta tags, sitemap, robots, schema-org)
     '@nuxt/image', // Image optimization dengan WebP support
-    '@nuxtjs/fontaine', // Font optimization untuk Saira & Fira Sans
+    '@nuxtjs/fontaine', // Font metric optimization
+    '@nuxt/fonts', // Self-host Saira & Fira Sans
     '@nuxtjs/partytown', // Third-party scripts ke web worker
     '@nuxt/scripts', // Script management
     '@nuxtjs/tailwindcss', // TailwindCSS 4
@@ -220,27 +221,32 @@ export default defineNuxtConfig({
     ],
   },
 
+  // Nuxt Fonts: Self-host Google Fonts untuk skor LCP lebih baik
+  fonts: {
+    defaults: {
+      subsets: ['latin'],
+      display: 'swap',
+      fallbacks: ['system-ui', 'sans-serif'],
+    },
+    families: [
+      {
+        name: 'Saira',
+        weights: ['400', '500', '600', '700', '800'],
+      },
+      {
+        name: 'Fira Sans',
+        weights: ['300', '400', '500', '600', '700'],
+      },
+    ],
+  },
+
   // App Configuration
   app: {
     head: {
-      // Load Google Fonts (Fontaine will optimize them)
       link: [
         {
           rel: 'preconnect',
-          href: 'https://fonts.googleapis.com',
-        },
-        {
-          rel: 'preconnect',
-          href: 'https://fonts.gstatic.com',
-          crossorigin: 'anonymous',
-        },
-        {
-          rel: 'preconnect',
           href: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000',
-        },
-        {
-          rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800&family=Fira+Sans:wght@300;400;500;600;700&display=swap',
         },
       ],
     },

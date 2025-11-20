@@ -51,10 +51,10 @@ const hasValidImage = computed(() => {
 const buildCardImage = (src?: string | null) => {
   if (!src) return ''
   return $img(sanitizeMediaUrl(src), {
-    width: 800,
-    height: 600,
+    width: 640,
+    height: 420,
     format: 'webp',
-    quality: 80,
+    quality: 70,
   })
 }
 </script>

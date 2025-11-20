@@ -1,7 +1,12 @@
 <template>
   <NuxtRouteAnnouncer />
   <NuxtLayout>
-    <NuxtPage />
+    <!-- 
+      OPTIMASI NAVIGASI BACK: 
+      KeepAlive menjaga component state saat navigasi, 
+      mencegah re-render dan refetch data yang sudah di-cache
+    -->
+    <NuxtPage :keepalive="{ max: 10 }" />
   </NuxtLayout>
 </template>
 

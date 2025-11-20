@@ -90,14 +90,17 @@ const sidebarBannerHeightClass = 'min-h-[200px]'
 
 const $img = useImage()
 
-const buildBannerImage = (src?: string | null, options: { width?: number; height?: number } = {}) => {
+const buildBannerImage = (
+  src?: string | null,
+  options: { width?: number; height?: number; quality?: number } = {}
+) => {
   const sanitized = sanitizeMediaUrl(src)
   if (!sanitized) return ''
   return $img(sanitized, {
     width: options.width ?? 1600,
     height: options.height ?? 600,
     format: 'webp',
-    quality: 80,
+    quality: options.quality ?? 75,
   })
 }
 
@@ -168,7 +171,7 @@ defineExpose({
                   >
                     <img
                       v-if="banner.image"
-                      :src="buildBannerImage(banner.image, { width: 1920, height: 640 })"
+                      :src="buildBannerImage(banner.image, { width: 1920, height: 640, quality: 75 })"
                       :alt="banner.name"
                       class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
                       loading="lazy"
@@ -201,7 +204,7 @@ defineExpose({
               >
                 <img
                   v-if="singleMainBanner.image"
-                  :src="buildBannerImage(singleMainBanner.image, { width: 1920, height: 640 })"
+                  :src="buildBannerImage(singleMainBanner.image, { width: 1920, height: 640, quality: 75 })"
                   :alt="singleMainBanner.name"
                   class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
                   loading="lazy"
@@ -257,7 +260,7 @@ defineExpose({
                   >
                     <img
                       v-if="banner.image"
-                      :src="buildBannerImage(banner.image, { width: 900, height: 400 })"
+                      :src="buildBannerImage(banner.image, { width: 900, height: 400, quality: 70 })"
                       :alt="banner.name"
                       class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
                       loading="lazy"
@@ -289,7 +292,7 @@ defineExpose({
               >
                 <img
                   v-if="slot.banners[0]?.image"
-                  :src="buildBannerImage(slot.banners[0]!.image, { width: 900, height: 400 })"
+                  :src="buildBannerImage(slot.banners[0]!.image, { width: 900, height: 400, quality: 70 })"
                   :alt="slot.banners[0]?.name ?? 'Banner Promo'"
                   class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
                   loading="lazy"
@@ -339,7 +342,7 @@ defineExpose({
             >
               <img
                 v-if="banner.image"
-                :src="buildBannerImage(banner.image, { width: 1200, height: 720 })"
+                :src="buildBannerImage(banner.image, { width: 1200, height: 720, quality: 70 })"
                 :alt="banner.name"
                 class="h-72 w-full object-cover transition duration-500 group-hover:scale-[1.02]"
                 loading="lazy"

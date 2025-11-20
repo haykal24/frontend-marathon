@@ -150,6 +150,22 @@ declare module 'nuxt/schema' {
         modifiers?: Record<string, any>
       }
     }
+    // @nuxt/fonts module
+    fonts?: {
+      defaults?: {
+        subsets?: string[]
+        display?: 'auto' | 'block' | 'swap' | 'fallback' | 'optional'
+        fallbacks?: string[]
+        preload?: boolean
+      }
+      families?: Array<{
+        name: string
+        weights?: string[]
+        styles?: Array<'normal' | 'italic'>
+        fallbacks?: string[]
+        preload?: boolean
+      }>
+    }
     // @nuxtjs/partytown module
     partytown?: {
       forward?: string[]

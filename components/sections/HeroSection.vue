@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useImage } from '#imports'
+import { useHead, useImage } from '#imports'
 import type { AdBanner } from '~/types/ad'
 import type { Event } from '~/types/event'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
@@ -64,9 +64,37 @@ const buildHeroImageUrl = (
     width: options.width ?? 1920,
     height: options.height ?? 1080,
     format: 'webp',
-    quality: 80,
+    quality: 75,
   })
 }
+
+const heroPreloadImage = computed(() => {
+  if (heroBanners.value.length > 0 && heroBanners.value[0]?.image) {
+    return buildHeroImageUrl(heroBanners.value[0].image, { width: 1600, height: 900 })
+  }
+
+  const eventWithImage = events.value.find(event => event.image)
+  if (eventWithImage?.image) {
+    return buildHeroImageUrl(eventWithImage.image, { width: 1600, height: 900 })
+  }
+
+  return ''
+})
+
+useHead(() => {
+  if (!heroPreloadImage.value) return {}
+  return {
+    link: [
+      {
+        rel: 'preload',
+        as: 'image',
+        href: heroPreloadImage.value,
+        imagesizes: '100vw',
+        fetchpriority: 'high',
+      },
+    ],
+  }
+})
 </script>
 
 <template>
@@ -74,8 +102,8 @@ const buildHeroImageUrl = (
     <Splide
       v-if="hasHeroContent"
       :options="splideOptions"
-      class="hero-splide h-full"
       :has-track="false"
+      class="hero-splide h-full min-h-[70vh] lg:min-h-0"
     >
       <div class="splide__track h-full">
         <ul class="splide__list h-full">
@@ -142,8 +170,8 @@ const buildHeroImageUrl = (
           </SplideSlide>
 
           <SplideSlide
-            v-for="event in events"
-            :key="event.id"
+            v-for="(event, index) in events"
+            :key="event.id ?? index"
             class="h-full"
           >
             <div
@@ -156,9 +184,9 @@ const buildHeroImageUrl = (
                 class="absolute inset-0 h-full w-full object-cover"
                 width="1920"
                 height="1080"
-                loading="eager"
+                :loading="index === 0 ? 'eager' : 'lazy'"
                 decoding="async"
-                fetchpriority="high"
+                :fetchpriority="index === 0 ? 'high' : 'low'"
               />
               <div
                 v-else
@@ -289,6 +317,23 @@ const buildHeroImageUrl = (
 </template>
 
 <style scoped lang="postcss">
+.hero-splide {
+  min-height: 100%;
+}
+
+.hero-splide :deep(.splide__track),
+.hero-splide :deep(.splide__list),
+.hero-splide :deep(.splide__slide) {
+  min-height: inherit;
+}
+
+@media (max-width: 1023px) {
+  .hero-splide {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+  }
+}
+
 :deep(.hero-splide .splide__pagination) {
   @apply absolute top-0 right-0 translate-y-[-45%] translate-x-[30%] lg:translate-y-[-40%] lg:translate-x-[40%] flex gap-1.5 z-30;
 }
