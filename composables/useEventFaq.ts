@@ -6,15 +6,7 @@
  * - Kategori/jarak
  * - Lokasi
  * - Tanggal
- * 
- * Menggabungkan:
- * 1. Generic template dari seoKeywords
- * 2. Event-specific data (event.cutOffTime, event.categories, dll)
- * 3. Natural language injection
  */
-
-import { useSeoInjection } from './useSeoInjection'
-import { SEO_KEYWORDS } from '~/utils/seoKeywords'
 
 const pickTemplate = (templates: string[], fallback: string): string => {
   if (!templates.length) {
@@ -280,51 +272,8 @@ export const useEventFaq = () => {
     return generateEventFaq(eventData)
   }
 
-  /**
-   * Combine event-specific FAQ dengan generic FAQ dari keywords
-   */
-  const mergeWithGenericFaq = (eventData: EventData, keyword?: typeof SEO_KEYWORDS.marathon) => {
-    const eventFaqs = generateEventFaq(eventData)
-    if (!keyword) {
-      return eventFaqs
-    }
-    const { generateFAQItems } = useSeoInjection()
-
-    // Convert categories to string[] if needed
-    const categories = Array.isArray(eventData.categories)
-      ? eventData.categories.map(cat => typeof cat === 'string' ? cat : cat.name)
-      : undefined
-
-    // Generic FAQ
-    const genericFaqs = generateFAQItems(keyword, {
-      pageType: 'event',
-      eventData: {
-        title: eventData.title,
-        cutOffTime: undefined,
-        categories,
-        location: eventData.location_name,
-      },
-    })
-
-    // Combine: event-specific first, then generic
-    return [
-      ...eventFaqs,
-      ...genericFaqs.filter((generic) => {
-        const normalizedGeneric = generic.question?.split('?')[0]?.toLowerCase() ?? ''
-        if (!normalizedGeneric) {
-          return true
-        }
-        // Avoid duplicates - filter out generic FAQs yang sudah ada di event-specific
-        return !eventFaqs.some((eventFaq) =>
-          eventFaq.question.toLowerCase().includes(normalizedGeneric)
-        )
-      }),
-    ]
-  }
-
   return {
     generateFaq,
-    mergeWithGenericFaq,
   }
 }
 

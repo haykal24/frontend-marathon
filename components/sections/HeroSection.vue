@@ -6,6 +6,10 @@ import type { Event } from '~/types/event'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
 import IconHeroiconsSparkles20Solid from '~icons/heroicons/sparkles-20-solid'
 import IconHeroiconsMegaphone20Solid from '~icons/heroicons/megaphone-20-solid'
+import IconHeroiconsTag20Solid from '~icons/heroicons/tag-20-solid'
+import IconHeroiconsCalendarDays20Solid from '~icons/heroicons/calendar-days-20-solid'
+import IconHeroiconsMapPin20Solid from '~icons/heroicons/map-pin-20-solid'
+import IconHeroiconsUserGroup20Solid from '~icons/heroicons/user-group-20-solid'
 import {
   formatEventDate,
   formatEventLocation,
@@ -99,6 +103,9 @@ useHead(() => {
 
 <template>
   <section class="relative overflow-hidden min-h-screen lg:h-screen">
+    <!-- SEO H1 (Hidden Visually) -->
+    <h1 class="sr-only">Kalender Lari & Jadwal Marathon {{ currentYear }} Terlengkap di Indonesia</h1>
+
     <Splide
       v-if="hasHeroContent"
       :options="splideOptions"
@@ -137,9 +144,9 @@ useHead(() => {
                     Platform Digital #1 Event Lari Indonesia
                   </span>
 
-                  <h1 class="text-3xl font-bold lg:text-6xl tracking-tighter leading-[1.4]">
+                  <div class="text-3xl font-bold lg:text-6xl tracking-tighter leading-[1.4]">
                     Kalender Lari & Jadwal Marathon {{ currentYear }} Terlengkap di Indonesia
-                  </h1>
+                  </div>
 
                   <p class="text-sm text-white/80 lg:text-base max-w-xl">
                     Jelajahi jadwal lari {{ currentYear }} terlengkap dari indonesiamarathon.com,
@@ -330,7 +337,19 @@ useHead(() => {
 }
 
 /* Override default line-height for hero titles */
-:deep(.hero-splide h1) {
+:deep(.hero-splide h1),
+:deep(.hero-splide .text-3xl) {
   line-height: 1.1 !important;
+}
+
+/* Pagination limit: only show active and immediate neighbors */
+:deep(.hero-splide .splide__pagination li) {
+  display: none;
+}
+
+:deep(.hero-splide .splide__pagination li:has(.is-active)),
+:deep(.hero-splide .splide__pagination li:has(.is-active) + li),
+:deep(.hero-splide .splide__pagination li:has(+ li .is-active)) {
+  display: block;
 }
 </style>

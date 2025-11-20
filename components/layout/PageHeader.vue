@@ -37,6 +37,7 @@ const mobileBanners = computed(() => {
 const hasDesktopBanners = computed(() => desktopBanners.value.length > 0)
 const hasMobileBanners = computed(() => mobileBanners.value.length > 0)
 const hasAnyBanners = computed(() => hasDesktopBanners.value || hasMobileBanners.value)
+const areBannersIdentical = computed(() => mobileBanners.value === desktopBanners.value)
 
 const headerBgUrl = computed(() =>
   props.backgroundImageUrl ? sanitizeMediaUrl(props.backgroundImageUrl) : null
@@ -65,10 +66,17 @@ const buildBannerImage = (src?: string | null, options: { width?: number; height
 </script>
 
 <template>
-  <!-- Desktop Slider -->
+  <!-- SEO H1 (Hidden Visually) -->
+  <h1 class="sr-only">{{ title }}</h1>
+
+  <!-- Desktop / Unified Slider -->
+  <!-- Jika banner identik, tampilkan slider ini di semua device (block). Jika beda, hanya di desktop (hidden lg:block). -->
   <div
     v-if="hasDesktopBanners"
-    class="hidden lg:block h-[60vh] overflow-hidden"
+    :class="[
+      areBannersIdentical ? 'block' : 'hidden lg:block',
+      'h-[60vh] overflow-hidden'
+    ]"
   >
     <Splide
       :key="`splide-desktop-${desktopBanners.length}`"
@@ -86,9 +94,9 @@ const buildBannerImage = (src?: string | null, options: { width?: number; height
               <div class="absolute inset-0 bg-primary/70" />
               <div class="relative z-10 w-full h-full flex flex-col justify-center">
                 <div class="layout-container text-center text-white">
-                  <h1 class="text-2xl lg:text-4xl font-bold tracking-tighter leading-[1.2] max-w-4xl mx-auto">
+                  <div class="text-2xl lg:text-4xl font-bold tracking-tighter leading-[1.2] max-w-4xl mx-auto">
                     {{ title }}
-                  </h1>
+                  </div>
                   <p
                     v-if="description"
                     class="mt-4 text-sm lg:text-base text-white/80 max-w-2xl mx-auto"
@@ -149,9 +157,9 @@ const buildBannerImage = (src?: string | null, options: { width?: number; height
     </Splide>
   </div>
                   
-  <!-- Mobile Slider -->
+  <!-- Mobile Only Slider (Only if banners differ) -->
   <div
-    v-if="hasMobileBanners"
+    v-if="hasMobileBanners && !areBannersIdentical"
     class="lg:hidden h-[60vh] overflow-hidden"
   >
     <Splide
@@ -170,9 +178,10 @@ const buildBannerImage = (src?: string | null, options: { width?: number; height
               <div class="absolute inset-0 bg-primary/70" />
               <div class="relative z-10 w-full h-full flex flex-col justify-center">
                 <div class="layout-container text-center text-white">
-                  <h1 class="text-2xl lg:text-4xl font-bold tracking-tighter leading-[1.2] max-w-4xl mx-auto">
+                  <!-- Gunakan div class text-2xl (tampilan mirip h1) untuk menghindari duplicate h1 -->
+                  <div class="text-2xl lg:text-4xl font-bold tracking-tighter leading-[1.2] max-w-4xl mx-auto">
                     {{ title }}
-                  </h1>
+                  </div>
                   <p
                     v-if="description"
                     class="mt-4 text-sm lg:text-base text-white/80 max-w-2xl mx-auto"
@@ -242,9 +251,9 @@ const buildBannerImage = (src?: string | null, options: { width?: number; height
     <div class="absolute inset-0 bg-primary/70" />
     <div class="relative z-10 w-full h-full flex flex-col justify-center">
       <div class="layout-container text-center text-white">
-        <h1 class="text-2xl lg:text-4xl font-bold tracking-tighter leading-[1.2] max-w-4xl mx-auto">
+        <div class="text-2xl lg:text-4xl font-bold tracking-tighter leading-[1.2] max-w-4xl mx-auto">
           {{ title }}
-        </h1>
+        </div>
         <p
           v-if="description"
           class="mt-4 text-sm lg:text-base text-white/80 max-w-2xl mx-auto"
@@ -283,6 +292,17 @@ const buildBannerImage = (src?: string | null, options: { width?: number; height
 
 :deep(.splide__pagination__page.is-active) {
   @apply h-2.5 w-6 rounded-full bg-secondary !important;
+}
+
+/* Pagination limit: only show active and immediate neighbors */
+:deep(.splide__pagination li) {
+  display: none;
+}
+
+:deep(.splide__pagination li:has(.is-active)),
+:deep(.splide__pagination li:has(.is-active) + li),
+:deep(.splide__pagination li:has(+ li .is-active)) {
+  display: block;
 }
 </style>
      

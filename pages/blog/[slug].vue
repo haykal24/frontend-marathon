@@ -22,9 +22,6 @@ import IconMdiInstagram from '~icons/mdi/instagram'
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
 import { ref } from 'vue'
 import { useSchemaOrg, defineArticle } from '#imports'
-import { SEO_KEYWORDS } from '~/utils/seoKeywords'
-import SeoFaqSection from '~/components/seo/SeoFaqSection.vue'
-import SeoRelatedKeywords from '~/components/seo/SeoRelatedKeywords.vue'
 
 const route = useRoute()
 const config = useRuntimeConfig()
@@ -32,12 +29,23 @@ const { getImage } = useSiteSettings()
 const { fetchBlogPostBySlug, fetchBlogPosts } = useBlogPosts()
 const { fetchResponsiveBanners } = useAdBanners()
 
-const slug = computed(() => route.params.slug as string)
+const slug = computed(() => {
+  const routeSlug = route.params.slug
+  // Return string atau empty string, jangan throw di computed
+  return (typeof routeSlug === 'string' ? routeSlug : '') || ''
+})
 
 // --- Fetch blog post (best practice: await useAsyncData) ---
 const { data: postResponse, error: postError } = await useAsyncData<{ data: BlogPost }>(
-  `blog-post-${slug.value}`,
-  () => fetchBlogPostBySlug(slug.value),
+  `blog-post-${slug.value || 'invalid'}`,
+  async () => {
+    const currentSlug = slug.value
+    // Validate slug sebelum fetch
+    if (!currentSlug || currentSlug === 'undefined' || currentSlug.trim() === '') {
+      throw createError({ statusCode: 404, statusMessage: 'Slug artikel tidak valid', fatal: true })
+    }
+    return await fetchBlogPostBySlug(currentSlug)
+  },
   { watch: [slug] }
 )
 
@@ -67,12 +75,6 @@ if (postError.value || !post.value) {
   throw createError({ statusCode: 404, statusMessage: 'Artikel tidak ditemukan', fatal: true })
 }
 
-// --- SEO INJECTION LOGIC ---
-// Cari tahu apakah halaman ini adalah pillar page berdasarkan slug
-const pillarKeyword = computed(() => {
-  const currentSlug = `/blog/${slug.value}`
-  return Object.values(SEO_KEYWORDS).find(keyword => keyword.targetPage === currentSlug)
-})
 
 // --- Fetch related posts (best practice: await useAsyncData) ---
 const { data: relatedResponse } = await useAsyncData<BlogPostsResponse>(
@@ -505,16 +507,5 @@ const shareX = () => {
       </div>
     </section>
 
-    <!-- SEO Injection Sections -->
-    <div
-      v-if="pillarKeyword"
-      class="space-y-10 lg:space-y-16"
-    >
-      <SeoFaqSection
-        :keyword="pillarKeyword"
-        :context="{ pageType: 'blog' }"
-      />
-      <SeoRelatedKeywords :keyword="pillarKeyword" />
-    </div>
   </div>
 </template>

@@ -133,7 +133,7 @@ const selectedYearModel = computed<number>({
             >
               <ListboxButton
                 class="relative w-full cursor-default rounded-lg border border-secondary/60 bg-white py-2.5 pl-3 pr-10 text-left text-sm font-medium text-primary focus:outline-none focus-visible:border-secondary focus-visible:ring-2 focus-visible:ring-secondary/20"
-              >
+          >
                 <span class="block truncate">{{ selectedYear }}</span>
                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                   <IconHeroiconsArrowRight20Solid class="h-4 w-4 rotate-90 text-gray-400" />

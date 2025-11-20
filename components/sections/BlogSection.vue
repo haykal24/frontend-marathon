@@ -221,4 +221,15 @@ const buildPostImage = (src?: string | null) => {
 .blog-splide :deep(.splide__pagination__page.is-active) {
   @apply w-8 rounded-full bg-secondary;
 }
+
+/* Pagination limit: only show active and immediate neighbors */
+.blog-splide :deep(.splide__pagination li) {
+  display: none;
+}
+
+.blog-splide :deep(.splide__pagination li:has(.is-active)),
+.blog-splide :deep(.splide__pagination li:has(.is-active) + li),
+.blog-splide :deep(.splide__pagination li:has(+ li .is-active)) {
+  display: block;
+}
 </style>

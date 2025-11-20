@@ -21,9 +21,6 @@ import EventCard from '~/components/event/EventCard.vue'
 import EventCardSkeleton from '~/components/event/EventCardSkeleton.vue'
 import AppFilterDropdown from '~/components/ui/AppFilterDropdown.vue'
 import PageHeader from '~/components/layout/PageHeader.vue'
-import { SEO_KEYWORDS } from '~/utils/seoKeywords'
-import SeoFaqSection from '~/components/seo/SeoFaqSection.vue'
-import SeoRelatedKeywords from '~/components/seo/SeoRelatedKeywords.vue'
 
 const { currentYear } = useCurrentYear()
 const config = useRuntimeConfig()
@@ -68,8 +65,6 @@ useSchemaOrg([
   }),
 ])
 
-// --- SEO Injection ---
-const pillarKeyword = SEO_KEYWORDS.eventLariIndonesia
 
 // --- Breadcrumb Items ---
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => {
@@ -862,17 +857,6 @@ loadEvents()
         </p>
       </div>
 
-      <!-- SEO Injection Sections -->
-      <div
-        v-if="pillarKeyword"
-        class="space-y-10 lg:space-y-16 mt-16"
-      >
-        <SeoFaqSection
-          :keyword="pillarKeyword"
-          :context="{ pageType: 'listing' }"
-        />
-        <SeoRelatedKeywords :keyword="pillarKeyword" />
-      </div>
 
       <!-- Mobile Filter Button - Fixed at bottom (Mobile Only) -->
       <div

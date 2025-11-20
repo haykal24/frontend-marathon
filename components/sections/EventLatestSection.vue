@@ -149,4 +149,15 @@ const sliderOptions = {
 .event-latest-splide :deep(.splide__pagination__page.is-active) {
   @apply w-8 rounded-full bg-secondary;
 }
+
+/* Pagination limit: only show active and immediate neighbors */
+.event-latest-splide :deep(.splide__pagination li) {
+  display: none;
+}
+
+.event-latest-splide :deep(.splide__pagination li:has(.is-active)),
+.event-latest-splide :deep(.splide__pagination li:has(.is-active) + li),
+.event-latest-splide :deep(.splide__pagination li:has(+ li .is-active)) {
+  display: block;
+}
 </style>

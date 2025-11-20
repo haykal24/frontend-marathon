@@ -42,33 +42,6 @@ useSchemaOrg([
         'query-input': 'required name=search_term_string',
       },
     ],
-    // Add mainEntity for sitelink candidates
-    mainEntity: [
-      {
-        '@type': 'WebPage',
-        name: 'Kalender Lari',
-        url: `${siteConfig.url}/event`,
-        description: 'Jadwal event running, marathon, dan fun run terbaru di Indonesia',
-      },
-      {
-        '@type': 'WebPage',
-        name: 'Blog Lari',
-        url: `${siteConfig.url}/blog`,
-        description: 'Artikel dan panduan tentang marathon, pace, dan lari lainnya',
-      },
-      {
-        '@type': 'WebPage',
-        name: 'Ekosistem',
-        url: `${siteConfig.url}/ekosistem`,
-        description: 'Vendor medali, race management, komunitas lari, dan fotografer',
-      },
-      {
-        '@type': 'WebPage',
-        name: 'Rate Card',
-        url: `${siteConfig.url}/rate-card`,
-        description: 'Promosikan event lari Anda dengan paket advertising kami',
-      },
-    ],
   }),
 ])
 

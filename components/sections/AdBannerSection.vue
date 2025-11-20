@@ -415,4 +415,19 @@ defineExpose({
 .ad-banner-splide-mobile :deep(.splide__pagination__page.is-active) {
   @apply w-8 rounded-full bg-secondary;
 }
+
+/* Pagination limit: only show active and immediate neighbors */
+.ad-banner-splide :deep(.splide__pagination li),
+.ad-banner-splide-mobile :deep(.splide__pagination li) {
+  display: none;
+}
+
+.ad-banner-splide :deep(.splide__pagination li:has(.is-active)),
+.ad-banner-splide :deep(.splide__pagination li:has(.is-active) + li),
+.ad-banner-splide :deep(.splide__pagination li:has(+ li .is-active)),
+.ad-banner-splide-mobile :deep(.splide__pagination li:has(.is-active)),
+.ad-banner-splide-mobile :deep(.splide__pagination li:has(.is-active) + li),
+.ad-banner-splide-mobile :deep(.splide__pagination li:has(+ li .is-active)) {
+  display: block;
+}
 </style>

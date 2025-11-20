@@ -239,4 +239,15 @@ const buildTypeImage = (src?: string | null) => {
 .event-type-splide :deep(.splide__pagination__page.is-active) {
   @apply w-8 rounded-full bg-secondary;
 }
+
+/* Pagination limit: only show active and immediate neighbors */
+.event-type-splide :deep(.splide__pagination li) {
+  display: none;
+}
+
+.event-type-splide :deep(.splide__pagination li:has(.is-active)),
+.event-type-splide :deep(.splide__pagination li:has(.is-active) + li),
+.event-type-splide :deep(.splide__pagination li:has(+ li .is-active)) {
+  display: block;
+}
 </style>

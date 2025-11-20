@@ -25,9 +25,6 @@ import IconMdiChevronDown from '~icons/mdi/chevron-down'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
 import IconMdiEmail from '~icons/mdi/email'
 import IconMdiPhone from '~icons/mdi/phone'
-import { SEO_KEYWORDS } from '~/utils/seoKeywords'
-import SeoFaqSection from '~/components/seo/SeoFaqSection.vue'
-import SeoRelatedKeywords from '~/components/seo/SeoRelatedKeywords.vue'
 
 const route = useRoute()
 const config = useRuntimeConfig()
@@ -87,13 +84,6 @@ if (fetchError.value || !event.value) {
     fatal: true,
   })
 }
-
-// --- SEO INJECTION LOGIC ---
-// Cari tahu apakah halaman ini adalah pillar event berdasarkan slug
-const pillarKeyword = computed(() => {
-  const currentSlug = `/event/${slug}`
-  return Object.values(SEO_KEYWORDS).find(keyword => keyword.targetPage === currentSlug)
-})
 
 // --- Computed Event (Type-safe for template) ---
 const eventData = computed<Event>(() => event.value as Event)
@@ -615,9 +605,9 @@ const allContactItems = computed(() => {
       </div>
     </div>
 
-    <!-- SEO Injection Sections -->
+    <!-- Event FAQ Section -->
     <div
-      v-if="pillarKeyword"
+      v-if="eventFaqItems.length > 0"
       class="space-y-10 lg:space-y-16 bg-surface py-10"
     >
       <!-- Event-Specific FAQ (auto-generated from event data) -->
@@ -692,24 +682,6 @@ const allContactItems = computed(() => {
         </div>
       </div>
 
-      <!-- Generic Pillar Keyword FAQ & Related Keywords -->
-      <SeoFaqSection
-        v-if="pillarKeyword"
-        :keyword="pillarKeyword"
-        :context="{
-          pageType: 'event',
-          eventData: {
-            title: eventData.title,
-            cutOffTime: undefined, // TODO: Add cut off time field to event model
-            categories: eventData.categories?.map(cat => typeof cat === 'string' ? cat : cat.name) || [],
-            location: eventData.location_name
-          }
-        }"
-      />
-      <SeoRelatedKeywords
-        v-if="pillarKeyword"
-        :keyword="pillarKeyword"
-      />
     </div>
   </div>
 </template>

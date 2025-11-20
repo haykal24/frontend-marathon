@@ -6,9 +6,6 @@ import { useSeoMetaDynamic } from '~/composables/useSeoMeta'
 import { useSiteSettings } from '~/composables/useSiteSettings'
 import { useEcosystem } from '~/composables/useEcosystem'
 import EcosystemCard from '~/components/ecosystem/EcosystemCard.vue'
-import { SEO_KEYWORDS } from '~/utils/seoKeywords'
-import SeoFaqSection from '~/components/seo/SeoFaqSection.vue'
-import SeoRelatedKeywords from '~/components/seo/SeoRelatedKeywords.vue'
 import IconMdiViewGrid from '~icons/mdi/view-grid'
 import IconMdiViewList from '~icons/mdi/view-list'
 import IconMdiWhatsapp from '~icons/mdi/whatsapp'
@@ -110,8 +107,6 @@ const headerAdBanners = computed(() => vendorFotograferHeaderBanners.value?.desk
 const headerAdBannersMobile = computed(() => vendorFotograferHeaderBanners.value?.mobile ?? [])
 const totalCount = computed(() => items.value.length)
 
-// --- SEO Injection ---
-const pillarKeyword = SEO_KEYWORDS.vendorFotografer
 </script>
 
 <template>
@@ -128,21 +123,23 @@ const pillarKeyword = SEO_KEYWORDS.vendorFotografer
     <section class="bg-surface py-10">
       <div class="layout-container">
         <!-- Toolbar -->
-        <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p class="text-sm text-gray-600">
-              Total <span class="font-semibold text-primary">{{ totalCount }}</span> fotografer
-              event lari.
-            </p>
-          </div>
+        <div
+          class="mb-6 flex items-center justify-between gap-3 rounded-2xl border border-secondary/20 bg-white/80 px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-gray-600"
+        >
+          <p class="min-w-0 font-medium">
+            Total
+            <span class="font-semibold text-primary">{{ totalCount }}</span><span class="inline sm:hidden"> </span>
+            <span class="hidden sm:inline">fotografer event lari.</span>
+            <span class="inline sm:hidden"> Fotografer</span>
+          </p>
           <div
-            class="inline-flex items-center gap-2 rounded-xl border border-secondary/30 bg-white p-1"
+            class="inline-flex flex-shrink-0 items-center gap-1 sm:gap-2 rounded-xl border border-secondary/30 bg-surface px-1 py-1"
           >
             <button
               :class="[
-                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-1.5 sm:gap-2 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 text-sm font-medium transition-colors',
                 viewMode === 'grid'
-                  ? 'bg-secondary text-primary shadow-sm'
+                  ? 'bg-secondary text-primary'
                   : 'text-gray-500 hover:text-primary',
               ]"
               @click="viewMode = 'grid'"
@@ -152,9 +149,9 @@ const pillarKeyword = SEO_KEYWORDS.vendorFotografer
             </button>
             <button
               :class="[
-                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-1.5 sm:gap-2 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 text-sm font-medium transition-colors',
                 viewMode === 'table'
-                  ? 'bg-secondary text-primary shadow-sm'
+                  ? 'bg-secondary text-primary'
                   : 'text-gray-500 hover:text-primary',
               ]"
               @click="viewMode = 'table'"
@@ -332,16 +329,5 @@ const pillarKeyword = SEO_KEYWORDS.vendorFotografer
       </div>
     </section>
 
-    <!-- SEO Injection Sections -->
-    <div
-      v-if="pillarKeyword"
-      class="space-y-10 lg:space-y-16 bg-surface"
-    >
-      <SeoFaqSection
-        :keyword="pillarKeyword"
-        :context="{ pageType: 'detail' }"
-      />
-      <SeoRelatedKeywords :keyword="pillarKeyword" />
-    </div>
   </div>
 </template>

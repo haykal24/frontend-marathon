@@ -121,7 +121,17 @@ const categoryOptions = computed(() =>
   }))
 )
 
-const flattenedTags = computed<BlogTag[]>(() => posts.value.flatMap(post => post.tags ?? []))
+const flattenedTags = computed<BlogTag[]>(() => {
+  const allTags = posts.value.flatMap(post => post.tags ?? [])
+  // Remove duplicates by slug
+  const uniqueTags = new Map<string, BlogTag>()
+  allTags.forEach(tag => {
+    if (tag.slug && !uniqueTags.has(tag.slug)) {
+      uniqueTags.set(tag.slug, tag)
+    }
+  })
+  return Array.from(uniqueTags.values())
+})
 
 const selectedTagLabel = computed(() => {
   if (!selectedTag.value) return ''
@@ -187,6 +197,7 @@ onMounted(() => {
   const page = parseInt(route.query.page as string) || 1
   searchQuery.value = (route.query.search as string) || ''
   selectedCategory.value = (route.query.category as string) || ''
+  selectedTag.value = (route.query.tag as string) || ''
 
   fetchPostsData(page)
 })
@@ -338,7 +349,7 @@ const loadMore = async () => {
                     class="group"
                   >
                     <h3
-                      class="lg:text-lg text-base font-bold text-primary mb-2 group-hover:text-secondary transition"
+                      class="lg:text-lg text-base font-bold text-primary mb-2 group-hover:text-secondary transition line-clamp-2"
                     >
                       {{ post.title }}
                     </h3>
@@ -479,6 +490,39 @@ const loadMore = async () => {
                   Kategori belum tersedia — pantau terus untuk update artikel terbaru.
                 </li>
               </ul>
+            </div>
+
+            <!-- Tags Summary -->
+            <div
+              v-if="flattenedTags.length > 0"
+              class="rounded-2xl border border-secondary/40 bg-white/90 backdrop-blur-sm p-6 shadow-sm"
+            >
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="lg:text-lg text-base font-bold text-primary tracking-tight">
+                  Tag Populer
+                </h3>
+                <span
+                  class="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-secondary/20 text-primary"
+                >
+                  <IconHeroiconsTag20Solid class="h-4 w-4" />
+                </span>
+              </div>
+
+              <p class="text-xs text-gray-500 mb-4">
+                Filter artikel berdasarkan tag yang paling sering digunakan.
+              </p>
+
+              <div class="flex flex-wrap gap-2">
+                <NuxtLink
+                  v-for="tag in flattenedTags.slice(0, 10)"
+                  :key="tag.slug"
+                  :to="`/blog?tag=${tag.slug}`"
+                  class="inline-flex items-center gap-1.5 rounded-full border border-secondary/30 bg-white/80 px-3 py-1.5 text-xs sm:text-sm font-medium text-primary transition hover:border-secondary hover:bg-secondary/10"
+                >
+                  <IconHeroiconsTag20Solid class="h-3.5 w-3.5 text-secondary" />
+                  {{ tag.name }}
+                </NuxtLink>
+              </div>
             </div>
 
             <!-- Newsletter CTA -->
