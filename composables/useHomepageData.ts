@@ -48,10 +48,9 @@ export const useHomepageData = () => {
   } = useAsyncData(
     'homepage-overview',
     async () => {
-      // PERBAIKAN: Jangan gunakan cache di SSR, biarkan server fetch data
-      // Cache hanya untuk client-side navigation (back/forward)
+      // OPTIMASI: Cache hanya untuk client-side navigation (back/forward)
+      // Jangan gunakan cache saat SSR untuk memastikan IPX bisa optimize images
       if (cachedHomepageData.value && import.meta.client && !import.meta.server) {
-        console.log('[useHomepageData] Using cached data for instant navigation')
         return cachedHomepageData.value
       }
 
@@ -187,13 +186,11 @@ export const useHomepageData = () => {
         // OPTIMASI: Simpan ke cache untuk instant back navigation
         if (import.meta.client) {
           cachedHomepageData.value = result
-          console.log('[useHomepageData] Data cached for instant navigation')
         }
 
         return result
       } catch (error) {
-        console.error('[useHomepageData] Failed to fetch data:', error)
-        // Return empty structure on error
+        // Return empty structure on error untuk graceful fallback
         return {
           latestEvents: null,
           eventTypes: null,
@@ -236,10 +233,6 @@ export const useHomepageData = () => {
       },
     }
   )
-
-  if (process.dev && _error.value) {
-    console.error('Error fetching homepage data:', _error.value)
-  }
 
   return {
     pending,

@@ -60,14 +60,7 @@ const buildHeroImageUrl = (
   options: { width?: number; height?: number } = {}
 ) => {
   if (!src) return ''
-  const sanitized = sanitizeMediaUrl(src) ?? ''
-  
-  // FIX: Skip IPX untuk gambar dari backend Laravel (sudah WebP optimized)
-  if (sanitized.includes('dasbor.indonesiamarathon.com') || sanitized.includes('storage/')) {
-    return sanitized // Return URL langsung tanpa IPX processing
-  }
-  
-  return $img(sanitized, {
+  return $img(sanitizeMediaUrl(src), {
     width: options.width ?? 1920,
     height: options.height ?? 1080,
     format: 'webp',
