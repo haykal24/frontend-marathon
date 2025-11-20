@@ -103,7 +103,7 @@ useHead(() => {
       v-if="hasHeroContent"
       :options="splideOptions"
       :has-track="false"
-      class="hero-splide h-full min-h-[70vh] lg:min-h-0"
+      class="hero-splide h-full"
     >
       <div class="splide__track h-full">
         <ul class="splide__list h-full">
@@ -317,23 +317,6 @@ useHead(() => {
 </template>
 
 <style scoped lang="postcss">
-.hero-splide {
-  min-height: 100%;
-}
-
-.hero-splide :deep(.splide__track),
-.hero-splide :deep(.splide__list),
-.hero-splide :deep(.splide__slide) {
-  min-height: inherit;
-}
-
-@media (max-width: 1023px) {
-  .hero-splide {
-    aspect-ratio: 16 / 9;
-    width: 100%;
-  }
-}
-
 :deep(.hero-splide .splide__pagination) {
   @apply absolute top-0 right-0 translate-y-[-45%] translate-x-[30%] lg:translate-y-[-40%] lg:translate-x-[40%] flex gap-1.5 z-30;
 }

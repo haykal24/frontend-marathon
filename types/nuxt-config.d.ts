@@ -128,6 +128,8 @@ declare module 'nuxt/schema' {
     }
     robots?: {
       disallow?: string[]
+      allow?: string[]
+      sitemap?: string | string[]
     }
     ogImage?: {
       enabled?: boolean

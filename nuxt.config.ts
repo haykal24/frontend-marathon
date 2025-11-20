@@ -164,11 +164,23 @@ export default defineNuxtConfig({
     },
   },
 
-  // Robots Configuration (untuk menghilangkan warning)
+  // Robots Configuration (@nuxtjs/seo)
+  // Hanya block path yang memang ada di frontend dan perlu dilindungi
   robots: {
-    // Disallow internal API routes (normal untuk SEO)
-    // Warning ini OK karena /api/** memang tidak perlu di-index
-    disallow: ['/api/', '/admin/', '/_nuxt/'],
+    disallow: [
+      '/api/',       // API endpoints (tidak ada, tapi untuk jaga-jaga)
+      '/_nuxt/',     // Nuxt internal assets
+      '/mitra/',     // Partner dashboard (private area, memerlukan login)
+      '/login',      // Login page (tidak perlu di-index)
+    ],
+    // Set sitemap URL untuk membantu crawler menemukan semua konten
+    sitemap: [
+      '/sitemap.xml',          // Main sitemap index
+      '/pages-sitemap.xml',    // Static pages
+      '/events-sitemap.xml',   // Event listings
+      '/blog-sitemap.xml',     // Blog articles
+      '/categories-sitemap.xml', // Categories
+    ],
   },
 
   image: {
