@@ -48,12 +48,15 @@ export const useHomepageData = () => {
   } = useAsyncData(
     'homepage-overview',
     async () => {
-      // OPTIMASI: Gunakan cache jika ada (instant loading untuk back navigation)
-      if (cachedHomepageData.value && import.meta.client) {
+      // PERBAIKAN: Jangan gunakan cache di SSR, biarkan server fetch data
+      // Cache hanya untuk client-side navigation (back/forward)
+      if (cachedHomepageData.value && import.meta.client && !import.meta.server) {
+        console.log('[useHomepageData] Using cached data for instant navigation')
         return cachedHomepageData.value
       }
 
-      const results = await Promise.allSettled([
+      try {
+        const results = await Promise.allSettled([
         fetchLatestEvents(6),
         fetchActiveEventTypes(),
         fetchMajorProvinces(),
@@ -163,30 +166,51 @@ export const useHomepageData = () => {
         })
       }
 
-      // We return the raw results here
-      const result = {
-        latestEvents,
-        eventTypes,
-        provinces,
-        blogPosts,
-        featuredHeroEvents,
-        sliderBanners: extractList<AdBanner>(sliderBannerResult as ApiListResponse<AdBanner>),
-        ctaBanner,
-        bannerMain: bannerMainResult,
-        sidebar1: sidebar1Result,
-        sidebar2: sidebar2Result,
-        eventsByType,
-        eventsByProvince,
-        calendarStats,
-        calendarStatsByYear,
-      }
+        // We return the raw results here
+        const result = {
+          latestEvents,
+          eventTypes,
+          provinces,
+          blogPosts,
+          featuredHeroEvents,
+          sliderBanners: extractList<AdBanner>(sliderBannerResult as ApiListResponse<AdBanner>),
+          ctaBanner,
+          bannerMain: bannerMainResult,
+          sidebar1: sidebar1Result,
+          sidebar2: sidebar2Result,
+          eventsByType,
+          eventsByProvince,
+          calendarStats,
+          calendarStatsByYear,
+        }
 
-      // OPTIMASI: Simpan ke cache untuk instant back navigation
-      if (import.meta.client) {
-        cachedHomepageData.value = result
-      }
+        // OPTIMASI: Simpan ke cache untuk instant back navigation
+        if (import.meta.client) {
+          cachedHomepageData.value = result
+          console.log('[useHomepageData] Data cached for instant navigation')
+        }
 
-      return result
+        return result
+      } catch (error) {
+        console.error('[useHomepageData] Failed to fetch data:', error)
+        // Return empty structure on error
+        return {
+          latestEvents: null,
+          eventTypes: null,
+          provinces: null,
+          blogPosts: null,
+          featuredHeroEvents: null,
+          sliderBanners: [],
+          ctaBanner: null,
+          bannerMain: { desktop: [], mobile: [] },
+          sidebar1: { desktop: [], mobile: [] },
+          sidebar2: { desktop: [], mobile: [] },
+          eventsByType: {},
+          eventsByProvince: {},
+          calendarStats: {},
+          calendarStatsByYear: {},
+        }
+      }
     },
     {
       server: true,

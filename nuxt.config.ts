@@ -43,8 +43,7 @@ export default defineNuxtConfig({
     '/tentang-kami': { swr: 86400 },
     '/kontak': { swr: 86400 },
     '/rate-card': { swr: 3600 },
-    '/admin/**': { ssr: false },
-    '/api/**': { ssr: false, cors: true },
+    '/mitra/**': { ssr: false }, // Partner dashboard (butuh auth)
   },
 
   // Site Meta Configuration (Centralized for @nuxtjs/seo)
@@ -130,15 +129,11 @@ export default defineNuxtConfig({
     // Don't auto-add lastmod (sudah di-handle backend)
     autoLastmod: false,
     
-    // Exclude paths secara global
+    // Exclude paths secara global (hanya path yang benar-benar ada)
     exclude: [
-      '/api/**',
-      '/_nuxt/**',
-      '/admin/**',
-      '/login',
-      '/register',
-      '/mitra/**',
-      '/auth/**',
+      '/_nuxt/**',   // Nuxt assets
+      '/mitra/**',   // Partner dashboard
+      '/login',      // Login page
     ],
   },
 
