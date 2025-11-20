@@ -94,7 +94,7 @@ const buildBannerImage = (src?: string | null, options: { width?: number; height
               <div class="absolute inset-0 bg-primary/70" />
               <div class="relative z-10 w-full h-full flex flex-col justify-center">
                 <div class="layout-container text-center text-white">
-                  <div class="text-2xl lg:text-4xl font-bold tracking-tighter leading-[1.2] max-w-4xl mx-auto">
+                  <div class="font-display text-2xl lg:text-4xl font-bold tracking-tighter leading-[1.2] max-w-4xl mx-auto">
                     {{ title }}
                   </div>
                   <p
@@ -179,7 +179,7 @@ const buildBannerImage = (src?: string | null, options: { width?: number; height
               <div class="relative z-10 w-full h-full flex flex-col justify-center">
                 <div class="layout-container text-center text-white">
                   <!-- Gunakan div class text-2xl (tampilan mirip h1) untuk menghindari duplicate h1 -->
-                  <div class="text-2xl lg:text-4xl font-bold tracking-tighter leading-[1.2] max-w-4xl mx-auto">
+                  <div class="font-display text-2xl lg:text-4xl font-bold tracking-tighter leading-[1.2] max-w-4xl mx-auto">
                     {{ title }}
                   </div>
                   <p
@@ -251,7 +251,7 @@ const buildBannerImage = (src?: string | null, options: { width?: number; height
     <div class="absolute inset-0 bg-primary/70" />
     <div class="relative z-10 w-full h-full flex flex-col justify-center">
       <div class="layout-container text-center text-white">
-        <div class="text-2xl lg:text-4xl font-bold tracking-tighter leading-[1.2] max-w-4xl mx-auto">
+        <div class="font-display text-2xl lg:text-4xl font-bold tracking-tighter leading-[1.2] max-w-4xl mx-auto">
           {{ title }}
         </div>
         <p

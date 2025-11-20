@@ -186,9 +186,9 @@ const resolveLink = (item: NavigationItem) => {
           <NuxtImg
             :src="siteLogo"
             :alt="siteName"
-            class="h-10 w-auto"
-            :width="160"
-            :height="40"
+            class="h-10 w-auto object-contain"
+            :width="140"
+            :height="32"
             format="webp"
             loading="lazy"
           />

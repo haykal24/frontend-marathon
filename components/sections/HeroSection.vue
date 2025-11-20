@@ -144,7 +144,7 @@ useHead(() => {
                     Platform Digital #1 Event Lari Indonesia
                   </span>
 
-                  <div class="text-3xl font-bold lg:text-6xl tracking-tighter leading-[1.4]">
+                  <div class="font-display text-3xl font-bold lg:text-6xl tracking-tighter leading-[1.4]">
                     Kalender Lari & Jadwal Marathon {{ currentYear }} Terlengkap di Indonesia
                   </div>
 
@@ -234,9 +234,9 @@ useHead(() => {
                       class="group flex flex-row items-stretch lg:flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/10 backdrop-blur-md h-full transition hover:border-secondary/70 hover:bg-white/15"
                     >
                       <div
-                        class="relative w-32 min-h-[7rem] flex-shrink-0 overflow-hidden h-full lg:h-40 lg:w-full lg:flex-shrink-0"
+                        class="relative w-32 flex-shrink-0 overflow-hidden lg:h-40 lg:w-full lg:flex-shrink-0"
                       >
-                        <span class="badge-label absolute top-0 left-0 rounded-br-2xl">
+                        <span class="badge-label absolute top-0 left-0 z-10 rounded-br-2xl">
                           <IconHeroiconsSparkles20Solid class="h-4 w-4" />
                           Event Pilihan
                         </span>
@@ -244,7 +244,7 @@ useHead(() => {
                           v-if="event.image"
                           :src="buildHeroImageUrl(event.image, { width: 640, height: 400 })"
                           :alt="event.title"
-                          class="h-full w-full object-cover"
+                          class="absolute inset-0 h-full w-full object-cover"
                           width="640"
                           height="400"
                           loading="lazy"
@@ -252,7 +252,7 @@ useHead(() => {
                         />
                         <div
                           v-else
-                          class="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/80 via-primary/70 to-black/80 text-center text-xs text-white/60 lg:rounded-t-2xl"
+                          class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/80 via-primary/70 to-black/80 text-center text-xs text-white/60 lg:rounded-t-2xl"
                         >
                           Poster event belum tersedia
                         </div>
