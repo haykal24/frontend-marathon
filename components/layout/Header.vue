@@ -187,10 +187,8 @@ const resolveLink = (item: NavigationItem) => {
             :src="siteLogo"
             :alt="siteName"
             class="h-10 w-auto object-contain"
-            :width="140"
-            :height="32"
-            format="webp"
-            loading="lazy"
+            fit="contain"
+            preload
           />
         </NuxtLink>
 
