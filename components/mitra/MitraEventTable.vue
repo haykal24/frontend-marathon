@@ -95,7 +95,7 @@ const containerClasses = computed(() => [
 <style scoped>
 .mitra-event-table-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgba(190, 242, 0, 0.4) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
 }
 
 .mitra-event-table-scroll::-webkit-scrollbar {
@@ -107,12 +107,12 @@ const containerClasses = computed(() => [
 }
 
 .mitra-event-table-scroll::-webkit-scrollbar-thumb {
-  background-color: rgba(190, 242, 0, 0.4);
+  background-color: rgb(255, 255, 255);
   border-radius: 9999px;
 }
 
 .mitra-event-table-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(190, 242, 0, 0.6);
+  background-color: rgba(247, 247, 247, 0.6);
 }
 </style>
 

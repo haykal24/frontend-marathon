@@ -1,39 +1,56 @@
 <script setup lang="ts">
-import { ref, watch, computed, onMounted, nextTick } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import type { Event as EventType } from '~/types/event'
 import type { BreadcrumbItem } from '~/components/layout/Breadcrumb.vue'
-import { useEvents } from '~/composables/useEvents'
-import { useProvinces } from '~/composables/useProvinces'
-import { useEventTypes } from '~/composables/useEventTypes'
 import { useSiteSettings } from '~/composables/useSiteSettings'
 import { useSeoMetaDynamic } from '~/composables/useSeoMeta'
 import { useCurrentYear } from '~/composables/useCurrentYear'
 import { useAdBanners } from '~/composables/useAdBanners'
+import { useEventListing, type EventFilterState } from '~/composables/useEventListing'
+import { useActiveProvinces } from '~/composables/useActiveProvinces'
+import { useEventFilters } from '~/composables/useEventFilters'
 import IconMdiMagnify from '~icons/mdi/magnify'
 import IconMdiViewGrid from '~icons/mdi/view-grid'
 import IconMdiViewList from '~icons/mdi/view-list'
 import IconMdiChevronDown from '~icons/mdi/chevron-down'
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
-import { format } from 'date-fns'
-import { id } from 'date-fns/locale/id'
 import EventCard from '~/components/event/EventCard.vue'
 import EventCardSkeleton from '~/components/event/EventCardSkeleton.vue'
 import AppFilterDropdown from '~/components/ui/AppFilterDropdown.vue'
 import PageHeader from '~/components/layout/PageHeader.vue'
+import { formatEventMeta, formatEventDateRange } from '~/utils/format'
 
 const { currentYear } = useCurrentYear()
 const config = useRuntimeConfig()
+const route = useRoute()
+const router = useRouter()
 
-// --- State (declare early) ---
-const events = ref<EventType[]>([])
+// --- SEO Meta & Canonical ---
+const canonicalUrl = computed(() => {
+  // Ambil full path dengan query params untuk canonical yang akurat
+  // Google menganggap /event?province=bali sebagai halaman unik
+  const path = route.path
+  const query = route.query
+  
+  // Filter query params yang relevan untuk canonical
+  const canonicalParams = new URLSearchParams()
+  const allowedParams = ['province', 'category', 'month', 'year', 'type', 'page']
+  
+  Object.entries(query).forEach(([key, value]) => {
+    if (allowedParams.includes(key) && value) {
+      canonicalParams.append(key, String(value))
+    }
+  })
+  
+  const queryString = canonicalParams.toString()
+  return queryString ? `${path}?${queryString}` : path
+})
 
-// --- SEO Meta ---
 useSeoMetaDynamic({
   title: `Jadwal Event Lari ${currentYear.value} - Kalender Event Lari Indonesia`,
   description:
     'Temukan jadwal lengkap event lari di seluruh Indonesia. Kalender lari terbaru untuk road run, trail run, fun run, dan marathon.',
-  url: '/event',
+  url: canonicalUrl, // FIX: Canonical URL harus menyertakan filter
 })
 
 // SEO: OG Image menggunakan fallback og.webp (tidak perlu defineOgImage untuk listing)
@@ -41,11 +58,11 @@ useSeoMetaDynamic({
 // --- CollectionPage & ItemList Schema.org (SEO Optimal) ---
 useSchemaOrg([
   defineWebPage({
-    '@id': `${config.public.siteUrl}/event`,
+    '@id': `${config.public.siteUrl}${canonicalUrl.value}`,
     name: `Kalender Event Lari ${currentYear.value}`,
     description:
       'Jadwal lengkap event lari di seluruh Indonesia. Filter berdasarkan kategori, lokasi, dan tanggal.',
-    url: `${config.public.siteUrl}/event`,
+    url: `${config.public.siteUrl}${canonicalUrl.value}`,
     '@type': 'CollectionPage',
   }),
   // OPTIMASI: Tambahkan ItemList untuk memberitahu Google konten dari koleksi ini
@@ -78,48 +95,10 @@ const breadcrumbItems = computed<BreadcrumbItem[]>(() => {
 useBreadcrumbSchema(breadcrumbItems)
 
 // --- Composables ---
-const { fetchEvents } = useEvents()
-const { fetchActiveProvinces } = useProvinces()
-const { fetchActiveEventTypes } = useEventTypes()
 const { getImage } = useSiteSettings()
 const { fetchResponsiveBanners } = useAdBanners()
+const { provinces, refreshProvinces } = await useActiveProvinces()
 
-// --- Initial Data Fetch (Best Practice: await useAsyncData) ---
-// Use lazy: false to ensure data is loaded on both SSR and client
-// Key must be unique to avoid conflicts with other pages
-const { data: provincesData, error: provincesError, refresh: refreshProvinces } = await useAsyncData(
-  'event-listing-provinces',
-  () => fetchActiveProvinces(),
-  {
-    lazy: false, // Ensure data is loaded immediately
-    server: true, // Load on server
-    default: () => ({ data: [] }), // Default value
-  }
-)
-const { data: eventTypesData, error: eventTypesError } = await useAsyncData(
-  'event-listing-event-types',
-  () => fetchActiveEventTypes(),
-  {
-    lazy: false,
-    server: true,
-    default: () => ({ data: [] }),
-  }
-)
-
-const provinces = computed(() => {
-  const data = provincesData.value?.data
-  if (!data || !Array.isArray(data)) {
-    return []
-  }
-  return data
-})
-const eventTypes = computed(() => {
-  const data = eventTypesData.value?.data
-  if (!data || !Array.isArray(data)) {
-    return []
-  }
-  return data
-})
 const headerBg = computed(() => getImage('header_bg_events', null) ?? undefined)
 
 const { data: eventHeaderBanners } = await useAsyncData('ad-banners-page-header-events', () =>
@@ -129,56 +108,44 @@ const headerAdBanners = computed(() => eventHeaderBanners.value?.desktop ?? [])
 const headerAdBannersMobile = computed(() => eventHeaderBanners.value?.mobile ?? [])
 
 // --- State (continued) ---
-const pending = ref(true)
-const currentPage = ref(1)
-const lastPage = ref(1)
-const totalCount = ref(0)
 const viewMode = ref<'grid' | 'table'>('grid')
 const showMobileFilter = ref(false)
-const activeFilterTab = ref<'search' | 'category' | 'month' | 'province' | 'sort'>('search')
+const activeFilterTab = ref<'search' | 'month' | 'province' | 'sort'>('search')
 
-const filters = ref({
+const createDefaultFilters = (): EventFilterState => ({
   search: '',
   month: '',
   province: [] as string[], // Multiple select
-  type: [] as string[], // Multiple select
+  type: [] as string[], // Multiple select (kept for deep-link compatibility)
   sort: 'latest',
+  year: '',
 })
+
+const filters = ref<EventFilterState>(createDefaultFilters())
+
+initializeFiltersFromQuery()
+
+const {
+  events,
+  pending,
+  currentPage,
+  lastPage,
+  totalCount,
+  loadMore,
+} = useEventListing(filters)
 
 const sortOptions = [
   { value: 'latest', label: 'Terbaru' },
   { value: 'featured', label: 'Event Pilihan' },
 ]
 
-// Year selector state
-const selectedYear = ref(new Date().getFullYear())
-
-// Available years (dynamically generated: current year - 1 to current year + 3)
-const availableYears = computed(() => {
-  const currentYear = new Date().getFullYear()
-  const years = []
-  for (let i = currentYear - 1; i <= currentYear + 3; i++) {
-    years.push(i)
-  }
-  return years
-})
-
-const monthOptions = computed(() => {
-  const months = []
-  const _currentMonth = new Date().getMonth()
-  const _currentYear = new Date().getFullYear()
-
-  // Always show all 12 months for any selected year
-  // (user can filter past months too if needed)
-  for (let i = 0; i < 12; i++) {
-    const date = new Date(selectedYear.value, i, 1)
-    months.push({
-      value: format(date, 'yyyy-MM'),
-      label: format(date, 'MMMM', { locale: id }),
-    })
-  }
-  return months
-})
+const {
+  selectedYear,
+  availableYears,
+  monthOptions,
+  handleYearSelect,
+  handleMonthSelect,
+} = useEventFilters(filters)
 
 // --- Computed Options for Filters ---
 const provinceOptions = computed(() => {
@@ -190,56 +157,6 @@ const provinceOptions = computed(() => {
     })
     .filter(Boolean) as Array<{ value: string; label: string }>
 })
-const eventTypeOptions = computed(() => {
-  const types = eventTypes.value || []
-  return types
-    .map(t => {
-      if (!t.slug || !t.name) return null
-      return { value: t.slug, label: t.name }
-    })
-    .filter(Boolean) as Array<{ value: string; label: string }>
-})
-
-async function loadEvents(page = 1, append = false) {
-  pending.value = true
-  try {
-    const sortValue = filters.value.sort as 'latest' | 'featured'
-    // Handle multiple filters - take first value if array
-    const typeValue = Array.isArray(filters.value.type) ? filters.value.type[0] : filters.value.type
-    const provinceValue = Array.isArray(filters.value.province)
-      ? filters.value.province[0]
-      : filters.value.province
-
-    const response = await fetchEvents({
-      page,
-      per_page: 12,
-      sort: sortValue || 'latest',
-      order_by: 'event_date',
-      order: 'desc',
-      status: 'published',
-      search: filters.value.search || undefined,
-      month: filters.value.month || undefined,
-      province: provinceValue || undefined,
-      type: typeValue || undefined,
-    })
-    if (append) {
-      events.value.push(...response.data)
-    } else {
-      events.value = response.data
-    }
-    currentPage.value = response.meta.pagination.current_page
-    lastPage.value = response.meta.pagination.last_page
-    totalCount.value = response.meta.pagination.total
-
-    // Update pagination rel links for SEO
-    updatePaginationLinks()
-  } catch (error) {
-    // Silently handle error
-  } finally {
-    pending.value = false
-  }
-}
-
 // --- Pagination SEO Links ---
 function updatePaginationLinks() {
   // Only run on client-side to avoid SSR errors
@@ -292,92 +209,91 @@ function updatePaginationLinks() {
 }
 
 // --- Watchers & Computed ---
-watch(
-  filters,
-  () => {
-    loadEvents(1, false)
-  },
-  { deep: true }
-)
-
 const hasMorePages = computed(() => currentPage.value < lastPage.value)
 
-function formatEventDate(startDate: string, endDate?: string | null): string {
-  const start = new Date(startDate)
-  if (endDate) {
-    const end = new Date(endDate)
-    if (start.getMonth() === end.getMonth()) {
-      return `${format(start, 'd')} - ${format(end, 'd MMMM yyyy', { locale: id })}`
-    }
-    return `${format(start, 'd MMM')} - ${format(end, 'd MMM yyyy', { locale: id })}`
-  }
-  return format(start, 'd MMMM yyyy', { locale: id })
-}
-
 function resetFilters() {
-  filters.value = {
-    search: '',
-    month: '',
-    province: [],
-    type: [],
-    sort: 'latest',
-  }
+  filters.value = createDefaultFilters()
   // Clear URL query params
   router.push({ path: '/event' })
 }
 
-// --- Initialize Filters from Query Params ---
-const route = useRoute()
-const router = useRouter()
+function initializeFiltersFromQuery(query = route.query) {
+  const nextFilters = createDefaultFilters()
+  let derivedYear: number | null = null
 
-function initializeFiltersFromQuery() {
-  const query = route.query
-
-  // Set type filter
+  // Type filter (deep link compatibility)
   if (query.type) {
     const typeValue = Array.isArray(query.type) ? query.type[0] : query.type || ''
-    if (typeValue) filters.value.type = [typeValue]
+    if (typeValue) nextFilters.type = [typeValue]
   }
 
-  // Set province filter
+  // Province filter
   if (query.province) {
     const provinceValue = Array.isArray(query.province) ? query.province[0] : query.province || ''
-    if (provinceValue) filters.value.province = [provinceValue]
+    if (provinceValue) nextFilters.province = [provinceValue]
   }
 
-  // Set month filter
+  // Month filter (prioritized to sync year automatically)
   if (query.month) {
     const monthValue = Array.isArray(query.month) ? query.month[0] : query.month || ''
-    if (monthValue) filters.value.month = monthValue
+    if (monthValue) {
+      nextFilters.month = monthValue
+      const monthYear = Number(monthValue.split('-')[0])
+      if (!Number.isNaN(monthYear)) {
+        derivedYear = monthYear
+        nextFilters.year = String(monthYear)
+      }
+    }
   }
 
-  // Set search filter
+  // Year-only filter
+  if (!derivedYear && query.year) {
+    const yearValue = Array.isArray(query.year) ? query.year[0] : query.year || ''
+    if (yearValue && /^\d{4}$/.test(yearValue)) {
+      derivedYear = Number(yearValue)
+      nextFilters.year = yearValue
+    }
+  }
+
+  // Search filter
   if (query.search) {
     const searchValue = Array.isArray(query.search) ? query.search[0] : query.search || ''
-    if (searchValue) filters.value.search = searchValue
+    if (searchValue) nextFilters.search = searchValue
   }
 
-  // Set sort filter
+  // Sort filter
   if (query.sort) {
     const sortValue = Array.isArray(query.sort) ? query.sort[0] : query.sort || ''
     if (sortValue && ['latest', 'featured'].includes(sortValue)) {
-      filters.value.sort = sortValue as 'latest' | 'featured'
+      nextFilters.sort = sortValue as 'latest' | 'featured'
     }
   }
+
+  filters.value = nextFilters
 }
 
+watch(
+  [currentPage, lastPage],
+  () => {
+    updatePaginationLinks()
+  },
+  { immediate: true }
+)
+
+watch(
+  () => route.fullPath,
+  () => {
+    initializeFiltersFromQuery()
+  }
+)
+
 onMounted(() => {
-  initializeFiltersFromQuery()
-  
   // Refresh provinces if empty (fallback for client-side)
   // This handles cases where SSR didn't load the data or API failed
   if (provinces.value.length === 0) {
     refreshProvinces()
   }
 })
-
-// --- Initial Load ---
-loadEvents()
 </script>
 
 <template>
@@ -398,7 +314,7 @@ loadEvents()
         class="hidden lg:block mb-8 rounded-2xl border border-secondary/40 bg-white p-4 lg:p-6 shadow-sm"
       >
         <div class="flex flex-col lg:flex-row gap-4 items-center lg:items-end">
-          <div class="grid flex-grow grid-cols-1 md:grid-cols-2 lg:grid-cols-10 gap-3 w-full">
+          <div class="grid flex-grow grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-3 w-full">
             <!-- Search Input -->
             <div class="relative lg:col-span-3">
               <input
@@ -410,16 +326,6 @@ loadEvents()
               <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <IconMdiMagnify class="h-5 w-5 text-gray-400" />
               </div>
-            </div>
-
-            <!-- Category Filter -->
-            <div class="lg:col-span-2">
-              <AppFilterDropdown
-                v-model="filters.type"
-                :options="eventTypeOptions"
-                placeholder="Kategori"
-                multiple
-              />
             </div>
 
             <!-- Month & Year Filter Popover -->
@@ -434,11 +340,21 @@ loadEvents()
                     filters.month ? 'text-primary' : 'text-gray-500',
                   ]"
                 >
-                  <span class="block truncate">{{
-                    monthOptions.find(m => m.value === filters.month)?.label
-                      ? `${monthOptions.find(m => m.value === filters.month)?.label} ${selectedYear}`
-                      : 'Bulan/Tahun'
-                  }}</span>
+                  <span class="block truncate">
+                    <template v-if="filters.month">
+                      {{
+                        monthOptions.find(m => m.value === filters.month)?.label
+                          ? `${monthOptions.find(m => m.value === filters.month)?.label} ${filters.month.slice(0, 4)}`
+                          : 'Bulan'
+                      }}
+                    </template>
+                    <template v-else-if="filters.year">
+                      Tahun {{ filters.year }}
+                    </template>
+                    <template v-else>
+                      Bulan/Tahun
+                    </template>
+                  </span>
                   <span
                     class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2"
                   >
@@ -468,11 +384,11 @@ loadEvents()
                             :key="year"
                             :class="[
                               'w-full rounded-md py-2 text-sm font-medium transition-colors',
-                              selectedYear === year
+                              (filters.year ? Number(filters.year) === year : selectedYear === year)
                                 ? 'bg-secondary text-primary'
                                 : 'border border-secondary/40 hover:bg-gray-100',
                             ]"
-                            @click="selectedYear = year"
+                            @click="handleYearSelect(year)"
                           >
                             {{ year }}
                           </button>
@@ -495,12 +411,7 @@ loadEvents()
                                 : 'hover:bg-gray-100',
                             ]"
                             :title="month.label"
-                            @click="
-                              () => {
-                                filters.month = filters.month === month.value ? '' : month.value
-                                close()
-                              }
-                            "
+                            @click="handleMonthSelect(month.value, close)"
                           >
                             {{ month.label.slice(0, 3) }}
                           </button>
@@ -706,7 +617,7 @@ loadEvents()
         >
           <table class="w-full text-sm text-left text-gray-600">
             <thead
-              class="bg-gradient-to-r from-primary/5 to-secondary/5 border-b-2 border-secondary/30"
+              class="bg-gray-100 text-xs font-semibold uppercase tracking-wider text-primary"
             >
               <tr>
                 <th
@@ -743,12 +654,30 @@ loadEvents()
                 @click="navigateTo(`/event/${event.slug}`)"
               >
                 <td class="px-4 sm:px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                  {{ formatEventDate(event.event_date, event.event_end_date) }}
+                  {{ formatEventDateRange(event.event_date, event.event_end_date) }}
                 </td>
                 <td class="px-4 sm:px-6 py-4">
-                  <span class="font-semibold text-primary">
-                    {{ event.title }}
-                  </span>
+                  <div class="flex flex-col gap-1">
+                    <span class="inline-flex flex-wrap items-center gap-2">
+                  <div class="flex items-center gap-2">
+                    <span
+                      :class="[
+                        'inline-flex items-center gap-2 font-semibold',
+                        event.is_featured_hero
+                          ? 'badge-modern text-xs w-fit'
+                          : 'text-primary',
+                      ]"
+                    >
+                      <IconHeroiconsSparkles20Solid
+                        v-if="event.is_featured_hero"
+                        class="h-4 w-4"
+                      />
+                      {{ event.title }}
+                    </span>
+                  </div>
+                     
+                    </span>
+                  </div>
                 </td>
                 <td class="px-4 sm:px-6 py-4 text-gray-600">
                   <div class="flex flex-col gap-0.5">
@@ -757,37 +686,9 @@ loadEvents()
                   </div>
                 </td>
                 <td class="px-4 sm:px-6 py-4">
-                  <div
-                    v-if="event.categories && event.categories.length > 0"
-                    class="flex flex-wrap gap-1 items-center"
-                  >
-                    <template
-                      v-for="(cat, idx) in event.categories.slice(0, 3)"
-                      :key="typeof cat === 'string' ? `cat-${idx}` : cat.id"
-                    >
-                      <span
-                        class="inline-flex items-center gap-1 text-xs bg-secondary/10 text-primary px-2.5 py-1 rounded-full border border-secondary/40 font-medium"
-                      >
-                        {{ typeof cat === 'string' ? cat : cat.name }}
-                      </span>
-                    </template>
-                    <span
-                      v-if="event.categories && event.categories.length > 3"
-                      class="text-xs text-gray-500 font-medium hover:text-primary transition-colors group relative cursor-pointer"
-                    >
-                      +{{ event.categories.length - 3 }}
-                      <div
-                        class="hidden group-hover:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-primary text-white text-xs rounded whitespace-nowrap z-10"
-                      >
-                        {{
-                          event.categories
-                            .slice(3)
-                            .map(c => (typeof c === 'string' ? c : c.name))
-                            .join(', ')
-                        }}
-                      </div>
-                    </span>
-                  </div>
+                  <span class="text-sm font-medium text-gray-900">
+                    {{ formatEventMeta(event) }}
+                  </span>
                 </td>
               </tr>
             </tbody>
@@ -815,7 +716,7 @@ loadEvents()
           size="md"
           variant="primary"
           :is-loading="pending"
-          @click="loadEvents(currentPage + 1, true)"
+          @click="loadMore()"
         >
           <span v-if="!pending">Muat Lebih Banyak</span>
           <span
@@ -979,7 +880,7 @@ loadEvents()
             >
               <div class="flex gap-2 min-w-min">
                 <button
-                  v-for="tab in ['search', 'category', 'month', 'province', 'sort']"
+                  v-for="tab in ['search', 'month', 'province', 'sort']"
                   :key="tab"
                   :class="[
                     'px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap',
@@ -990,15 +891,13 @@ loadEvents()
                   @click="activeFilterTab = tab as any"
                 >
                   {{
-                    tab === 'category'
-                      ? 'Kategori'
-                      : tab === 'month'
-                        ? 'Bulan/Tahun'
-                        : tab === 'province'
-                          ? 'Provinsi'
-                          : tab === 'sort'
-                            ? 'Urutkan'
-                            : 'Cari'
+                    tab === 'month'
+                      ? 'Bulan/Tahun'
+                      : tab === 'province'
+                        ? 'Provinsi'
+                        : tab === 'sort'
+                          ? 'Urutkan'
+                          : 'Cari'
                   }}
                 </button>
               </div>
@@ -1022,76 +921,6 @@ loadEvents()
                 </div>
               </div>
 
-              <!-- Category Tab -->
-              <div
-                v-if="activeFilterTab === 'category'"
-                class="p-6 space-y-3"
-              >
-                <label
-                  v-for="type in eventTypes"
-                  :key="type.slug"
-                  class="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
-                >
-                  <div class="relative w-5 h-5 flex-shrink-0">
-                    <input
-                      type="checkbox"
-                      :checked="
-                        Array.isArray(filters.type)
-                          ? filters.type.includes(type.slug)
-                          : filters.type === type.slug
-                      "
-                      class="absolute opacity-0 w-0 h-0"
-                      @change="
-                        () => {
-                          if (Array.isArray(filters.type)) {
-                            const index = filters.type.indexOf(type.slug)
-                            if (index > -1) {
-                              filters.type.splice(index, 1)
-                            } else {
-                              filters.type.push(type.slug)
-                            }
-                          } else {
-                            filters.type = filters.type === type.slug ? [] : [type.slug]
-                          }
-                        }
-                      "
-                    >
-                    <div
-                      class="w-5 h-5 border-2 border-secondary/60 rounded-md flex items-center justify-center transition-colors"
-                      :class="
-                        (
-                          Array.isArray(filters.type)
-                            ? filters.type.includes(type.slug)
-                            : filters.type === type.slug
-                        )
-                          ? 'bg-secondary border-secondary'
-                          : 'group-hover:border-secondary'
-                      "
-                    >
-                      <svg
-                        v-if="
-                          Array.isArray(filters.type)
-                            ? filters.type.includes(type.slug)
-                            : filters.type === type.slug
-                        "
-                        class="w-3 h-3 text-primary"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="3"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                  <span class="text-gray-900 font-medium">{{ type.name }}</span>
-                </label>
-              </div>
-
               <!-- Month Tab -->
               <div
                 v-if="activeFilterTab === 'month'"
@@ -1107,11 +936,11 @@ loadEvents()
                       :key="year"
                       :class="[
                         'py-2 text-sm font-medium rounded-lg transition-colors',
-                        selectedYear === year
+                        (filters.year ? Number(filters.year) === year : selectedYear === year)
                           ? 'bg-secondary text-primary'
                           : 'border border-secondary/40 hover:bg-gray-100',
                       ]"
-                      @click="selectedYear = year"
+                      @click="handleYearSelect(year)"
                     >
                       {{ year }}
                     </button>
@@ -1132,7 +961,7 @@ loadEvents()
                           : 'hover:bg-gray-100',
                       ]"
                       :title="month.label"
-                      @click="filters.month = filters.month === month.value ? '' : month.value"
+                      @click="handleMonthSelect(month.value)"
                     >
                       {{ month.label.slice(0, 3) }}
                     </button>

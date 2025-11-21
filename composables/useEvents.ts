@@ -15,6 +15,7 @@ export const useEvents = () => {
     page?: number
     per_page?: number
     month?: string // Format: YYYY-MM
+    year?: string | number
     type?: string
     city?: string
     province?: string
@@ -31,6 +32,7 @@ export const useEvents = () => {
     if (params?.page) queryParams.append('page', params.page.toString())
     if (params?.per_page) queryParams.append('per_page', params.per_page.toString())
     if (params?.month) queryParams.append('month', params.month)
+    if (params?.year) queryParams.append('year', params.year.toString())
     if (params?.type) queryParams.append('type', params.type)
     if (params?.city) queryParams.append('city', params.city)
     if (params?.province) queryParams.append('province', params.province)

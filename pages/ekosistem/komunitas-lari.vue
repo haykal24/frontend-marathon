@@ -88,7 +88,20 @@ useSchemaOrg([
           '@type': 'SportsClub',
           name: community.name,
           url: `${config.public.siteUrl}/ekosistem/komunitas-lari#${community.id}`,
-          location: community.location,
+          address: {
+            '@type': 'PostalAddress',
+            addressLocality: community.location || 'Indonesia',
+            addressCountry: 'ID',
+          },
+          location: {
+            '@type': 'Place',
+            name: community.location || 'Indonesia',
+            address: {
+              '@type': 'PostalAddress',
+              addressLocality: community.location || 'Indonesia',
+              addressCountry: 'ID',
+            },
+          },
         },
       }))
     ),

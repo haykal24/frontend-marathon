@@ -6,6 +6,7 @@ import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-soli
 import IconHeroiconsCalendarDays20Solid from '~icons/heroicons/calendar-days-20-solid'
 import IconHeroiconsMapPin20Solid from '~icons/heroicons/map-pin-20-solid'
 import IconHeroiconsUserGroup20Solid from '~icons/heroicons/user-group-20-solid'
+import IconHeroiconsSparkles20Solid from '~icons/heroicons/sparkles-20-solid'
 import {
   formatEventDate,
   formatEventLocation,
@@ -63,7 +64,7 @@ const buildCardImage = (src?: string | null) => {
   <article
     :class="[
       'flex h-full overflow-hidden rounded-2xl transition-all duration-200',
-      'flex-col sm:flex-row',
+      'flex flex-col lg:flex-row',
       containerToneClasses,
     ]"
   >
@@ -71,33 +72,16 @@ const buildCardImage = (src?: string | null) => {
     <div
       :class="[
         'relative flex-shrink-0 overflow-hidden',
-        'w-full h-48 sm:w-[220px] sm:h-full',
+        'w-full aspect-[16/9] lg:w-[240px] lg:aspect-[4/5]',
       ]"
     >
       <!-- Favorite Badge - Event Pilihan Badge Label Style -->
-      <div
-        v-if="props.event.is_featured_hero"
-        class="absolute top-0 left-0 z-10"
-      >
-        <div class="badge-label">
-          <svg
-            class="h-4 w-4 fill-current"
-            viewBox="0 0 24 24"
-          >
-            <path
-              d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-            />
-          </svg>
-          Event Pilihan
-        </div>
-      </div>
-
       <!-- Image jika ada dan valid (tidak placeholder) -->
       <img
         v-if="hasValidImage"
         :src="buildCardImage(props.event.image || props.event.poster_webp_url)"
         :alt="props.event.title"
-        class="h-full w-full object-cover"
+        class="absolute inset-0 h-full w-full object-cover"
         loading="lazy"
         decoding="async"
         width="800"
@@ -107,7 +91,7 @@ const buildCardImage = (src?: string | null) => {
       <!-- Fallback dengan bg-primary gradient (konsisten dengan EventTypeSection/BlogSection) -->
       <div
         v-else
-        class="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary via-primary/70 to-black p-4 text-center text-white"
+        class="absolute inset-0 flex h-full w-full items-center justify-center bg-gradient-to-br from-primary via-primary/70 to-black p-4 text-center text-white"
       >
         <span class="text-sm font-semibold tracking-tight leading-snug z-10">
           {{ props.event.title }}
@@ -115,53 +99,57 @@ const buildCardImage = (src?: string | null) => {
       </div>
     </div>
 
-    <div :class="['flex flex-1 flex-col justify-between gap-4 p-5', 'md:p-6']">
-      <h3
-        :class="[
-          'text-primary font-semibold leading-snug line-clamp-2',
-          props.variant === 'compact' ? 'text-base' : 'text-lg',
-        ]"
+    <div :class="['flex flex-1 flex-col justify-between gap-3 p-4', 'sm:p-5']">
+      <div
+        v-if="props.event.is_featured_hero"
+        class="flex"
       >
-        {{ props.event.title }}
+        <span class="badge-modern inline-flex items-center justify-center gap-2 text-xs">
+          <IconHeroiconsSparkles20Solid class="h-4 w-4" />
+          Event Pilihan
+        </span>
+      </div>
+      <h3
+        class="text-primary font-semibold leading-snug line-clamp-2 text-base lg:text-lg"
+      >
+        {{ event.title }}
       </h3>
 
-      <div class="space-y-1.5 text-sm text-gray-600">
+      <div class="space-y-1 text-xs sm:text-sm text-gray-600">
         <div class="flex items-center gap-2">
           <IconHeroiconsCalendarDays20Solid class="h-4 w-4 text-secondary" />
-          <span class="font-medium">{{ formatEventDate(props.event.event_date) }}</span>
+          <span class="font-medium">{{ formatEventDate(event.event_date) }}</span>
         </div>
         <div class="flex items-center gap-2">
           <IconHeroiconsMapPin20Solid class="h-4 w-4 text-secondary" />
-          <span class="line-clamp-1 font-medium">{{ formatEventLocation(props.event) }}</span>
+          <span class="line-clamp-1 font-medium">{{ formatEventLocation(event) }}</span>
         </div>
         <div class="flex items-center gap-2">
           <IconHeroiconsUserGroup20Solid class="h-4 w-4 text-secondary" />
-          <span class="line-clamp-2 text-sm font-medium text-primary/90">
-            {{ formatEventMeta(props.event) }}
+          <span class="line-clamp-2 text-xs sm:text-sm font-medium text-primary/90">
+            {{ formatEventMeta(event) }}
           </span>
         </div>
       </div>
 
       <p
-        v-if="props.variant === 'default' && props.event.description"
+        v-if="variant === 'default' && event.description"
         class="text-xs text-gray-500 leading-relaxed line-clamp-2"
       >
-        {{ props.event.description }}
+        {{ event.description }}
       </p>
 
       <div
-        v-if="props.showCta"
+        v-if="showCta"
         class="mt-auto flex justify-end"
       >
-        <UiAppButton
-          :to="`/event/${props.event.slug}`"
-          variant="primary"
-          size="sm"
-          class="w-full sm:w-auto"
-          :icon="IconHeroiconsArrowRight20Solid"
+        <NuxtLink
+          :to="`/event/${event.slug}`"
+          class="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-secondary px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/70 focus-visible:ring-offset-2"
         >
-          Lihat Detail Event
-        </UiAppButton>
+          <span>Lihat Detail Event</span>
+          <IconHeroiconsArrowRight20Solid class="h-4 w-4" />
+        </NuxtLink>
       </div>
     </div>
   </article>

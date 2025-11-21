@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from '#imports'
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
 import { useAuth } from '~/composables/useAuth'
@@ -133,6 +133,27 @@ const handleAddCategory = async () => {
   }
 }
 
+const ensureCategoryFeeEntries = () => {
+  if (!categories.value?.length) return
+
+  const selectedNames = form.category_ids
+    .map(id => categories.value.find(c => c.id === id)?.name)
+    .filter((name): name is string => Boolean(name))
+
+  const currentAutoFees = form.registration_fees.filter(fee => !fee.isManual && fee.category)
+  const autoMap = new Map(currentAutoFees.map(fee => [fee.category, fee]))
+  const manualFees = form.registration_fees.filter(fee => fee.isManual)
+
+  const autoFees = selectedNames.map(name => {
+    if (autoMap.has(name)) {
+      return autoMap.get(name)!
+    }
+    return { category: name, price: '', isManual: false }
+  })
+
+  form.registration_fees = [...autoFees, ...manualFees]
+}
+
 const handleToggleCategory = (id: number) => {
   const index = form.category_ids.indexOf(id)
   if (index > -1) {
@@ -140,11 +161,25 @@ const handleToggleCategory = (id: number) => {
   } else {
     form.category_ids.push(id)
   }
+  ensureCategoryFeeEntries()
 }
 
 const handleRemoveCategory = (id: number) => {
   form.category_ids = form.category_ids.filter(cid => cid !== id)
+  ensureCategoryFeeEntries()
 }
+
+watch(
+  () => [...form.category_ids],
+  () => ensureCategoryFeeEntries(),
+  { immediate: true }
+)
+
+watch(
+  () => categories.value,
+  () => ensureCategoryFeeEntries(),
+  { deep: true }
+)
 
 const handleSubmit = async () => {
   if (loading.value) return
@@ -163,24 +198,7 @@ const handleSubmit = async () => {
   }
 }
 
-const _selectedCategoryNames = computed(() => {
-  return form.category_ids
-    .map(id => categories.value.find(c => c.id === id)?.name)
-    .filter(Boolean)
-    .join(', ')
-})
 
-const _selectedEventTypeName = computed(() => {
-  return eventTypes.value.find(t => t.slug === form.event_type)?.name || 'Pilih jenis event'
-})
-
-// Dropdown options untuk AppFilterDropdown
-const _eventTypeOptions = computed(() =>
-  (eventTypes.value || []).map(t => ({ value: t.slug, label: t.name }))
-)
-const _categoryOptions = computed(() =>
-  (categories.value || []).map(c => ({ value: c.id, label: c.name }))
-)
 
 const handleImageSelect = (e: Event) => {
   const target = e.target as HTMLInputElement
@@ -215,7 +233,7 @@ const handleRemoveBenefit = (index: number) => {
 }
 
 const handleAddRegistrationFee = () => {
-  form.registration_fees.push({ category: '', price: '' })
+  form.registration_fees.push({ category: '', price: '', isManual: true })
 }
 
 const handleRemoveRegistrationFee = (index: number) => {
@@ -734,6 +752,7 @@ const handleRemoveSocialMedia = (index: number) => {
                         type="text"
                         placeholder="cth: Medali finisher, Kaos eksklusif, Asuransi"
                         class="flex-1 rounded-xl border border-secondary/70 bg-white px-4 py-2 text-sm placeholder:text-sm focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20"
+                        @keyup.enter.prevent="handleAddBenefit"
                       >
                       <button
                         type="button"
@@ -804,12 +823,22 @@ const handleRemoveSocialMedia = (index: number) => {
                     >
                       <div>
                         <label class="text-xs font-semibold text-gray-700 mb-1 block">Kategori / Jarak</label>
-                        <input
-                          v-model="fee.category"
-                          type="text"
-                          placeholder="cth: 5K, 10K, Half Marathon"
-                          class="w-full rounded-xl border border-secondary/70 bg-white px-3 py-2 text-sm placeholder:text-sm focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20"
-                        >
+                        <template v-if="fee.isManual">
+                          <input
+                            v-model="fee.category"
+                            type="text"
+                            placeholder="cth: 5K, 10K, Half Marathon"
+                            class="w-full rounded-xl border border-secondary/70 bg-white px-3 py-2 text-sm placeholder:text-sm focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20"
+                          >
+                        </template>
+                        <template v-else>
+                          <div class="w-full rounded-xl border border-secondary/30 bg-gray-50 px-3 py-2 text-sm font-semibold text-primary">
+                            {{ fee.category }}
+                          </div>
+                          <p class="mt-1 text-[11px] text-gray-500">
+                            Judul otomatis mengikuti kategori yang dipilih.
+                          </p>
+                        </template>
                       </div>
                       <div class="flex gap-2">
                         <div class="flex-1">
@@ -827,6 +856,7 @@ const handleRemoveSocialMedia = (index: number) => {
                           >
                         </div>
                         <button
+                          v-if="fee.isManual"
                           type="button"
                           class="self-end rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-100"
                           @click="handleRemoveRegistrationFee(index)"

@@ -170,10 +170,10 @@ export default defineNuxtConfig({
     // Set sitemap URL untuk membantu crawler menemukan semua konten
     sitemap: [
       '/sitemap.xml',          // Main sitemap index
-      '/pages-sitemap.xml',    // Static pages
-      '/events-sitemap.xml',   // Event listings
-      '/blog-sitemap.xml',     // Blog articles
-      '/categories-sitemap.xml', // Categories
+      '/__sitemap__/pages.xml',
+      '/__sitemap__/events.xml',
+      '/__sitemap__/blog.xml',
+      '/__sitemap__/categories.xml',
     ],
   },
 

@@ -174,7 +174,6 @@ const resolveLink = (item: NavigationItem) => {
   return item.path
 }
 </script>
-<!-- SEO-->
 <template>
   <header class="sticky top-0 z-50 bg-primary text-white">
     <nav class="layout-container">

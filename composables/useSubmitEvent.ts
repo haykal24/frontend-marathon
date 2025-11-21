@@ -25,6 +25,7 @@ interface RatePackageOption {
 interface RegistrationFeeEntry {
   category: string
   price: string
+  isManual?: boolean
 }
 
 interface ContactEntry {

@@ -62,6 +62,42 @@ export const formatEventDate = (date?: string | null): string => {
   }
 }
 
+export const formatEventDateRange = (
+  startDate?: string | null,
+  endDate?: string | null
+): string => {
+  if (!startDate) {
+    return 'Tanggal belum tersedia'
+  }
+
+  try {
+    const start = new Date(startDate)
+    if (endDate) {
+      const end = new Date(endDate)
+      if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
+        return `${new Intl.DateTimeFormat('id-ID', { day: 'numeric' }).format(start)} - ${new Intl.DateTimeFormat('id-ID', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        }).format(end)}`
+      }
+
+      return `${new Intl.DateTimeFormat('id-ID', {
+        day: 'numeric',
+        month: 'short',
+      }).format(start)} - ${new Intl.DateTimeFormat('id-ID', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      }).format(end)}`
+    }
+
+    return formatEventDate(startDate)
+  } catch {
+    return startDate
+  }
+}
+
 /**
  * Format tanggal dengan hari (contoh: "Senin, 15 Januari 2025")
  * @param date - String tanggal (format: YYYY-MM-DD) atau Date object

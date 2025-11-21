@@ -46,26 +46,110 @@ const currentPage = ref(1)
 const lastPage = ref(1)
 const totalCount = ref(0)
 const isLoading = ref(false)
-const searchQuery = ref('')
+const searchQuery = ref((route.query.search as string) || '')
 const selectedCategory = ref<string>((route.query.category as string) || '')
 const selectedTag = ref<string>((route.query.tag as string) || '')
 
-// --- SEO Meta Tags ---
+const flattenedTags = computed<BlogTag[]>(() => {
+  const allTags = posts.value.flatMap(post => post.tags ?? [])
+  // Remove duplicates by slug
+  const uniqueTags = new Map<string, BlogTag>()
+  allTags.forEach(tag => {
+    if (tag.slug && !uniqueTags.has(tag.slug)) {
+      uniqueTags.set(tag.slug, tag)
+    }
+  })
+  return Array.from(uniqueTags.values())
+})
+
+const selectedTagLabel = computed(() => {
+  if (!selectedTag.value) return ''
+  const tag = flattenedTags.value.find(tag => tag.slug === selectedTag.value)
+  if (tag?.name) return tag.name
+  return selectedTag.value.replace(/-/g, ' ')
+})
+
+const clearSelectedTag = () => {
+  selectedTag.value = ''
+  fetchPostsData(1)
+}
+
+const defaultSeoTitle = 'Blog Lari Indonesia - Panduan Marathon, Latihan, dan Tips Kesehatan'
+const defaultSeoDescription =
+  'Artikel lengkap lari marathon: panduan latihan, tips kesehatan, review perlengkapan, dan pembahasan teknik lari untuk pemula hingga advanced.'
+
+const selectedCategoryName = computed(() => {
+  if (!selectedCategory.value) return ''
+  const category = categories.value.find(cat => cat.slug === selectedCategory.value)
+  return category?.name || selectedCategory.value.replace(/-/g, ' ')
+})
+
+const seoTitle = computed(() => {
+  if (selectedTag.value && selectedTagLabel.value) {
+    return `Artikel Tag ${selectedTagLabel.value} - Blog Lari Indonesia`
+  }
+  if (selectedCategoryName.value) {
+    return `Kategori ${selectedCategoryName.value} - Blog Lari Indonesia`
+  }
+  if (searchQuery.value) {
+    return `Hasil Pencarian “${searchQuery.value}” - Blog Lari Indonesia`
+  }
+  if (currentPage.value > 1) {
+    return `Halaman ${currentPage.value} - ${defaultSeoTitle}`
+  }
+  return defaultSeoTitle
+})
+
+const seoDescription = computed(() => {
+  if (selectedTag.value && selectedTagLabel.value) {
+    return `Kumpulan artikel bertopik ${selectedTagLabel.value} untuk pelari Indonesia: panduan latihan, tips gear, dan strategi finish kuat.`
+  }
+  if (selectedCategoryName.value) {
+    return `Artikel kategori ${selectedCategoryName.value} yang membahas latihan lari, strategi marathon, dan insight komunitas lari Indonesia.`
+  }
+  if (searchQuery.value) {
+    return `Hasil pencarian untuk “${searchQuery.value}” dalam blog lari kami. Temukan artikel relevan tentang latihan, event, dan tips kesehatan.`
+  }
+  return defaultSeoDescription
+})
+
+const seoUrl = computed(() => {
+  const params = new URLSearchParams()
+  if (selectedCategory.value) params.set('category', selectedCategory.value)
+  if (selectedTag.value) params.set('tag', selectedTag.value)
+  if (searchQuery.value) params.set('search', searchQuery.value)
+  if (currentPage.value > 1) params.set('page', String(currentPage.value))
+  const queryString = params.toString()
+  return queryString ? `/blog?${queryString}` : '/blog'
+})
+
 useSeoMetaDynamic({
-  title: 'Blog Lari Indonesia - Panduan Marathon, Latihan, dan Tips Kesehatan',
-  description:
-    'Artikel lengkap lari marathon: panduan latihan, tips kesehatan, review perlengkapan, dan pembahasan teknik lari untuk pemula hingga advanced.',
-  url: '/blog',
+  title: seoTitle,
+  description: seoDescription,
+  url: seoUrl,
 })
 
 // SEO: OG Image menggunakan fallback og.webp (tidak perlu defineOgImage untuk listing)
 
 // --- Schema.org CollectionPage ---
-useSchemaOrg([
+const schemaPageName = computed(() => {
+  if (selectedTagLabel.value) {
+    return `Artikel Tag ${selectedTagLabel.value}`
+  }
+  if (selectedCategoryName.value) {
+    return `Artikel Kategori ${selectedCategoryName.value}`
+  }
+  if (searchQuery.value) {
+    return `Hasil Pencarian ${searchQuery.value}`
+  }
+  return 'Blog Lari Indonesia'
+})
+
+useSchemaOrg(() => [
   defineWebPage({
-    '@id': `${config.public.siteUrl}/blog`,
-    name: 'Blog Lari Indonesia',
-    description: 'Artikel lengkap tentang lari marathon, teknik latihan, dan tips kesehatan',
+    '@id': `${config.public.siteUrl}${seoUrl.value}`,
+    name: schemaPageName.value,
+    description: seoDescription.value,
   }),
   // OPTIMASI: Tambahkan ItemList untuk memberitahu Google konten dari halaman blog ini
   defineItemList({
@@ -121,38 +205,41 @@ const categoryOptions = computed(() =>
   }))
 )
 
-const flattenedTags = computed<BlogTag[]>(() => {
-  const allTags = posts.value.flatMap(post => post.tags ?? [])
-  // Remove duplicates by slug
-  const uniqueTags = new Map<string, BlogTag>()
-  allTags.forEach(tag => {
-    if (tag.slug && !uniqueTags.has(tag.slug)) {
-      uniqueTags.set(tag.slug, tag)
-    }
+// --- Fetch Categories ---
+const initialPage = parseInt(route.query.page as string) || 1
+
+const { data: ssrCategories } = await useAsyncData('blog-categories', async () => {
+  const res = await fetchBlogCategories()
+  return res.data || []
+})
+categories.value = ssrCategories.value || []
+
+const { data: ssrPosts } = await useAsyncData('blog-posts-initial', async () => {
+  return fetchBlogPosts({
+    page: initialPage,
+    per_page: perPage,
+    search: searchQuery.value || undefined,
+    category: selectedCategory.value || undefined,
+    tag: selectedTag.value || undefined,
   })
-  return Array.from(uniqueTags.values())
 })
 
-const selectedTagLabel = computed(() => {
-  if (!selectedTag.value) return ''
-  const tag = flattenedTags.value.find(tag => tag.slug === selectedTag.value)
-  if (tag?.name) return tag.name
-  return selectedTag.value.replace(/-/g, ' ')
-})
-
-const clearSelectedTag = () => {
-  selectedTag.value = ''
-  fetchPostsData(1)
+if (ssrPosts.value) {
+  const items = ssrPosts.value.data ?? []
+  posts.value = items
+  const pagination = (ssrPosts.value as BlogPostsResponse).meta
+  currentPage.value = pagination?.current_page ?? initialPage
+  lastPage.value = pagination?.last_page ?? 1
+  totalCount.value = pagination?.total ?? items.length ?? 0
 }
 
-// --- Fetch Categories ---
 const fetchCategoriesData = async () => {
   try {
-    const res = await fetchBlogCategories()
-    categories.value = res.data || []
-  } catch (e) {
-    console.error('Failed to fetch categories:', e)
-  }
+    if (!ssrCategories.value) {
+      const res = await fetchBlogCategories()
+      categories.value = res.data || []
+    }
+  } catch {}
 }
 
 // --- Fetch Posts ---
@@ -183,9 +270,8 @@ const fetchPostsData = async (page = 1, append = false) => {
     if (page > 1) query.page = String(page)
 
     router.push({ query })
-  } catch (e) {
-    console.error('Failed to fetch posts:', e)
-  } finally {
+  } catch {}
+  finally {
     isLoading.value = false
   }
 }
@@ -193,13 +279,9 @@ const fetchPostsData = async (page = 1, append = false) => {
 // --- Lifecycle ---
 onMounted(() => {
   fetchCategoriesData()
-
-  const page = parseInt(route.query.page as string) || 1
-  searchQuery.value = (route.query.search as string) || ''
-  selectedCategory.value = (route.query.category as string) || ''
-  selectedTag.value = (route.query.tag as string) || ''
-
-  fetchPostsData(page)
+  if (!ssrPosts.value) {
+    fetchPostsData(initialPage)
+  }
 })
 
 // --- Watch for filter changes ---

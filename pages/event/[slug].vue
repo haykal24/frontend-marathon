@@ -103,8 +103,8 @@ const buildImageUrl = (
 
 const eventPosterImage = computed(() =>
   buildImageUrl(eventData.value?.poster_webp_url || eventData.value?.image, {
-    width: 720,
-    height: 720,
+    width: 800,
+    height: 1000,
   }),
 )
 
@@ -250,9 +250,16 @@ const normalizePhoneNumber = (value: string): string => {
   return digits
 }
 
+const leadGeneratorMessage = computed(() => {
+  const baseUrl = `${config.public.siteUrl}/event/${slug}`
+  const title = eventData.value?.title ?? 'event lari'
+  return `Halo, saya mendapatkan info ${title} melalui ${baseUrl}`
+})
+
 const buildWhatsappUrl = (value: string): string | null => {
   const normalized = normalizePhoneNumber(value)
-  return normalized ? `https://wa.me/${normalized}` : null
+  if (!normalized) return null
+  return `https://wa.me/${normalized}?text=${encodeURIComponent(leadGeneratorMessage.value)}`
 }
 
 const buildTelUrl = (value: string): string | null => {
@@ -261,11 +268,28 @@ const buildTelUrl = (value: string): string | null => {
   return cleaned ? `tel:${cleaned}` : null
 }
 
+const buildEmailLink = (value: string): string | null => {
+  if (!value) return null
+  const subject = encodeURIComponent(`Info Event ${eventData.value?.title ?? ''}`.trim())
+  const body = encodeURIComponent(leadGeneratorMessage.value)
+  return `mailto:${value}?subject=${subject}&body=${body}`
+}
+
 // --- Share Functionality ---
 const shareUrl = computed(() => `${config.public.siteUrl}/event/${slug}`)
 const shareText = computed(() => `${eventData.value.title} - ${eventData.value.location_name}`)
 const showSharePopover = ref(false)
 const copyLinkSuccess = ref(false)
+
+const registrationUrl = computed(() => {
+  const rawUrl = eventData.value?.registration_url?.trim()
+  if (!rawUrl) return ''
+  try {
+    return new URL(rawUrl).toString()
+  } catch {
+    return rawUrl
+  }
+})
 
 const copyLink = async () => {
   try {
@@ -514,13 +538,20 @@ const allContactItems = computed(() => {
                   </div>
                   <!-- Email -->
                   <a
-                    v-else-if="item.label.toLowerCase().includes('email')"
-                    :href="`mailto:${item.value}`"
+                    v-else-if="item.label.toLowerCase().includes('email') && buildEmailLink(item.value)"
+                    :href="buildEmailLink(item.value) || undefined"
                     class="flex items-center gap-3 text-gray-600 hover:text-secondary font-medium text-sm w-full"
                   >
                     <IconMdiEmail class="h-5 w-5 text-gray-600 flex-shrink-0" />
                     {{ item.value }}
                   </a>
+                  <div
+                    v-else-if="item.label.toLowerCase().includes('email')"
+                    class="flex items-center gap-3 text-gray-600 font-medium text-sm w-full"
+                  >
+                    <IconMdiEmail class="h-5 w-5 text-gray-600 flex-shrink-0" />
+                    {{ item.value }}
+                  </div>
                   <!-- Instagram -->
                   <a
                     v-else-if="item.label.toLowerCase().includes('instagram')"
@@ -563,14 +594,14 @@ const allContactItems = computed(() => {
             <!-- Event Thumbnail (Full Width, No Padding) -->
             <div
               v-if="eventPosterImage"
-              class="rounded-2xl overflow-hidden border border-secondary"
+              class="rounded-2xl overflow-hidden"
             >
               <img
                 :src="eventPosterImage"
                 :alt="eventData.title"
-                class="w-full h-auto object-cover"
-                width="720"
-                height="720"
+                class="w-full h-full object-cover"
+                width="800"
+                height="1000"
                 loading="lazy"
                 decoding="async"
                 fetchPriority="low"
@@ -579,26 +610,21 @@ const allContactItems = computed(() => {
 
             <!-- Registration CTA -->
             <div
-              v-if="eventData.registration_url"
-              class="rounded-2xl border border-secondary bg-white p-6 text-center"
+              v-if="registrationUrl"
+              class="rounded-2xl border border-secondary bg-white p-4 text-center space-y-3"
             >
-              <h3 class="lg:text-lg text-base font-bold text-primary mb-4">
+              <h3 class="lg:text-lg text-base font-bold text-primary">
                 Daftar Sekarang
               </h3>
-              <UiAppButton
-                block
-                variant="secondary"
-                size="lg"
-                as="a"
-                :href="eventData.registration_url"
+              <NuxtLink
+                :to="registrationUrl"
                 target="_blank"
                 rel="noopener noreferrer"
+                class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-secondary px-4 py-2 font-semibold text-primary transition hover:bg-primary hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/70 focus-visible:ring-offset-2 text-sm"
               >
-                Buka Pendaftaran
-              </UiAppButton>
-              <p class="text-xs text-gray-500 mt-3">
-                Akan membuka di tab baru
-              </p>
+                Link Pendaftaran
+              </NuxtLink>
+             
             </div>
           </div>
         </div>
