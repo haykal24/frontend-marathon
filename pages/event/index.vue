@@ -55,34 +55,6 @@ useSeoMetaDynamic({
 
 // SEO: OG Image menggunakan fallback og.webp (tidak perlu defineOgImage untuk listing)
 
-// --- CollectionPage & ItemList Schema.org (SEO Optimal) ---
-useSchemaOrg([
-  defineWebPage({
-    '@id': `${config.public.siteUrl}${canonicalUrl.value}`,
-    name: `Kalender Event Lari ${currentYear.value}`,
-    description:
-      'Jadwal lengkap event lari di seluruh Indonesia. Filter berdasarkan kategori, lokasi, dan tanggal.',
-    url: `${config.public.siteUrl}${canonicalUrl.value}`,
-    '@type': 'CollectionPage',
-  }),
-  // OPTIMASI: Tambahkan ItemList untuk memberitahu Google konten dari koleksi ini
-  defineItemList({
-    itemListElement: computed(() =>
-      events.value.slice(0, 10).map((event, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        item: {
-          '@type': 'Event',
-          name: event.title,
-          url: `${config.public.siteUrl}/event/${event.slug}`,
-          startDate: event.event_date,
-        },
-      }))
-    ),
-  }),
-])
-
-
 // --- Breadcrumb Items ---
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => {
   const items: BreadcrumbItem[] = [
@@ -133,6 +105,33 @@ const {
   totalCount,
   loadMore,
 } = useEventListing(filters)
+
+// --- CollectionPage & ItemList Schema.org (SEO Optimal) ---
+useSchemaOrg([
+  defineWebPage({
+    '@id': `${config.public.siteUrl}${canonicalUrl.value}`,
+    name: `Kalender Event Lari ${currentYear.value}`,
+    description:
+      'Jadwal lengkap event lari di seluruh Indonesia. Filter berdasarkan kategori, lokasi, dan tanggal.',
+    url: `${config.public.siteUrl}${canonicalUrl.value}`,
+    '@type': 'CollectionPage',
+  }),
+  // OPTIMASI: Tambahkan ItemList untuk memberitahu Google konten dari koleksi ini
+  defineItemList({
+    itemListElement: computed(() =>
+      events.value.slice(0, 10).map((event, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        item: {
+          '@type': 'Event',
+          name: event.title,
+          url: `${config.public.siteUrl}/event/${event.slug}`,
+          startDate: event.event_date,
+        },
+      }))
+    ),
+  }),
+])
 
 const sortOptions = [
   { value: 'latest', label: 'Terbaru' },
