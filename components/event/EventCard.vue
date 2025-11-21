@@ -81,7 +81,7 @@ const buildCardImage = (src?: string | null) => {
         v-if="hasValidImage"
         :src="buildCardImage(props.event.image || props.event.poster_webp_url)"
         :alt="props.event.title"
-        class="absolute inset-0 h-full w-full object-contain"
+        class="absolute inset-0 h-full w-full object-cover"
         loading="lazy"
         decoding="async"
         width="800"

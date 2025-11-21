@@ -92,24 +92,24 @@ export const useHomepageData = () => {
           ? extractList<AdBanner>(ctaBannerResult as ApiListResponse<AdBanner>)[0]
           : null
 
-      // OPTIMASI: Kembalikan logic fetch 3 tahun (current - 1, current, current + 1)
       const calendarYears = Array.from(
         new Set([currentYear.value - 1, currentYear.value, currentYear.value + 1].filter(year => year > 0)),
       )
 
       const calendarStatsResponses = await Promise.allSettled(
-        calendarYears.map(year => fetchCalendarStats(year))
+        calendarYears.map(async year => {
+          const stats = await fetchCalendarStats(year)
+          return {
+            year,
+            stats: stats?.data && typeof stats.data === 'object' ? stats.data : {},
+          }
+        }),
       )
 
       const calendarStatsByYear: Record<number, Record<number, number>> = {}
-      calendarStatsResponses.forEach((result, index) => {
+      calendarStatsResponses.forEach(result => {
         if (result.status === 'fulfilled') {
-          const year = calendarYears[index]
-          // Ensure year is a valid number before using as index
-          if (typeof year === 'number') {
-            const stats = result.value?.data && typeof result.value.data === 'object' ? result.value.data : {}
-            calendarStatsByYear[year] = stats
-          }
+          calendarStatsByYear[result.value.year] = result.value.stats
         }
       })
 
@@ -120,7 +120,6 @@ export const useHomepageData = () => {
       const calendarStats =
         (fallbackYear !== undefined ? calendarStatsByYear[fallbackYear] : undefined) ?? {}
 
-      // OPTIMASI: Reduce event types from 6 to 3 untuk homepage
       const eventsByType: Record<string, Event[]> = {}
       const cleanEventTypes = extractList<EventType>(eventTypes as ApiListResponse<EventType>)
       if (cleanEventTypes.length > 0) {
@@ -128,7 +127,7 @@ export const useHomepageData = () => {
         const topTypes = cleanEventTypes
           .filter(type => (type.event_count ?? 0) > 0)
           .sort((a, b) => (b.event_count ?? 0) - (a.event_count ?? 0))
-          .slice(0, 6) // Restore 6 event types
+          .slice(0, 6)
         
         const typeFetchResults = await Promise.allSettled(
           topTypes.map(type => fetchEventsByType(type.slug, 2))
