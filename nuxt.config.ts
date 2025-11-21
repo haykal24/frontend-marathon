@@ -5,7 +5,7 @@ import IconsResolver from 'unplugin-icons/resolver'
 import Components from 'unplugin-vue-components/vite'
 
 export default defineNuxtConfig({
-  compatibilityDate: '2024-11-20',
+  compatibilityDate: '2024-11-21',
   devtools: { enabled: false },
 
   experimental: {
