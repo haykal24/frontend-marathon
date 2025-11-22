@@ -160,12 +160,65 @@ export default defineNuxtConfig({
   },
 
   // Robots Configuration (@nuxtjs/seo)
-  // Hanya block path yang memang ada di frontend dan perlu dilindungi
+  // Konfigurasi lengkap untuk robots.txt yang di-generate otomatis
   robots: {
+    // Allow paths yang penting untuk rendering (CSS, JS, images, fonts)
+    // Resource di /_nuxt/ HARUS diizinkan agar Googlebot bisa merender halaman dengan benar
+    allow: [
+      '/',                    // Homepage
+      '/_nuxt/',              // Nuxt assets (CSS, JS) - WAJIB untuk rendering
+      '/_nuxt/**',            // Semua resource di _nuxt
+      '/images/',             // Images folder
+      '/images/**',           // Semua images
+      '/fonts/',              // Fonts folder
+      '/fonts/**',            // Semua fonts
+      '/event',               // Event listing
+      '/event/**',            // Event detail pages
+      '/blog',                // Blog listing
+      '/blog/**',             // Blog detail pages
+      '/ekosistem/**',        // Directory pages
+      '/tentang-kami',        // About page
+      '/kontak',              // Contact page
+      '/rate-card',           // Rate card page
+      '/faq',                 // FAQ page
+      '/bio',                 // Bio link page
+    ],
+    // Disallow paths yang private atau tidak perlu di-index
     disallow: [
-      '/_nuxt/',     // Nuxt internal assets (wajib di-block)
-      '/mitra/',     // Partner dashboard (private area, memerlukan login)
-      '/login',      // Login page (tidak perlu di-index)
+      '/mitra/',              // Partner dashboard (private area, memerlukan login)
+      '/mitra/**',            // Semua path di mitra
+      '/login',               // Login page (tidak perlu di-index)
+      '/api/',                // API endpoints (tidak perlu di-index)
+      '/api/**',              // Semua API paths
+      '/admin/',              // Admin area (jika ada)
+      '/private/',            // Private area (jika ada)
+    ],
+    // User-agent specific rules
+    rules: [
+      {
+        // Block aggressive crawlers yang tidak berguna
+        userAgent: 'AhrefsBot',
+        disallow: ['/'],
+      },
+      {
+        userAgent: 'SemrushBot',
+        disallow: ['/'],
+      },
+      {
+        userAgent: 'SemrushBot-SA',
+        disallow: ['/'],
+      },
+      {
+        // Allow Googlebot full access
+        userAgent: 'Googlebot',
+        allow: ['/'],
+        disallow: ['/mitra/', '/api/'],
+      },
+      {
+        // Allow Googlebot-Image untuk image indexing
+        userAgent: 'Googlebot-Image',
+        allow: ['/images/', '/_nuxt/'],
+      },
     ],
     // Set sitemap URL untuk membantu crawler menemukan semua konten
     sitemap: [

@@ -127,9 +127,22 @@ declare module 'nuxt/schema' {
       }
     }
     robots?: {
+      // Global allow/disallow rules (applies to all user agents)
       disallow?: string[]
       allow?: string[]
+      // Sitemap URLs
       sitemap?: string | string[]
+      // User-agent specific rules
+      rules?: Array<{
+        // User agent name (e.g., 'Googlebot', 'AhrefsBot', '*')
+        userAgent: string
+        // Allow paths for this user agent
+        allow?: string[]
+        // Disallow paths for this user agent
+        disallow?: string[]
+        // Crawl delay in seconds (optional)
+        crawlDelay?: number
+      }>
     }
     ogImage?: {
       enabled?: boolean
