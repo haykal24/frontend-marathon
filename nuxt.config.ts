@@ -73,7 +73,7 @@ export default defineNuxtConfig({
         resolvers: [
           IconsResolver({
             prefix: 'Icon',
-            enabledCollections: ['mdi', 'heroicons', 'logos'],
+            enabledCollections: ['mdi', 'heroicons', 'logos', 'simple-icons'],
           }),
         ],
         dts: true,
