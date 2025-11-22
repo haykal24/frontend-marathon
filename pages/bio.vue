@@ -168,11 +168,21 @@ definePageMeta({
 // Static page untuk title dan description
 const {
   title: pageTitle,
-  seoDescription: pageDescription,
+  renderedContent,
   pending: pagePending,
 } = await useStaticPage('bio', {
   defaultTitle: 'Link Bio',
   defaultDescription: 'Platform Kalender Lari & Jadwal Marathon #1 di Indonesia',
+})
+
+// Extract plain text from HTML content for description
+const pageDescription = computed(() => {
+  if (!renderedContent.value) {
+    return 'Platform Kalender Lari & Jadwal Marathon #1 di Indonesia'
+  }
+  // Strip HTML tags and get plain text
+  const text = renderedContent.value.replace(/<[^>]*>/g, '').trim()
+  return text || 'Platform Kalender Lari & Jadwal Marathon #1 di Indonesia'
 })
 
 useHead({
