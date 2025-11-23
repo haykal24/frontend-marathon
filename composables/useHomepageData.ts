@@ -48,10 +48,18 @@ export const useHomepageData = () => {
   } = useAsyncData(
     'homepage-overview',
     async () => {
-      // OPTIMASI: Cache hanya untuk client-side navigation (back/forward)
-      // Jangan gunakan cache saat SSR untuk memastikan IPX bisa optimize images
+      // FIX: Validasi cache sebelum return - pastikan ada data penting
       if (cachedHomepageData.value && import.meta.client && !import.meta.server) {
-        return cachedHomepageData.value
+        // Validasi: cache harus punya minimal latestEvents atau featuredHeroEvents
+        const hasValidData = 
+          cachedHomepageData.value.latestEvents || 
+          cachedHomepageData.value.featuredHeroEvents ||
+          (cachedHomepageData.value.eventTypes && Object.keys(cachedHomepageData.value.eventsByType || {}).length > 0)
+        
+        if (hasValidData) {
+          return cachedHomepageData.value
+        }
+        // Jika cache kosong/invalid, fetch ulang
       }
 
       try {
@@ -97,29 +105,7 @@ export const useHomepageData = () => {
           ? extractList<AdBanner>(ctaBannerResult as ApiListResponse<AdBanner>)[0]
           : null
 
-      // OPTIMASI: Fetch calendar stats hanya untuk tahun ini (tidak perlu 3 tahun)
-      const calendarYears = [currentYear.value]
-      
-      const calendarStatsResponses = await Promise.allSettled(
-        calendarYears.map(async year => {
-          const stats = await fetchCalendarStats(year)
-          return {
-            year,
-            stats: stats?.data && typeof stats.data === 'object' ? stats.data : {},
-          }
-        }),
-      )
-
-      const calendarStatsByYear: Record<number, Record<number, number>> = {}
-      calendarStatsResponses.forEach(result => {
-        if (result.status === 'fulfilled') {
-          calendarStatsByYear[result.value.year] = result.value.stats
-        }
-      })
-
-      const calendarStats = calendarStatsByYear[currentYear.value] ?? {}
-
-      // OPTIMASI: Fetch events by type dan province secara parallel dengan limit lebih kecil
+      // FIX: Extract data SEBELUM digunakan untuk menghindari race condition
       const cleanEventTypes = extractList<EventType>(eventTypes as ApiListResponse<EventType>)
       const cleanProvinces = extractList<Province>(provinces as ApiListResponse<Province>)
 
@@ -127,43 +113,70 @@ export const useHomepageData = () => {
       const topTypes = cleanEventTypes
         .filter(type => (type.event_count ?? 0) > 0)
         .sort((a, b) => (b.event_count ?? 0) - (a.event_count ?? 0))
-        .slice(0, 4) // Reduced from 6 to 4
+        .slice(0, 4)
 
-      const topProvinces = cleanProvinces.slice(0, 2) // Reduced from 3 to 2
+      const topProvinces = cleanProvinces.slice(0, 2)
 
-      // Fetch semua sekaligus secara parallel
-      const [typeResults, provinceResults] = await Promise.all([
+      // FIX: Fetch calendar stats dan events secara parallel (tidak sequential)
+      const [calendarStatsResponses, typeResults, provinceResults] = await Promise.all([
+        // Calendar stats
         Promise.allSettled(
-          topTypes.map(type => fetchEventsByType(type.slug, 2))
+          [currentYear.value].map(async year => {
+            const stats = await fetchCalendarStats(year)
+            return {
+              year,
+              stats: stats?.data && typeof stats.data === 'object' ? stats.data : {},
+            }
+          })
         ),
-        Promise.allSettled(
-          topProvinces.map(province => fetchEventsByProvince(province.slug, 2))
-        ),
+        // Events by type (only if we have types)
+        topTypes.length > 0
+          ? Promise.allSettled(topTypes.map(type => fetchEventsByType(type.slug, 2)))
+          : Promise.resolve([]),
+        // Events by province (only if we have provinces)
+        topProvinces.length > 0
+          ? Promise.allSettled(topProvinces.map(province => fetchEventsByProvince(province.slug, 2)))
+          : Promise.resolve([]),
       ])
 
-      const eventsByType: Record<string, Event[]> = {}
-      typeResults.forEach((res, index) => {
-        if (res.status === 'fulfilled' && res.value) {
-          const selectedType = topTypes[index]
-          if (selectedType) {
-            eventsByType[selectedType.slug] = extractList<Event>(
-              res.value as ApiListResponse<Event>
-            )
-          }
+      // Process calendar stats
+      const calendarStatsByYear: Record<number, Record<number, number>> = {}
+      calendarStatsResponses.forEach(result => {
+        if (result.status === 'fulfilled') {
+          calendarStatsByYear[result.value.year] = result.value.stats
         }
       })
+      const calendarStats = calendarStatsByYear[currentYear.value] ?? {}
 
-      const eventsByProvince: Record<string, Event[]> = {}
-      provinceResults.forEach((res, index) => {
-        if (res.status === 'fulfilled' && res.value) {
-          const selectedProvince = topProvinces[index]
-          if (selectedProvince) {
-            eventsByProvince[selectedProvince.slug] = extractList<Event>(
-              res.value as ApiListResponse<Event>
-            )
+      // Process events by type
+      const eventsByType: Record<string, Event[]> = {}
+      if (Array.isArray(typeResults)) {
+        typeResults.forEach((res, index) => {
+          if (res.status === 'fulfilled' && res.value) {
+            const selectedType = topTypes[index]
+            if (selectedType) {
+              eventsByType[selectedType.slug] = extractList<Event>(
+                res.value as ApiListResponse<Event>
+              )
+            }
           }
-        }
-      })
+        })
+      }
+
+      // Process events by province
+      const eventsByProvince: Record<string, Event[]> = {}
+      if (Array.isArray(provinceResults)) {
+        provinceResults.forEach((res, index) => {
+          if (res.status === 'fulfilled' && res.value) {
+            const selectedProvince = topProvinces[index]
+            if (selectedProvince) {
+              eventsByProvince[selectedProvince.slug] = extractList<Event>(
+                res.value as ApiListResponse<Event>
+              )
+            }
+          }
+        })
+      }
 
         // We return the raw results here
         const result = {

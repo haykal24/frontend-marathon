@@ -72,33 +72,9 @@ const buildHeroImageUrl = (
   })
 }
 
-const heroPreloadImage = computed(() => {
-  if (heroBanners.value.length > 0 && heroBanners.value[0]?.image) {
-    return buildHeroImageUrl(heroBanners.value[0].image, { width: 1600, height: 900 })
-  }
-
-  const eventWithImage = events.value.find(event => event.image)
-  if (eventWithImage?.image) {
-    return buildHeroImageUrl(eventWithImage.image, { width: 1600, height: 900 })
-  }
-
-  return ''
-})
-
-useHead(() => {
-  if (!heroPreloadImage.value) return {}
-  return {
-    link: [
-      {
-        rel: 'preload',
-        as: 'image',
-        href: heroPreloadImage.value,
-        imagesizes: '100vw',
-        fetchpriority: 'high',
-      },
-    ],
-  }
-})
+// NOTE: Preload link removed to prevent "preloaded but not used" warning
+// The first slide image uses loading="eager" and fetchpriority="high" instead,
+// which is sufficient for LCP optimization without causing preload warnings
 </script>
 
 <template>
