@@ -122,21 +122,40 @@ const provinceOptions = computed(() => {
 })
 
 // --- SEO: Dynamic Title & Description (after all dependencies are initialized) ---
+// FIX: Add type filter to prevent duplicate content
+const eventTypeLabels: Record<string, string> = {
+  'road_run': 'Road Run',
+  'trail_run': 'Trail Run',
+  'fun_run': 'Fun Run',
+  'virtual_run': 'Virtual Run',
+  'marathon': 'Marathon',
+}
+
 const dynamicSeoTitle = computed(() => {
   const parts: string[] = []
   
-  // Province filter (prioritas tertinggi untuk Local SEO)
+  // Type filter (prioritas tertinggi untuk mencegah duplicate)
+  if (filters.value.type && filters.value.type.length > 0) {
+    const typeLabel = eventTypeLabels[filters.value.type[0]] || filters.value.type[0]
+    parts.push(`Event ${typeLabel}`)
+  }
+  
+  // Province filter
   if (filters.value.province && filters.value.province.length > 0) {
     const provinceName = provinceOptions.value.find(p => 
       p.value === filters.value.province[0]
     )?.label
     if (provinceName) {
-      parts.push(`Event Lari ${provinceName}`)
+      if (parts.length > 0) {
+        parts.push(`di ${provinceName}`)
+      } else {
+        parts.push(`Event Lari ${provinceName}`)
+      }
     }
   }
   
   // Month filter
-  if (filters.value.month && !parts.length) {
+  if (filters.value.month && parts.length === 0) {
     const monthLabel = monthOptions.value.find(m => 
       m.value === filters.value.month
     )?.label
@@ -151,11 +170,19 @@ const dynamicSeoTitle = computed(() => {
     parts.push(`Jadwal Event Lari ${currentYear.value}`)
   }
   
-  return parts.join(' - ')
+  return parts.join(' ')
 })
 
 const dynamicSeoDescription = computed(() => {
-  let desc = 'Temukan jadwal lengkap event lari'
+  let desc = 'Temukan jadwal lengkap'
+  
+  // Type context
+  if (filters.value.type && filters.value.type.length > 0) {
+    const typeLabel = eventTypeLabels[filters.value.type[0]] || filters.value.type[0]
+    desc += ` event ${typeLabel.toLowerCase()}`
+  } else {
+    desc += ' event lari'
+  }
   
   // Province context
   if (filters.value.province && filters.value.province.length > 0) {
@@ -178,8 +205,13 @@ const dynamicSeoDescription = computed(() => {
     }
   }
   
-  // Default suffix
-  desc += '. Kalender lari terbaru untuk road run, trail run, fun run, dan marathon.'
+  // Dynamic suffix based on type
+  if (filters.value.type && filters.value.type.length > 0) {
+    const typeLabel = eventTypeLabels[filters.value.type[0]]
+    desc += `. Kalender ${typeLabel.toLowerCase()} terbaru di Indonesia.`
+  } else {
+    desc += '. Kalender lari terbaru untuk road run, trail run, fun run, dan marathon.'
+  }
   
   return desc
 })
