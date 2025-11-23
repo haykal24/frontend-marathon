@@ -13,14 +13,6 @@ export const useSiteSettings = () => {
           const config = useRuntimeConfig()
         const apiBase = config.public.apiBase as string
           
-          // Ensure we have a valid base URL
-          if (!apiBase || apiBase === 'http://localhost:8000/api/v1') {
-            // During build/prerender, return empty settings
-            if (process.env.NODE_ENV === 'production' && !process.client) {
-              return {} as SiteSettingResponse
-            }
-          }
-          
           // Build full URL
         const fullUrl = `${apiBase}${SETTINGS_ENDPOINT}`
           
@@ -32,7 +24,7 @@ export const useSiteSettings = () => {
           }>(fullUrl)
           return response.data
         } catch (error) {
-          // During build/prerender, return empty settings if API is not available
+          // If API fetch fails, return empty settings with warning
           console.warn('Failed to fetch site settings:', error)
           return {} as SiteSettingResponse
         }

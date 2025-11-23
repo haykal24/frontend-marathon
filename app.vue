@@ -39,20 +39,29 @@ const sameAs = computed(() => {
   if (twitter) profiles.push(`https://twitter.com/${twitter.replace('@', '')}`)
   if (tiktok) profiles.push(`https://www.tiktok.com/${tiktok}`)
   
+  // Fallback: If no social profiles loaded from backend, use hardcoded defaults
+  // This ensures sameAs is never empty in production
+  if (profiles.length === 0) {
+    profiles.push('https://www.instagram.com/indonesia.marathon')
+    profiles.push('https://www.facebook.com/indonesia.marathon')
+    profiles.push('https://twitter.com/indonesia.marathon')
+  }
+  
   return profiles
 })
 
 // FIX: Extend the auto-generated Organization schema with dynamic data
 // This approach merges with Nuxt's default schema instead of creating duplicates
+// IMPORTANT: Pass computed properties directly (not .value) for reactivity
 useSchemaOrg([
   {
     '@type': 'Organization',
     '@id': `${siteUrl}/#organization`,
-    name: siteName,
-    description: siteDescription,
+    name: siteName, // Computed - will be reactive
+    description: siteDescription, // Computed - will be reactive
     logo: `${siteUrl}/logo.png`,
     url: siteUrl,
-    sameAs: sameAs.value,
+    sameAs: sameAs, // Computed - will be reactive (don't use .value!)
     potentialAction: [
       {
         '@type': 'SearchAction',
