@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { useSchemaOrg } from '#imports'
+import { useSchemaOrg, defineOrganization, defineWebSite, defineWebPage } from '#imports'
 import { useSplideAriaCleanup } from '~/composables/useSplideAriaCleanup'
 import { useSiteSettings } from '~/composables/useSiteSettings'
 
@@ -27,17 +27,33 @@ const siteDescription = computed(() => getSetting('site_description', 'Platform 
 const siteUrl = config.public.siteUrl
 
 // Construct social profiles array dynamically
+// FIX: Smart URL cleaning to prevent double "https://" prefix
 const sameAs = computed(() => {
-  const profiles = []
+  const profiles: string[] = []
+  
+  // Helper function to clean and format social media URLs
+  const cleanUrl = (val: string | null, prefix: string): string | null => {
+    if (!val) return null
+    // If user input is already a full URL, use it as-is
+    if (val.startsWith('http://') || val.startsWith('https://')) return val
+    // If user input is username (e.g., @indomarathon or indomarathon), add prefix
+    return `${prefix}/${val.replace('@', '')}`
+  }
+  
   const instagram = getSetting('instagram_handle')
   const facebook = getSetting('facebook_url')
   const twitter = getSetting('twitter_handle')
   const tiktok = getSetting('tiktok_handle')
 
-  if (instagram) profiles.push(`https://www.instagram.com/${instagram.replace('@', '')}`)
-  if (facebook) profiles.push(facebook)
-  if (twitter) profiles.push(`https://twitter.com/${twitter.replace('@', '')}`)
-  if (tiktok) profiles.push(`https://www.tiktok.com/${tiktok}`)
+  const igUrl = cleanUrl(instagram, 'https://www.instagram.com')
+  const fbUrl = cleanUrl(facebook, 'https://www.facebook.com')
+  const twUrl = cleanUrl(twitter, 'https://twitter.com')
+  const ttUrl = cleanUrl(tiktok, 'https://www.tiktok.com')
+
+  if (igUrl) profiles.push(igUrl)
+  if (fbUrl) profiles.push(fbUrl)
+  if (twUrl) profiles.push(twUrl)
+  if (ttUrl) profiles.push(ttUrl)
   
   // Fallback: If no social profiles loaded from backend, use hardcoded defaults
   // This ensures sameAs is never empty in production
@@ -50,18 +66,17 @@ const sameAs = computed(() => {
   return profiles
 })
 
-// FIX: Extend the auto-generated Organization schema with dynamic data
-// This approach merges with Nuxt's default schema instead of creating duplicates
-// IMPORTANT: Pass computed properties directly (not .value) for reactivity
+// FIX: Complete Schema.org setup with Organization, WebSite, and WebPage
+// This ensures proper linking between entities and prevents duplication
 useSchemaOrg([
-  {
-    '@type': 'Organization',
-    '@id': `${siteUrl}/#organization`,
+  // 1. ORGANIZATION (Master Node)
+  defineOrganization({
+    '@id': '#organization', // Use default Nuxt ID for merging
     name: siteName, // Computed - will be reactive
     description: siteDescription, // Computed - will be reactive
     logo: `${siteUrl}/logo.png`,
     url: siteUrl,
-    sameAs: sameAs, // Computed - will be reactive (don't use .value!)
+    sameAs: sameAs.value, // Unwrap computed for defineOrganization
     potentialAction: [
       {
         '@type': 'SearchAction',
@@ -72,7 +87,27 @@ useSchemaOrg([
         'query-input': 'required name=search_term_string',
       },
     ],
-  },
+  }),
+  
+  // 2. WEBSITE (FIX: Connect to Organization via publisher)
+  defineWebSite({
+    '@id': '#website',
+    name: siteName, // FIX: Use siteName instead of default "frontend"
+    url: siteUrl,
+    inLanguage: 'id',
+    description: siteDescription,
+    publisher: {
+      '@id': '#organization', // CRITICAL: Link back to organization
+    },
+  }),
+  
+  // 3. WEBPAGE (FIX: Connect to Organization via about)
+  defineWebPage({
+    '@id': '#webpage',
+    about: {
+      '@id': '#organization', // Link to organization for context
+    },
+  }),
 ])
 
 useSplideAriaCleanup()
