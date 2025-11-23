@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { format } from 'date-fns'
-import { id } from 'date-fns/locale/id'
 import type { BreadcrumbItem } from '~/components/layout/Breadcrumb.vue'
 import type { Event } from '~/types/event'
 import { useSeoMetaDynamic } from '~/composables/useSeoMeta'
@@ -20,7 +18,8 @@ import IconSimpleIconsFacebook from '~icons/simple-icons/facebook'
 import IconSimpleIconsX from '~icons/simple-icons/x'
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
 import { ref } from 'vue'
-import { useSchemaOrg, defineEvent } from '#imports'
+import { useSchemaOrg } from '#imports'
+import { useEventSchema } from '~/composables/useEventSchema'
 import IconMdiChevronDown from '~icons/mdi/chevron-down'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
 import IconMdiEmail from '~icons/mdi/email'
@@ -153,74 +152,49 @@ const { generateFaq } = useEventFaq()
   // --- Event Schema.org Markup ---
 if (event.value) {
   const evt = event.value as Event
-  useSchemaOrg([
-    defineEvent({
-      name: evt.title,
-      startDate: evt.event_date,
-      endDate: evt.event_end_date || evt.event_date,
-      description: evt.seo_description || evt.description,
-      
-      // FIX: Google Search Console - image field harus ada
-      // Gunakan poster event, fallback ke OG image default
-      image: evt.poster_webp_url || evt.image || `${config.public.siteUrl}/og.webp`,
-      
-      location: {
-        '@type': 'Place',
-        name: evt.location_name,
-        address: {
-          '@type': 'PostalAddress',
-          addressLocality: evt.city,
-          addressRegion: evt.province || undefined,
-          addressCountry: 'ID',
-        },
-      },
-      
-      // Organizer (event organizer/penyelenggara)
-      organizer: evt.organizer_name
-        ? { '@type': 'Organization', name: evt.organizer_name }
-        : undefined,
-      
-      // FIX: Google Search Console - performer field (siapa yang "perform" di event)
-      // Untuk event lari, performer adalah peserta (runners), tapi kita bisa set ke organizer
-      performer: evt.organizer_name
-        ? { '@type': 'Organization', name: evt.organizer_name }
-        : { '@type': 'Organization', name: 'Indonesian Marathon Community' },
-      
-      eventStatus: 'https://schema.org/EventScheduled',
-      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-      url: `${config.public.siteUrl}/event/${slug}`,
+  
+  // Menggunakan composable useEventSchema yang sudah dioptimalkan (Local SEO, Default Values)
+  useEventSchema({
+    name: evt.title,
+    description: evt.seo_description || evt.description || '',
+    startDate: evt.event_date,
+    endDate: evt.event_end_date || evt.event_date,
+    url: `${config.public.siteUrl}/event/${slug}`,
+    image: evt.poster_webp_url || evt.image || `${config.public.siteUrl}/og.webp`,
+    
+    location: {
+      name: evt.location_name,
+      address: {
+        addressLocality: evt.city,
+        addressRegion: evt.province || undefined, // Penting untuk Local SEO
+        addressCountry: 'ID',
+        streetAddress: evt.location_name, // Gunakan nama lokasi sebagai fallback jalan jika tidak ada field khusus
+      }
+    },
 
-      // OPTIMASI: Tambahkan `offers` untuk menampilkan info harga/tiket
-      offers:
-        evt.registration_fees && Object.keys(evt.registration_fees).length > 0
-          ? Object.entries(evt.registration_fees).map(([category, price]) => ({
-              '@type': 'Offer',
-              name: category,
-              price: (typeof price === 'string' ? price.replace(/[^0-9]/g, '') : '0') || '0',
-              priceCurrency: 'IDR',
-              url: evt.registration_url || `${config.public.siteUrl}/event/${slug}`,
-              availability: 'https://schema.org/InStock',
-              validFrom: evt.created_at,
-            }))
-          : undefined,
-    }),
-  ])
+    organizer: {
+      name: evt.organizer_name || 'Indonesian Marathon Community',
+      url: undefined // Bisa diisi jika ada data website organizer
+    },
+
+    performer: {
+      name: evt.organizer_name || 'Indonesian Marathon Community'
+    },
+
+    // Mapping offers (tiket)
+    offers: evt.registration_fees && Object.keys(evt.registration_fees).length > 0
+      ? Object.entries(evt.registration_fees).map(([category, price]) => ({
+          price: (typeof price === 'string' ? price.replace(/[^0-9]/g, '') : '0') || '0',
+          priceCurrency: 'IDR',
+          availability: 'InStock', // Default
+          url: evt.registration_url || `${config.public.siteUrl}/event/${slug}`,
+          validFrom: evt.created_at,
+        }))
+      : undefined
+  })
 }
 
 // --- Helper Functions (Exposed to template) ---
-const _formatEventDate = (startDate?: string | null, endDate?: string | null): string => {
-  if (!startDate) return ''
-  const start = new Date(startDate)
-  if (endDate) {
-    const end = new Date(endDate)
-    if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear())
-      return `${format(start, 'd')} - ${format(end, 'd MMMM yyyy', { locale: id })}`
-
-    return `${format(start, 'd MMM yyyy', { locale: id })} - ${format(end, 'd MMM yyyy', { locale: id })}`
-  }
-  return format(start, 'd MMMM yyyy', { locale: id })
-}
-
 const getContactValue = (contact: string | string[] | undefined): string => {
   if (!contact) return ''
   if (Array.isArray(contact)) return contact[0] || ''

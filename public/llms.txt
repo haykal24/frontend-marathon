@@ -1,40 +1,40 @@
-# llms.txt for indonesiamarathon.com
+# indonesiamarathon.com
 
-# About
-indonesiamarathon.com is Indonesia's #1 digital platform for running events calendar, marathon schedules, and running community ecosystem. We provide comprehensive event listings, blog content about running, and directories for running communities, vendors, and race management services.
+> Indonesia's #1 digital platform for running events calendar, marathon schedules, and running community ecosystem. We provide comprehensive event listings, blog content about running, and directories for running communities, vendors, and race management services.
 
-# Main Content Areas
+indonesiamarathon.com is the most comprehensive platform for discovering running events across Indonesia. The platform serves both runners seeking events and event organizers promoting their races. Event data is updated daily with new running events, and includes detailed information about location, dates, registration fees, and contact details.
+
+## Main Content Areas
+
 - Event Calendar: Complete schedule of running events (road run, trail run, fun run, marathon) across Indonesia
 - Blog: Educational content about running, including guides on pace, marathon distances, cut-off times, and training tips
 - Directory: Lists of running communities, medal vendors, race management services, jersey vendors, and photographers
 - Event Submission: Platform for event organizers to submit their running events
 
-# Key Pages
-- Homepage: / - Main landing page with featured events, latest updates, and blog posts
-- Event Listing: /event - Complete calendar of running events with filters by province, category, month, and type
-- Blog: /blog - Articles and guides about running
-- About: /tentang-kami - Information about the platform
-- Contact: /kontak - Contact information and collaboration guidelines
-- Rate Card: /rate-card - Advertising and partnership packages
+## Key Pages
 
-# Data Structure
-- Events: Each event has title, description, location, date, registration fees, contact info, and social media links
-- Blog Posts: Articles categorized by topics like marathon guides, pace calculations, and training tips
-- Provinces: Events are organized by Indonesian provinces (DKI Jakarta, Jawa Barat, Jawa Timur, Bali, etc.)
-- Categories: Events categorized by distance (5K, 10K, 21K, 42K) and type (road run, trail run, fun run, marathon)
+- [Homepage](https://indonesiamarathon.com/): Main landing page with featured events, latest updates, and blog posts
+- [Event Listing](https://indonesiamarathon.com/agenda-lari): Complete calendar of running events with filters by province, category, month, and type
+- [Blog](https://indonesiamarathon.com/blog): Articles and guides about running
+- [About](https://indonesiamarathon.com/tentang-kami): Information about the platform
+- [Contact](https://indonesiamarathon.com/kontak): Contact information and collaboration guidelines
+- [Rate Card](https://indonesiamarathon.com/rate-card): Advertising and partnership packages
 
-# Important Resources
-- Sitemap: https://indonesiamarathon.com/__sitemap__/urlset.xml
-- Robots.txt: https://indonesiamarathon.com/robots.txt
-- API Base: https://indonesiamarathon.com/api (REST API for event data)
+## Data Structure
 
-# Content Guidelines for AI
-- Event data is updated daily with new running events across Indonesia
-- Blog content focuses on educational topics: "Apa itu Marathon", "Pace Adalah", "Cut Off Adalah", "Trail Run Adalah"
-- All event information includes location (city, province), date, registration fees, and contact details
-- Events can be filtered by province, category, month, year, and event type
-- The platform serves both runners (finding events) and event organizers (promoting events)
+Events: Each event has title, description, location, date, registration fees, contact info, and social media links. Events are organized by Indonesian provinces (DKI Jakarta, Jawa Barat, Jawa Timur, Bali, etc.) and categorized by distance (5K, 10K, 21K, 42K) and type (road run, trail run, fun run, marathon).
 
-# Contact
-For questions about events or content, visit /kontak or check individual event pages for organizer contact information.
+Blog Posts: Articles categorized by topics like marathon guides, pace calculations, and training tips. Blog content focuses on educational topics: "Apa itu Marathon", "Pace Adalah", "Cut Off Adalah", "Trail Run Adalah".
+
+## Important Resources
+
+- [Sitemap](https://indonesiamarathon.com/__sitemap__/urlset.xml): Complete sitemap of all indexable pages
+- [Robots.txt](https://indonesiamarathon.com/robots.txt): Crawling instructions for search engines
+- [API Base](https://indonesiamarathon.com/api): REST API for event data
+
+## Content Guidelines
+
+Event data is updated daily with new running events across Indonesia. All event information includes location (city, province), date, registration fees, and contact details. Events can be filtered by province, category, month, year, and event type. The platform serves both runners (finding events) and event organizers (promoting events).
+
+For questions about events or content, visit the contact page at /kontak or check individual event pages for organizer contact information.
 

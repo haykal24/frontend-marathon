@@ -23,6 +23,8 @@ import IconHeroiconsRectangleGroup from '~icons/heroicons/rectangle-group'
 
 import { useAuth } from '~/composables/useAuth'
 import { useSiteSettings } from '~/composables/useSiteSettings'
+import { useImage } from '#imports'
+import { sanitizeMediaUrl } from '~/utils/format'
 
 interface NavigationItem {
   label: string
@@ -38,11 +40,45 @@ interface NavigationItem {
 const { isAuthenticated, user, logout } = useAuth()
 const { getSetting, getImage } = useSiteSettings()
 const route = useRoute()
+const $img = useImage()
 
 const siteName = computed(
   () => getSetting<string>('site_name', 'Marathon Indonesia') ?? 'Marathon Indonesia'
 )
-const siteLogo = computed(() => getImage('logo', null) ?? '/logo.png')
+
+// Logo handling with error fallback
+const logoUrl = computed(() => getImage('logo', null))
+const hasValidLogo = computed(() => {
+  const logo = logoUrl.value
+  if (!logo) return false
+  
+  const sanitized = sanitizeMediaUrl(logo)
+  if (!sanitized) return false
+  
+  // Check if logo is placeholder path
+  const logoStr = String(sanitized).toLowerCase()
+  if (logoStr.includes('placeholder')) return false
+  
+  return true
+})
+
+const siteLogo = computed(() => {
+  if (!hasValidLogo.value) return ''
+  const sanitized = sanitizeMediaUrl(logoUrl.value)
+  if (!sanitized) return ''
+  return $img(sanitized, {
+    width: 192,
+    height: 48,
+    format: 'webp',
+    quality: 80,
+    fit: 'contain',
+  })
+})
+
+const logoError = ref(false)
+const onLogoError = () => {
+  logoError.value = true
+}
 
 // Store icons in a ref to ensure they're available during SSR
 // This prevents "is not defined" errors, especially for IconHeroiconsDocumentPlus
@@ -182,12 +218,26 @@ const resolveLink = (item: NavigationItem) => {
           to="/"
           class="flex items-center gap-3"
         >
-          <NuxtImg
+          <img
+            v-if="siteLogo && !logoError"
             :src="siteLogo"
             :alt="siteName"
             class="h-12 w-auto object-contain"
-            fit="contain"
-            preload
+            width="192"
+            height="48"
+            loading="eager"
+            decoding="async"
+            @error="onLogoError"
+          />
+          <img
+            v-else
+            src="/logo.png"
+            :alt="siteName"
+            class="h-12 w-auto object-contain"
+            width="192"
+            height="48"
+            loading="eager"
+            decoding="async"
           />
         </NuxtLink>
 

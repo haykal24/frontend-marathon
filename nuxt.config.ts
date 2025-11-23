@@ -5,7 +5,7 @@ import IconsResolver from 'unplugin-icons/resolver'
 import Components from 'unplugin-vue-components/vite'
 
 export default defineNuxtConfig({
-  compatibilityDate: '2024-11-21',
+  compatibilityDate: '2024-11-22',
   devtools: { enabled: false },
 
   experimental: {
@@ -49,9 +49,8 @@ export default defineNuxtConfig({
   // Site Meta Configuration (Centralized for @nuxtjs/seo)
   site: {
     url: process.env.NUXT_PUBLIC_SITE_URL || (process.env.NODE_ENV === 'production' ? 'https://indonesiamarathon.com' : 'http://localhost:3000'),
-    name: 'indonesiamarathon.com',
-    description: `Platform digital #1 di Indonesia sebagai pusat informasi dan komunitas event lari. Temukan jadwal lari ${new Date().getFullYear()} terlengkap, ekosistem vendor, dan artikel seputar dunia lari.`,
     defaultLocale: 'id-ID',
+    // Name & description will be set dynamically via useSiteConfig in app.vue
   },
 
   // Modules

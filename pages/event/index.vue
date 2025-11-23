@@ -25,7 +25,7 @@ const config = useRuntimeConfig()
 const route = useRoute()
 const router = useRouter()
 
-// --- SEO Meta & Canonical ---
+// --- SEO Meta & Canonical (Partial - will be completed after filters init) ---
 const canonicalUrl = computed(() => {
   // Ambil full path dengan query params untuk canonical yang akurat
   // Google menganggap /event?province=bali sebagai halaman unik
@@ -45,15 +45,6 @@ const canonicalUrl = computed(() => {
   const queryString = canonicalParams.toString()
   return queryString ? `${path}?${queryString}` : path
 })
-
-useSeoMetaDynamic({
-  title: `Jadwal Event Lari ${currentYear.value} - Kalender Event Lari Indonesia`,
-  description:
-    'Temukan jadwal lengkap event lari di seluruh Indonesia. Kalender lari terbaru untuk road run, trail run, fun run, dan marathon.',
-  url: canonicalUrl, // FIX: Canonical URL harus menyertakan filter
-})
-
-// SEO: OG Image menggunakan fallback og.webp (tidak perlu defineOgImage untuk listing)
 
 // --- Breadcrumb Items ---
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => {
@@ -106,33 +97,6 @@ const {
   loadMore,
 } = useEventListing(filters)
 
-// --- CollectionPage & ItemList Schema.org (SEO Optimal) ---
-useSchemaOrg([
-  defineWebPage({
-    '@id': `${config.public.siteUrl}${canonicalUrl.value}`,
-    name: `Kalender Event Lari ${currentYear.value}`,
-    description:
-      'Jadwal lengkap event lari di seluruh Indonesia. Filter berdasarkan kategori, lokasi, dan tanggal.',
-    url: `${config.public.siteUrl}${canonicalUrl.value}`,
-    '@type': 'CollectionPage',
-  }),
-  // OPTIMASI: Tambahkan ItemList untuk memberitahu Google konten dari koleksi ini
-  defineItemList({
-    itemListElement: computed(() =>
-      events.value.slice(0, 10).map((event, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        item: {
-          '@type': 'Event',
-          name: event.title,
-          url: `${config.public.siteUrl}/event/${event.slug}`,
-          startDate: event.event_date,
-        },
-      }))
-    ),
-  }),
-])
-
 const sortOptions = [
   { value: 'latest', label: 'Terbaru' },
   { value: 'featured', label: 'Event Pilihan' },
@@ -156,6 +120,103 @@ const provinceOptions = computed(() => {
     })
     .filter(Boolean) as Array<{ value: string; label: string }>
 })
+
+// --- SEO: Dynamic Title & Description (after all dependencies are initialized) ---
+const dynamicSeoTitle = computed(() => {
+  const parts: string[] = []
+  
+  // Province filter (prioritas tertinggi untuk Local SEO)
+  if (filters.value.province && filters.value.province.length > 0) {
+    const provinceName = provinceOptions.value.find(p => 
+      p.value === filters.value.province[0]
+    )?.label
+    if (provinceName) {
+      parts.push(`Event Lari ${provinceName}`)
+    }
+  }
+  
+  // Month filter
+  if (filters.value.month && !parts.length) {
+    const monthLabel = monthOptions.value.find(m => 
+      m.value === filters.value.month
+    )?.label
+    if (monthLabel) {
+      const year = filters.value.month.split('-')[0]
+      parts.push(`Event Lari ${monthLabel} ${year}`)
+    }
+  }
+  
+  // Default jika tidak ada filter spesifik
+  if (parts.length === 0) {
+    parts.push(`Jadwal Event Lari ${currentYear.value}`)
+  }
+  
+  return parts.join(' - ')
+})
+
+const dynamicSeoDescription = computed(() => {
+  let desc = 'Temukan jadwal lengkap event lari'
+  
+  // Province context
+  if (filters.value.province && filters.value.province.length > 0) {
+    const provinceName = provinceOptions.value.find(p => 
+      p.value === filters.value.province[0]
+    )?.label
+    if (provinceName) {
+      desc += ` di ${provinceName}`
+    }
+  }
+  
+  // Month context
+  if (filters.value.month) {
+    const monthLabel = monthOptions.value.find(m => 
+      m.value === filters.value.month
+    )?.label
+    if (monthLabel) {
+      const year = filters.value.month.split('-')[0]
+      desc += ` untuk ${monthLabel} ${year}`
+    }
+  }
+  
+  // Default suffix
+  desc += '. Kalender lari terbaru untuk road run, trail run, fun run, dan marathon.'
+  
+  return desc
+})
+
+// Apply dynamic SEO meta
+useSeoMetaDynamic({
+  title: dynamicSeoTitle,
+  description: dynamicSeoDescription,
+  url: canonicalUrl,
+})
+
+// --- CollectionPage & ItemList Schema.org (SEO Optimal) ---
+useSchemaOrg([
+  defineWebPage({
+    '@id': `${config.public.siteUrl}${canonicalUrl.value}`,
+    name: dynamicSeoTitle, // Dynamic title untuk Schema.org
+    description: dynamicSeoDescription, // Dynamic description untuk Schema.org
+    url: `${config.public.siteUrl}${canonicalUrl.value}`,
+    '@type': 'CollectionPage',
+  }),
+  // OPTIMASI: Tambahkan ItemList untuk memberitahu Google konten dari koleksi ini
+  defineItemList({
+    itemListElement: computed(() =>
+      events.value.slice(0, 10).map((event, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        item: {
+          '@type': 'Event',
+          name: event.title,
+          url: `${config.public.siteUrl}/event/${event.slug}`,
+          startDate: event.event_date,
+        },
+      }))
+    ),
+  }),
+])
+
 // --- Pagination SEO Links ---
 function updatePaginationLinks() {
   // Only run on client-side to avoid SSR errors

@@ -12,7 +12,9 @@ export interface EventSchemaData {
   location: {
     name: string
     address: {
-      addressLocality: string // City
+      streetAddress?: string // Alamat lengkap/jalan (Penting untuk Maps)
+      addressLocality: string // Kota/Kabupaten
+      addressRegion?: string // Provinsi (Penting untuk SEO Lokal)
       addressCountry: 'ID'
     }
   }
@@ -27,27 +29,25 @@ export interface EventSchemaData {
     | 'OnlineEventAttendanceMode'
     | 'MixedEventAttendanceMode'
   offers?: {
-    price: string
+    price: string | number
     priceCurrency: 'IDR'
-    availability?: string
+    availability?: 'InStock' | 'SoldOut' | 'PreOrder'
     url?: string
+    validFrom?: string
   }[]
   performer?: {
-    // Tambahkan performer jika ada, misal: guest star
     name: string
   }
-  category?: string
   url?: string
 }
 
 /**
  * Best Practice Refactor:
- * - Menggunakan `defineEvent` dari `nuxt-schema-org` (bagian dari @nuxtjs/seo).
- * - Menghapus pembuatan objek schema manual dan injeksi script fallback.
- * - Lebih type-safe, ringkas, dan sesuai dengan ekosistem Nuxt.
+ * - Menggunakan `defineEvent` dari `nuxt-schema-org`.
+ * - Menambahkan FALLBACK VALUES untuk memastikan validitas Rich Results Google.
+ * - Menambahkan detail lokasi (Provinsi & Jalan) untuk Local SEO.
  */
 export const useEventSchema = (eventData: EventSchemaData) => {
-  // Langsung panggil useSchemaOrg dengan defineEvent
   useSchemaOrg([
     defineEvent({
       name: eventData.name,
@@ -56,20 +56,27 @@ export const useEventSchema = (eventData: EventSchemaData) => {
       endDate: eventData.endDate,
       url: eventData.url,
       image: eventData.image,
+      
+      // OPTIMASI 1: Default Values untuk Status & Mode
+      // Mayoritas event lari adalah Terjadwal dan Offline.
       eventStatus: eventData.eventStatus
         ? `https://schema.org/${eventData.eventStatus}`
-        : undefined,
+        : 'https://schema.org/EventScheduled',
+        
       eventAttendanceMode: eventData.eventAttendanceMode
         ? `https://schema.org/${eventData.eventAttendanceMode}`
-        : undefined,
+        : 'https://schema.org/OfflineEventAttendanceMode',
 
+      // OPTIMASI 2: Detail Lokasi Lengkap
       location: {
         '@type': 'Place',
         name: eventData.location.name,
         address: {
           '@type': 'PostalAddress',
+          streetAddress: eventData.location.address.streetAddress,
           addressLocality: eventData.location.address.addressLocality,
-          addressCountry: eventData.location.address.addressCountry,
+          addressRegion: eventData.location.address.addressRegion, // Kritis untuk query "Lari di Jawa Barat"
+          addressCountry: 'ID',
         },
       },
 
@@ -88,16 +95,18 @@ export const useEventSchema = (eventData: EventSchemaData) => {
         },
       }),
 
+      // OPTIMASI 3: Validitas Offers
       ...(eventData.offers &&
         eventData.offers.length > 0 && {
           offers: eventData.offers.map(offer => ({
             '@type': 'Offer',
             price: offer.price,
-            priceCurrency: offer.priceCurrency,
+            priceCurrency: 'IDR',
             availability: offer.availability
               ? `https://schema.org/${offer.availability}`
-              : undefined,
-            url: offer.url,
+              : 'https://schema.org/InStock', // Default ke InStock jika null
+            url: offer.url || eventData.url, // Fallback ke URL event jika URL tiket kosong
+            validFrom: offer.validFrom,
           })),
         }),
     }),

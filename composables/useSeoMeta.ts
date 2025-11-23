@@ -39,7 +39,19 @@ export const useSeoMetaDynamic = (metaData: SeoMetaData) => {
 
   // Image: fallback ke default jika tidak ada
   const resolvedImage = toValue(metaData.image) || `${siteUrl}/og.webp`
-  const resolvedUrl = toValue(metaData.url) || currentUrl
+  
+  // URL Logic: Ensure absolute URL for canonical/og
+  let resolvedUrl = toValue(metaData.url)
+  if (resolvedUrl) {
+    // If relative, prepend siteUrl
+    if (!resolvedUrl.startsWith('http')) {
+      const path = resolvedUrl.startsWith('/') ? resolvedUrl : `/${resolvedUrl}`
+      resolvedUrl = `${siteUrl}${path}`
+    }
+  } else {
+    resolvedUrl = currentUrl
+  }
+
   const resolvedType = toValue(metaData.type) || 'website'
   const publishedTime = toValue(metaData.publishedTime)
   const modifiedTime = toValue(metaData.modifiedTime)
@@ -61,8 +73,18 @@ export const useSeoMetaDynamic = (metaData: SeoMetaData) => {
     ...(modifiedTime && { articleModifiedTime: modifiedTime }),
   })
 
-  // NOTE: Canonical URL is automatically handled by @nuxtjs/seo module
-  // No need to set manually - removing to avoid duplication
+  // Explicitly set canonical URL using useHead (link tag)
+  useHead({
+    link: [
+      {
+        rel: 'canonical',
+        href: resolvedUrl,
+      },
+    ],
+  })
+
+  // NOTE: Canonical URL is now explicitly handled above to support query params
+  // when passed via metaData.url
 
   return {
     title: resolvedTitle,

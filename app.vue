@@ -11,38 +11,59 @@
 </template>
 
 <script setup lang="ts">
-import { useSchemaOrg, defineOrganization } from '#imports'
+import { useSchemaOrg } from '#imports'
 import { useSplideAriaCleanup } from '~/composables/useSplideAriaCleanup'
+import { useSiteSettings } from '~/composables/useSiteSettings'
 
 const config = useRuntimeConfig()
-const siteConfig = useSiteConfig()
+const { getSetting, settings } = useSiteSettings()
 
 const apiBaseUrl = config.public.apiBase || 'http://localhost:8000'
 const currentYear = new Date().getFullYear()
 
-// Define Organization Schema using the composable with full details
+// Fallback values if backend settings are not yet loaded
+const siteName = computed(() => getSetting('site_name', 'indonesiamarathon.com'))
+const siteDescription = computed(() => getSetting('site_description', 'Platform digital #1 di Indonesia sebagai pusat informasi dan komunitas event lari.'))
+const siteUrl = config.public.siteUrl
+
+// Construct social profiles array dynamically
+const sameAs = computed(() => {
+  const profiles = []
+  const instagram = getSetting('instagram_handle')
+  const facebook = getSetting('facebook_url')
+  const twitter = getSetting('twitter_handle')
+  const tiktok = getSetting('tiktok_handle')
+
+  if (instagram) profiles.push(`https://www.instagram.com/${instagram.replace('@', '')}`)
+  if (facebook) profiles.push(facebook)
+  if (twitter) profiles.push(`https://twitter.com/${twitter.replace('@', '')}`)
+  if (tiktok) profiles.push(`https://www.tiktok.com/${tiktok}`)
+  
+  return profiles
+})
+
+// FIX: Extend the auto-generated Organization schema with dynamic data
+// This approach merges with Nuxt's default schema instead of creating duplicates
 useSchemaOrg([
-  defineOrganization({
-    name: siteConfig.name || 'indonesiamarathon.com',
-    url: siteConfig.url,
-    logo: `${siteConfig.url}/logo.png`,
-    description: siteConfig.description,
-    sameAs: [
-      'https://www.instagram.com/indonesiamarathon',
-      'https://www.tiktok.com/@indonesiamarathon',
-    ],
-    // Add potentialAction for Google Sitelinks Search Box
+  {
+    '@type': 'Organization',
+    '@id': `${siteUrl}/#organization`,
+    name: siteName,
+    description: siteDescription,
+    logo: `${siteUrl}/logo.png`,
+    url: siteUrl,
+    sameAs: sameAs.value,
     potentialAction: [
       {
         '@type': 'SearchAction',
         target: {
           '@type': 'EntryPoint',
-          urlTemplate: `${siteConfig.url}/event?q={search_term_string}`,
+          urlTemplate: `${siteUrl}/event?q={search_term_string}`,
         },
         'query-input': 'required name=search_term_string',
       },
     ],
-  }),
+  },
 ])
 
 useSplideAriaCleanup()
@@ -52,8 +73,8 @@ useHead({
   // This pattern is excellent and works perfectly with @nuxtjs/seo
   titleTemplate: titleChunk => {
     return titleChunk
-      ? `${titleChunk} | ${siteConfig.name}`
-      : `${siteConfig.name} - Kalender Lari & Jadwal Marathon ${currentYear}`
+      ? `${titleChunk} | ${siteName.value}`
+      : `${siteName.value} - Kalender Lari & Jadwal Marathon ${currentYear}`
   },
 
   htmlAttrs: {
@@ -68,6 +89,7 @@ useHead({
     { name: 'format-detection', content: 'telephone=no' },
     
     // Default description is now handled by site config, but can be overridden per page
+    { name: 'description', content: siteDescription },
 
     // 3. PWA & MOBILE
     { name: 'mobile-web-app-capable', content: 'yes' },
@@ -86,10 +108,10 @@ useHead({
     // NOTE: Meta keywords REMOVED - Google deprecated this since 2009
     // Author and copyright can also be managed by the module if needed,
     // but this is fine here for explicit control.
-    { name: 'author', content: siteConfig.name },
+    { name: 'author', content: siteName },
     {
       name: 'copyright',
-      content: `© ${new Date().getFullYear()} ${siteConfig.name}. All rights reserved.`,
+      content: computed(() => `© ${currentYear} ${siteName.value}. All rights reserved.`),
     },
   ],
 
