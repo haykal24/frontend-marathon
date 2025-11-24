@@ -155,6 +155,34 @@ export const useEvents = () => {
     }
   }
 
+  /**
+   * Fetch available event years (distinct years with published events)
+   */
+  const fetchAvailableEventYears = async () => {
+    interface AvailableYearsResponse {
+      success: boolean
+      message: string
+      data: {
+        years?: number[]
+        min_year?: number
+        max_year?: number
+      }
+    }
+
+    const response = await api.get<AvailableYearsResponse>('/events/available-years')
+    const years = Array.isArray(response?.data?.years)
+      ? response.data.years
+          .map(year => Number(year))
+          .filter(year => !Number.isNaN(year))
+      : []
+
+    return {
+      years,
+      minYear: typeof response?.data?.min_year === 'number' ? response.data.min_year : null,
+      maxYear: typeof response?.data?.max_year === 'number' ? response.data.max_year : null,
+    }
+  }
+
   return {
     fetchEvents,
     fetchEventBySlug,
@@ -164,5 +192,6 @@ export const useEvents = () => {
     fetchEventsByProvince,
     fetchFeaturedHeroEvents,
     fetchCalendarStats,
+    fetchAvailableEventYears,
   }
 }

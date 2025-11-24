@@ -120,7 +120,7 @@ const {
   monthOptions,
   handleYearSelect,
   handleMonthSelect,
-} = useEventFilters(filters)
+} = await useEventFilters(filters)
 
 // --- Computed Options for Filters ---
 const provinceOptions = computed(() => {
