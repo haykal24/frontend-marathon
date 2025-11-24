@@ -108,6 +108,21 @@ curl http://localhost:3000/sitemap_index.xml
 curl http://localhost:3000/__sitemap__/0.xml
 ```
 
+### Mengontrol Facet / Filter URLs
+
+Query-string URLs seperti `/event?category=5k` atau `/faq?keyword=pace` sering dianggap "orphan pages" oleh Google karena hanya muncul lewat filter interaktif. Untuk mencegah hal ini, backend sekarang menonaktifkan facet URLs secara default. Jika suatu saat sudah tersedia landing page khusus yang bisa dijelajahi crawler, aktifkan kembali lewat environment variable backend:
+
+```
+SITEMAP_INCLUDE_FACET_URLS=true
+```
+
+Langkah setelah mengubahnya:
+
+1. Jalankan `php artisan cache:forget sitemap_urls` (atau `php artisan optimize:clear`) agar cache sitemap diperbarui.
+2. Tambahkan kembali entri `categories` di `nuxt.config.ts` (`sitemap.sitemaps` dan daftar `robots.sitemap`) sehingga `/__sitemap__/categories.xml` tersedia lagi.
+
+Biarkan nilai default `false` jika facet URLs masih berupa hasil filter AJAX tanpa tautan internal permanen.
+
 ## Problem: SSR build gagal karena fetch sitemap timeout
 
 ### Penyebab

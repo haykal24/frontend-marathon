@@ -151,13 +151,21 @@ const eventTypeLabels = computed(() => {
   return labels
 })
 
+const getPrimaryTypeFilter = () => {
+  const typeFilter = filters.value.type
+  if (Array.isArray(typeFilter)) {
+    return typeFilter.length > 0 ? typeFilter[0] : undefined
+  }
+  return typeFilter || undefined
+}
+
 const dynamicSeoTitle = computed(() => {
   const parts: string[] = []
   
   // Type filter (prioritas tertinggi untuk mencegah duplicate)
-  if (filters.value.type && filters.value.type.length > 0) {
-    const typeValue = filters.value.type[0]
-    const typeLabel = eventTypeLabels.value?.[typeValue] || typeValue
+  const selectedType = getPrimaryTypeFilter()
+  if (selectedType) {
+    const typeLabel = (eventTypeLabels.value && eventTypeLabels.value[selectedType]) || selectedType
     parts.push(`Event ${typeLabel}`)
   }
   
@@ -198,9 +206,9 @@ const dynamicSeoDescription = computed(() => {
   let desc = 'Temukan jadwal lengkap'
   
   // Type context
-  if (filters.value.type && filters.value.type.length > 0) {
-    const typeValue = filters.value.type[0]
-    const typeLabel = eventTypeLabels.value?.[typeValue] || typeValue
+  const selectedType = getPrimaryTypeFilter()
+  if (selectedType) {
+    const typeLabel = (eventTypeLabels.value && eventTypeLabels.value[selectedType]) || selectedType
     desc += ` event ${typeLabel.toLowerCase()}`
   } else {
     desc += ' event lari'
@@ -228,9 +236,8 @@ const dynamicSeoDescription = computed(() => {
   }
   
   // Dynamic suffix based on type
-  if (filters.value.type && filters.value.type.length > 0) {
-    const typeValue = filters.value.type[0]
-    const typeLabel = eventTypeLabels.value?.[typeValue] || typeValue
+  if (selectedType) {
+    const typeLabel = (eventTypeLabels.value && eventTypeLabels.value[selectedType]) || selectedType
     desc += `. Kalender ${typeLabel.toLowerCase()} terbaru di Indonesia.`
   } else {
     desc += '. Kalender lari terbaru untuk road run, trail run, fun run, dan marathon.'
@@ -266,6 +273,20 @@ useSchemaOrg([
           name: event.title,
           url: `${config.public.siteUrl}/event/${event.slug}`,
           startDate: event.event_date,
+          location: {
+            '@type': 'Place',
+            name: event.location_name,
+            address: {
+              '@type': 'PostalAddress',
+              addressLocality: event.city,
+              addressRegion: event.province,
+              addressCountry: 'ID',
+            },
+          },
+          eventStatus: 'https://schema.org/EventScheduled', // Default
+          eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode', // Default
+          image: event.poster_webp_url || `${config.public.siteUrl}/og-default.webp`, // Wajib jika ada
+          description: event.description || `Event lari ${event.title} di ${event.city}`, // Wajib
         },
       }))
     ),
