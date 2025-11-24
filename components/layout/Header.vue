@@ -208,9 +208,10 @@ const resolveLink = (item: NavigationItem) => {
               v-if="hasValidLogo && !logoError"
               :src="sanitizeMediaUrl(logoUrl) || '/logo.png'"
               :alt="siteName"
-              class="h-12 w-auto object-contain"
+              class="h-12 w-auto max-w-[13rem] object-contain"
               :width="192"
-              :height="48"
+              sizes="(max-width: 1024px) 160px, 192px"
+              fit="contain"
               format="webp"
               loading="eager"
               @error="onLogoError"
@@ -219,9 +220,10 @@ const resolveLink = (item: NavigationItem) => {
               v-else
               src="/logo.png"
               :alt="siteName"
-              class="h-12 w-auto object-contain"
+              class="h-12 w-auto max-w-[13rem] object-contain"
               :width="192"
-              :height="48"
+              sizes="(max-width: 1024px) 160px, 192px"
+              fit="contain"
               format="webp"
               loading="eager"
             />
@@ -229,9 +231,10 @@ const resolveLink = (item: NavigationItem) => {
               <NuxtImg
                 src="/logo.png"
                 :alt="siteName"
-                class="h-12 w-auto object-contain"
+                class="h-12 w-auto max-w-[13rem] object-contain"
                 :width="192"
-                :height="48"
+                sizes="(max-width: 1024px) 160px, 192px"
+                fit="contain"
                 format="webp"
                 loading="eager"
               />

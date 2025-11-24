@@ -29,12 +29,13 @@ export const useEventListing = (filters: Ref<EventFilterState>) => {
   const buildRequestPayload = (page: number) => {
     const filterValue = filters.value
 
+    // Support multiple values for type and province
     const typeValue = Array.isArray(filterValue.type)
-      ? filterValue.type[0]
-      : filterValue.type
+      ? filterValue.type.length > 0 ? filterValue.type : undefined
+      : filterValue.type || undefined
     const provinceValue = Array.isArray(filterValue.province)
-      ? filterValue.province[0]
-      : filterValue.province
+      ? filterValue.province.length > 0 ? filterValue.province : undefined
+      : filterValue.province || undefined
     const sortValue: SortOption = filterValue.sort ?? 'latest'
 
     return {
@@ -47,8 +48,8 @@ export const useEventListing = (filters: Ref<EventFilterState>) => {
       search: filterValue.search || undefined,
       month: filterValue.month || undefined,
       year: filterValue.year || undefined,
-      province: provinceValue || undefined,
-      type: typeValue || undefined,
+      province: provinceValue,
+      type: typeValue,
     }
   }
 

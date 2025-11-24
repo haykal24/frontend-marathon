@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { BreadcrumbItem } from '~/components/layout/Breadcrumb.vue'
 import { useSiteSettings } from '~/composables/useSiteSettings'
@@ -10,6 +10,7 @@ import { useEventListing, type EventFilterState } from '~/composables/useEventLi
 import { useActiveProvinces } from '~/composables/useActiveProvinces'
 import { useEventFilters } from '~/composables/useEventFilters'
 import { useEventTypes } from '~/composables/useEventTypes'
+import { useBreadcrumbSchema } from '~/composables/useBreadcrumbSchema'
 import IconMdiMagnify from '~icons/mdi/magnify'
 import IconMdiViewGrid from '~icons/mdi/view-grid'
 import IconMdiViewList from '~icons/mdi/view-list'
@@ -94,6 +95,8 @@ const createDefaultFilters = (): EventFilterState => ({
 })
 
 const filters = ref<EventFilterState>(createDefaultFilters())
+
+let isUpdatingFromQuery = false
 
 initializeFiltersFromQuery()
 
@@ -330,10 +333,11 @@ function resetFilters() {
 }
 
 function initializeFiltersFromQuery(query = route.query) {
+  isUpdatingFromQuery = true
   const nextFilters = createDefaultFilters()
   let derivedYear: number | null = null
 
-  // Type filter (deep link compatibility)
+  // Type filter (deep link compatibility - support both type[]=a&type[]=b and type=a)
   if (query.type) {
     if (Array.isArray(query.type)) {
       nextFilters.type = query.type.filter(t => t) as string[]
@@ -342,7 +346,7 @@ function initializeFiltersFromQuery(query = route.query) {
     }
   }
 
-  // Province filter
+  // Province filter (deep link compatibility - support both province[]=a&province[]=b and province=a)
   if (query.province) {
     if (Array.isArray(query.province)) {
       nextFilters.province = query.province.filter(p => p) as string[]
@@ -388,6 +392,10 @@ function initializeFiltersFromQuery(query = route.query) {
   }
 
   filters.value = nextFilters
+  // Reset flag after a short delay to allow watcher to work again
+  nextTick(() => {
+    isUpdatingFromQuery = false
+  })
 }
 
 watch(
@@ -403,6 +411,49 @@ watch(
   () => {
     initializeFiltersFromQuery()
   }
+)
+
+// Update URL query params when filters change (for deep linking & browser history)
+// Use nextTick to avoid updating during initialization
+watch(
+  filters,
+  () => {
+    // Skip if we're updating from query params to avoid infinite loop
+    if (isUpdatingFromQuery) return
+    
+    const query: Record<string, string | string[]> = {}
+    
+    if (filters.value.search) {
+      query.search = filters.value.search
+    }
+    
+    if (filters.value.month) {
+      query.month = filters.value.month
+    } else if (filters.value.year) {
+      query.year = filters.value.year
+    }
+    
+    // Multiple type filter
+    if (Array.isArray(filters.value.type) && filters.value.type.length > 0) {
+      query.type = filters.value.type
+    } else if (filters.value.type && !Array.isArray(filters.value.type)) {
+      query.type = [filters.value.type]
+    }
+    
+    // Multiple province filter
+    if (Array.isArray(filters.value.province) && filters.value.province.length > 0) {
+      query.province = filters.value.province
+    } else if (filters.value.province && !Array.isArray(filters.value.province)) {
+      query.province = [filters.value.province]
+    }
+    
+    if (filters.value.sort && filters.value.sort !== 'latest') {
+      query.sort = filters.value.sort
+    }
+    
+    router.replace({ query })
+  },
+  { deep: true }
 )
 
 onMounted(() => {

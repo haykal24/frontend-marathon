@@ -16,9 +16,9 @@ export const useEvents = () => {
     per_page?: number
     month?: string // Format: YYYY-MM
     year?: string | number
-    type?: string
+    type?: string | string[] // Support multiple types
     city?: string
-    province?: string
+    province?: string | string[] // Support multiple provinces
     category?: string
     status?: 'published' | 'pending_review' | 'draft'
     search?: string
@@ -33,9 +33,27 @@ export const useEvents = () => {
     if (params?.per_page) queryParams.append('per_page', params.per_page.toString())
     if (params?.month) queryParams.append('month', params.month)
     if (params?.year) queryParams.append('year', params.year.toString())
-    if (params?.type) queryParams.append('type', params.type)
+    
+    // Handle multiple types
+    if (params?.type) {
+      if (Array.isArray(params.type)) {
+        params.type.forEach(t => queryParams.append('type[]', t))
+      } else {
+        queryParams.append('type', params.type)
+      }
+    }
+    
     if (params?.city) queryParams.append('city', params.city)
-    if (params?.province) queryParams.append('province', params.province)
+    
+    // Handle multiple provinces
+    if (params?.province) {
+      if (Array.isArray(params.province)) {
+        params.province.forEach(p => queryParams.append('province[]', p))
+      } else {
+        queryParams.append('province', params.province)
+      }
+    }
+    
     if (params?.category) queryParams.append('category', params.category)
     if (params?.status) queryParams.append('status', params.status)
     if (params?.search) queryParams.append('search', params.search)
