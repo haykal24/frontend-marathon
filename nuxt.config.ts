@@ -113,6 +113,9 @@ export default defineNuxtConfig({
       blog: {
         sources: ['/api/__sitemap__/blog-urls'],
       },
+      categories: {
+        sources: ['/api/__sitemap__/categories-urls'],
+      },
     },
     
     // General options
@@ -222,6 +225,7 @@ export default defineNuxtConfig({
       '/__sitemap__/pages.xml',
       '/__sitemap__/events.xml',
       '/__sitemap__/blog.xml',
+      '/__sitemap__/categories.xml',
     ],
   },
 
