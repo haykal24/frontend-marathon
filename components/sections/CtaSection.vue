@@ -156,7 +156,7 @@ defineExpose({
           <div class="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-secondary/35 blur-3xl" />
           <div class="relative space-y-4">
             <h3 class="text-2xl font-semibold tracking-tight text-secondary">
-              Marathon Indonesia
+              Indonesia Marathon
             </h3>
             <p class="text-sm text-white/70 lg:text-base leading-relaxed">
               Apakah anda pengelola event lari dan ingin berkembang bersama kami? beberapa alasan

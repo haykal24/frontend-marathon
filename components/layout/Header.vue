@@ -23,7 +23,6 @@ import IconHeroiconsRectangleGroup from '~icons/heroicons/rectangle-group'
 
 import { useAuth } from '~/composables/useAuth'
 import { useSiteSettings } from '~/composables/useSiteSettings'
-import { useImage } from '#imports'
 import { sanitizeMediaUrl } from '~/utils/format'
 
 interface NavigationItem {
@@ -40,7 +39,6 @@ interface NavigationItem {
 const { isAuthenticated, user, logout } = useAuth()
 const { getSetting, getImage } = useSiteSettings()
 const route = useRoute()
-const $img = useImage()
 
 const siteName = computed(
   () => getSetting<string>('site_name', 'Marathon Indonesia') ?? 'Marathon Indonesia'
@@ -60,19 +58,6 @@ const hasValidLogo = computed(() => {
   if (logoStr.includes('placeholder')) return false
   
   return true
-})
-
-const siteLogo = computed(() => {
-  if (!hasValidLogo.value) return ''
-  const sanitized = sanitizeMediaUrl(logoUrl.value)
-  if (!sanitized) return ''
-  return $img(sanitized, {
-    width: 192,
-    height: 48,
-    format: 'webp',
-    quality: 80,
-    fit: 'contain',
-  })
 })
 
 const logoError = ref(false)
@@ -218,27 +203,40 @@ const resolveLink = (item: NavigationItem) => {
           to="/"
           class="flex items-center gap-3"
         >
-          <img
-            v-if="siteLogo && !logoError"
-            :src="siteLogo"
-            :alt="siteName"
-            class="h-12 w-auto object-contain"
-            width="192"
-            height="48"
-            loading="eager"
-            decoding="async"
-            @error="onLogoError"
-          />
-          <img
-            v-else
-            src="/logo.png"
-            :alt="siteName"
-            class="h-12 w-auto object-contain"
-            width="192"
-            height="48"
-            loading="eager"
-            decoding="async"
-          />
+          <ClientOnly>
+            <NuxtImg
+              v-if="hasValidLogo && !logoError"
+              :src="sanitizeMediaUrl(logoUrl) || '/logo.png'"
+              :alt="siteName"
+              class="h-12 w-auto object-contain"
+              :width="192"
+              :height="48"
+              format="webp"
+              loading="eager"
+              @error="onLogoError"
+            />
+            <NuxtImg
+              v-else
+              src="/logo.png"
+              :alt="siteName"
+              class="h-12 w-auto object-contain"
+              :width="192"
+              :height="48"
+              format="webp"
+              loading="eager"
+            />
+            <template #fallback>
+              <NuxtImg
+                src="/logo.png"
+                :alt="siteName"
+                class="h-12 w-auto object-contain"
+                :width="192"
+                :height="48"
+                format="webp"
+                loading="eager"
+              />
+            </template>
+          </ClientOnly>
         </NuxtLink>
 
         <div class="hidden items-center gap-4 lg:flex">

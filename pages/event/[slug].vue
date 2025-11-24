@@ -371,10 +371,10 @@ const allContactItems = computed(() => {
                 class="relative"
               >
                 <PopoverButton
-                  class="p-2 rounded-lg bg-secondary/10 hover:bg-secondary/20 text-primary transition-colors flex-shrink-0"
+                  class="p-2 rounded-lg bg-secondary hover:bg-secondary/20 text-primary transition-colors flex-shrink-0"
                   title="Bagikan Event"
                 >
-                  <IconMdiShareVariant class="h-5 w-5 text-secondary" />
+                  <IconMdiShareVariant class="h-5 w-5 text-primary" />
                 </PopoverButton>
 
                 <PopoverPanel

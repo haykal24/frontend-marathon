@@ -9,6 +9,7 @@ import { useAdBanners } from '~/composables/useAdBanners'
 import { useEventListing, type EventFilterState } from '~/composables/useEventListing'
 import { useActiveProvinces } from '~/composables/useActiveProvinces'
 import { useEventFilters } from '~/composables/useEventFilters'
+import { useEventTypes } from '~/composables/useEventTypes'
 import IconMdiMagnify from '~icons/mdi/magnify'
 import IconMdiViewGrid from '~icons/mdi/view-grid'
 import IconMdiViewList from '~icons/mdi/view-list'
@@ -61,6 +62,7 @@ useBreadcrumbSchema(breadcrumbItems)
 const { getImage } = useSiteSettings()
 const { fetchResponsiveBanners } = useAdBanners()
 const { provinces, refreshProvinces } = await useActiveProvinces()
+const { fetchActiveEventTypes } = useEventTypes()
 
 const headerBg = computed(() => getImage('header_bg_events', null) ?? undefined)
 
@@ -70,10 +72,17 @@ const { data: eventHeaderBanners } = await useAsyncData('ad-banners-page-header-
 const headerAdBanners = computed(() => eventHeaderBanners.value?.desktop ?? [])
 const headerAdBannersMobile = computed(() => eventHeaderBanners.value?.mobile ?? [])
 
+// Fetch event types dynamically from backend
+const { data: eventTypesData } = await useAsyncData('event-types', async () => {
+  const response = await fetchActiveEventTypes()
+  return response.data || []
+})
+const eventTypes = computed(() => eventTypesData.value || [])
+
 // --- State (continued) ---
 const viewMode = ref<'grid' | 'table'>('grid')
 const showMobileFilter = ref(false)
-const activeFilterTab = ref<'search' | 'month' | 'province' | 'sort'>('search')
+const activeFilterTab = ref<'search' | 'month' | 'province' | 'sort' | 'type'>('search')
 
 const createDefaultFilters = (): EventFilterState => ({
   search: '',
@@ -122,21 +131,30 @@ const provinceOptions = computed(() => {
 })
 
 // --- SEO: Dynamic Title & Description (after all dependencies are initialized) ---
-// FIX: Add type filter to prevent duplicate content
-const eventTypeLabels: Record<string, string> = {
-  'road_run': 'Road Run',
-  'trail_run': 'Trail Run',
-  'fun_run': 'Fun Run',
-  'virtual_run': 'Virtual Run',
-  'marathon': 'Marathon',
-}
+// Generate event type options dynamically from backend data
+const eventTypeOptions = computed(() => {
+  return eventTypes.value.map(type => ({
+    value: type.slug,
+    label: type.name
+  }))
+})
+
+// Create a lookup map for event type labels (for SEO meta)
+const eventTypeLabels = computed(() => {
+  const labels: Record<string, string> = {}
+  eventTypes.value.forEach(type => {
+    labels[type.slug] = type.name
+  })
+  return labels
+})
 
 const dynamicSeoTitle = computed(() => {
   const parts: string[] = []
   
   // Type filter (prioritas tertinggi untuk mencegah duplicate)
   if (filters.value.type && filters.value.type.length > 0) {
-    const typeLabel = eventTypeLabels[filters.value.type[0]] || filters.value.type[0]
+    const typeValue = filters.value.type[0]
+    const typeLabel = eventTypeLabels.value?.[typeValue] || typeValue
     parts.push(`Event ${typeLabel}`)
   }
   
@@ -178,7 +196,8 @@ const dynamicSeoDescription = computed(() => {
   
   // Type context
   if (filters.value.type && filters.value.type.length > 0) {
-    const typeLabel = eventTypeLabels[filters.value.type[0]] || filters.value.type[0]
+    const typeValue = filters.value.type[0]
+    const typeLabel = eventTypeLabels.value?.[typeValue] || typeValue
     desc += ` event ${typeLabel.toLowerCase()}`
   } else {
     desc += ' event lari'
@@ -207,7 +226,8 @@ const dynamicSeoDescription = computed(() => {
   
   // Dynamic suffix based on type
   if (filters.value.type && filters.value.type.length > 0) {
-    const typeLabel = eventTypeLabels[filters.value.type[0]]
+    const typeValue = filters.value.type[0]
+    const typeLabel = eventTypeLabels.value?.[typeValue] || typeValue
     desc += `. Kalender ${typeLabel.toLowerCase()} terbaru di Indonesia.`
   } else {
     desc += '. Kalender lari terbaru untuk road run, trail run, fun run, dan marathon.'
@@ -315,14 +335,20 @@ function initializeFiltersFromQuery(query = route.query) {
 
   // Type filter (deep link compatibility)
   if (query.type) {
-    const typeValue = Array.isArray(query.type) ? query.type[0] : query.type || ''
-    if (typeValue) nextFilters.type = [typeValue]
+    if (Array.isArray(query.type)) {
+      nextFilters.type = query.type.filter(t => t) as string[]
+    } else if (query.type) {
+      nextFilters.type = [query.type as string]
+    }
   }
 
   // Province filter
   if (query.province) {
-    const provinceValue = Array.isArray(query.province) ? query.province[0] : query.province || ''
-    if (provinceValue) nextFilters.province = [provinceValue]
+    if (Array.isArray(query.province)) {
+      nextFilters.province = query.province.filter(p => p) as string[]
+    } else if (query.province) {
+      nextFilters.province = [query.province as string]
+    }
   }
 
   // Month filter (prioritized to sync year automatically)
@@ -406,7 +432,7 @@ onMounted(() => {
         class="hidden lg:block mb-8 rounded-2xl border border-secondary/40 bg-white p-4 lg:p-6 shadow-sm"
       >
         <div class="flex flex-col lg:flex-row gap-4 items-center lg:items-end">
-          <div class="grid flex-grow grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-3 w-full">
+          <div class="grid flex-grow grid-cols-1 md:grid-cols-2 lg:grid-cols-10 gap-3 w-full">
             <!-- Search Input -->
             <div class="relative lg:col-span-3">
               <input
@@ -513,6 +539,16 @@ onMounted(() => {
                   </PopoverPanel>
                 </transition>
               </Popover>
+            </div>
+
+            <!-- Type Filter (New) -->
+            <div class="lg:col-span-2">
+              <AppFilterDropdown
+                v-model="filters.type"
+                :options="eventTypeOptions"
+                placeholder="Kategori Lari"
+                multiple
+              />
             </div>
 
             <!-- Province Filter -->
@@ -972,7 +1008,7 @@ onMounted(() => {
             >
               <div class="flex gap-2 min-w-min">
                 <button
-                  v-for="tab in ['search', 'month', 'province', 'sort']"
+                  v-for="tab in ['search', 'month', 'type', 'province', 'sort']"
                   :key="tab"
                   :class="[
                     'px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap',
@@ -987,9 +1023,11 @@ onMounted(() => {
                       ? 'Bulan/Tahun'
                       : tab === 'province'
                         ? 'Provinsi'
-                        : tab === 'sort'
-                          ? 'Urutkan'
-                          : 'Cari'
+                        : tab === 'type'
+                          ? 'Kategori'
+                          : tab === 'sort'
+                            ? 'Urutkan'
+                            : 'Cari'
                   }}
                 </button>
               </div>
@@ -1059,6 +1097,77 @@ onMounted(() => {
                     </button>
                   </div>
                 </div>
+              </div>
+
+              <!-- Type Tab -->
+              <div
+                v-if="activeFilterTab === 'type'"
+                class="p-6 space-y-3"
+              >
+                <label
+                  v-for="typeOption in eventTypeOptions"
+                  :key="typeOption.value"
+                  class="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer group"
+                >
+                  <div class="relative w-5 h-5 flex-shrink-0">
+                    <input
+                      type="checkbox"
+                      :checked="
+                        Array.isArray(filters.type)
+                          ? filters.type.includes(typeOption.value)
+                          : filters.type === typeOption.value
+                      "
+                      class="absolute opacity-0 w-0 h-0"
+                      @change="
+                        () => {
+                          if (Array.isArray(filters.type)) {
+                            const index = filters.type.indexOf(typeOption.value)
+                            if (index > -1) {
+                              filters.type.splice(index, 1)
+                            } else {
+                              filters.type.push(typeOption.value)
+                            }
+                          } else {
+                            filters.type =
+                              filters.type === typeOption.value ? [] : [typeOption.value]
+                          }
+                        }
+                      "
+                    >
+                    <div
+                      class="w-5 h-5 border-2 border-secondary/60 rounded-md flex items-center justify-center transition-colors"
+                      :class="
+                        (
+                          Array.isArray(filters.type)
+                            ? filters.type.includes(typeOption.value)
+                            : filters.type === typeOption.value
+                        )
+                          ? 'bg-secondary border-secondary'
+                          : 'group-hover:border-secondary'
+                      "
+                    >
+                      <svg
+                        v-if="
+                          Array.isArray(filters.type)
+                            ? filters.type.includes(typeOption.value)
+                            : filters.type === typeOption.value
+                        "
+                        class="w-3 h-3 text-primary"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="3"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="text-gray-900 font-medium">{{ typeOption.label }}</span>
+                </label>
               </div>
 
               <!-- Province Tab -->
