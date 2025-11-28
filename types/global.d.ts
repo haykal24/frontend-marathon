@@ -78,6 +78,8 @@ declare global {
       apiBase: string
       siteUrl: string
       appName: string
+      r2Domain?: string
+      googleAnalyticsId?: string
     }
   }
 

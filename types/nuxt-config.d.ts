@@ -1,32 +1,17 @@
 import type { NitroConfig } from 'nitropack'
 
-declare module 'nuxt/schema' {
-  interface NuxtConfig {
-    devtools?: {
-      enabled?: boolean
-    }
-    nitro?: NitroConfig & {
-      compatibilityDate?: string
-    }
-  }
-
-  interface NuxtOptions {
-    devtools?: {
-      enabled?: boolean
-    }
-    nitro?: NitroConfig & {
-      compatibilityDate?: string
-    }
-  }
-}
-
-export {}
 // Type declarations untuk Nuxt module configurations
 // File ini akan di-include oleh TypeScript setelah nuxt prepare
 // Updated: Support untuk manual sitemap chunking dengan sources terpisah
 
 declare module 'nuxt/schema' {
   interface NuxtConfig {
+    devtools?: {
+      enabled?: boolean
+    }
+    nitro?: NitroConfig & {
+      compatibilityDate?: string
+    }
     // @nuxtjs/seo module
     site?: {
       url?: string
@@ -192,4 +177,15 @@ declare module 'nuxt/schema' {
       exposeConfig?: boolean
     }
   }
+
+  interface NuxtOptions {
+    devtools?: {
+      enabled?: boolean
+    }
+    nitro?: NitroConfig & {
+      compatibilityDate?: string
+    }
+  }
 }
+
+export {}

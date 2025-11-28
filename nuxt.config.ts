@@ -93,6 +93,10 @@ export default defineNuxtConfig({
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api/v1',
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
       appName: process.env.NUXT_PUBLIC_APP_NAME || 'Marathon Indonesia',
+      // Cloudflare R2 public domain (untuk Nuxt Image)
+      r2Domain: process.env.NUXT_PUBLIC_R2_DOMAIN || undefined,
+      // Google Analytics ID
+      googleAnalyticsId: process.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_ID || undefined,
     },
   },
 
@@ -237,6 +241,9 @@ export default defineNuxtConfig({
       'localhost',
       'dasbor.indonesiamarathon.com',
       'indonesiamarathon.com',
+      'cdn.indonesiamarathon.com',
+      // Cloudflare R2 public URL (extract domain from env)
+      ...(process.env.NUXT_PUBLIC_R2_DOMAIN ? [process.env.NUXT_PUBLIC_R2_DOMAIN] : []),
     ],
     densities: [1, 2],
     screens: {
@@ -254,7 +261,7 @@ export default defineNuxtConfig({
 
   // Partytown Configuration (untuk third-party scripts)
   partytown: {
-    forward: ['dataLayer.push', 'fbq'],
+    forward: ['dataLayer.push', 'fbq', 'gtag'],
   },
 
   // TailwindCSS Configuration
