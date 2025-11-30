@@ -109,7 +109,7 @@ const detailLink = computed(() => {
           class="block"
           @click.stop
         >
-          <h3 
+        <h3 
             class="text-lg font-bold text-primary transition-colors group-hover:text-secondary group-hover:underline"
           >
             {{ props.item.name }}

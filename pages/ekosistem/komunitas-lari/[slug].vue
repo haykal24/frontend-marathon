@@ -30,11 +30,40 @@ const { getRunningCommunityBySlug } = useEcosystem()
 const { getImage } = useSiteSettings()
 const { fetchResponsiveBanners } = useAdBanners()
 
-// Fetch community data
+// Fetch community data with proper error handling
 const { data: communityResponse, error: fetchError } = await useAsyncData<{ data: RunningCommunity }>(
   `community-${slug}`,
   async () => {
-    return await getRunningCommunityBySlug(slug)
+    try {
+      const res = await getRunningCommunityBySlug(slug)
+      if (!res?.data) {
+        throw createError({
+          statusCode: 404,
+          statusMessage: 'Komunitas tidak ditemukan',
+          fatal: true,
+        })
+      }
+      return res
+    } catch (err: any) {
+      // Handle API errors (404, 500, etc.)
+      // $fetch from ofetch will throw FetchError for non-2xx responses
+      const statusCode = err?.statusCode || err?.status || err?.response?.status || 404
+      
+      if (statusCode === 404) {
+        throw createError({
+          statusCode: 404,
+          statusMessage: 'Komunitas tidak ditemukan',
+          fatal: true,
+        })
+      }
+      
+      // For other errors, also throw 404 to prevent showing listing page
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Komunitas tidak ditemukan',
+        fatal: true,
+      })
+    }
   },
   { watch: [() => route.params.slug] }
 )
@@ -51,7 +80,8 @@ const community = computed(() => {
   return data
 })
 
-if (fetchError.value) {
+// Handle 404 if community not found
+if (fetchError.value || !community.value) {
   throw createError({
     statusCode: 404,
     statusMessage: 'Komunitas tidak ditemukan',
