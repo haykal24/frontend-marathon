@@ -37,7 +37,7 @@ export const useProvinces = () => {
       }
       
       return { data: [] }
-    } catch (error) {
+    } catch (_error) {
       return { data: [] }
     }
   }
@@ -61,7 +61,7 @@ export const useProvinces = () => {
         : []
       
       return { data: filtered }
-    } catch (error) {
+    } catch (_error) {
       return { data: [] }
     }
   }

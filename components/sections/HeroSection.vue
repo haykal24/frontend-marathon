@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useHead, useImage } from '#imports'
+import { useImage } from '#imports'
 import type { AdBanner } from '~/types/ad'
 import type { Event } from '~/types/event'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
@@ -64,7 +64,9 @@ const buildHeroImageUrl = (
   options: { width?: number; height?: number } = {}
 ) => {
   if (!src) return ''
-  return $img(sanitizeMediaUrl(src), {
+  const sanitized = sanitizeMediaUrl(src)
+  if (!sanitized) return ''
+  return $img(sanitized, {
     width: options.width ?? 1920,
     height: options.height ?? 1080,
     format: 'webp',
@@ -80,7 +82,9 @@ const buildHeroImageUrl = (
 <template>
   <section class="relative overflow-hidden min-h-screen lg:h-screen">
     <!-- SEO H1 (Hidden Visually) -->
-    <h1 class="sr-only">Kalender Lari & Jadwal Marathon {{ currentYear }} Terlengkap di Indonesia</h1>
+    <h1 class="sr-only">
+      Kalender Lari & Jadwal Marathon {{ currentYear }} Terlengkap di Indonesia
+    </h1>
 
     <Splide
       v-if="hasHeroContent"
@@ -104,7 +108,8 @@ const buildHeroImageUrl = (
                 loading="eager"
                 decoding="async"
                 fetchpriority="high"
-              />
+                sizes="100vw"
+              >
               <div
                 v-else
                 class="absolute inset-0 h-full w-full bg-gradient-to-br from-primary via-primary/80 to-black"
@@ -170,7 +175,7 @@ const buildHeroImageUrl = (
                 :loading="index === 0 ? 'eager' : 'lazy'"
                 decoding="async"
                 :fetchpriority="index === 0 ? 'high' : 'low'"
-              />
+              >
               <div
                 v-else
                 class="absolute inset-0 h-full w-full bg-gradient-to-br from-primary via-primary/80 to-black"
@@ -225,7 +230,7 @@ const buildHeroImageUrl = (
                           height="400"
                           loading="lazy"
                           decoding="async"
-                        />
+                        >
                         <div
                           v-else
                           class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/80 via-primary/70 to-black/80 text-center text-xs text-white/60 lg:rounded-t-2xl"

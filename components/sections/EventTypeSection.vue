@@ -140,7 +140,7 @@ const buildTypeImage = (src?: string | null) => {
                 decoding="async"
                 width="1280"
                 height="720"
-              />
+              >
               <div
                 v-else
                 class="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary via-primary/70 to-black text-white"

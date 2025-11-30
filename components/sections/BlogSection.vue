@@ -139,7 +139,7 @@ const buildPostImage = (src?: string | null) => {
                 decoding="async"
                 width="1280"
                 height="720"
-              />
+              >
               <div
                 v-else
                 class="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary via-primary/80 to-black text-white"

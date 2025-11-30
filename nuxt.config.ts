@@ -97,6 +97,8 @@ export default defineNuxtConfig({
       r2Domain: process.env.NUXT_PUBLIC_R2_DOMAIN || undefined,
       // Google Analytics ID
       googleAnalyticsId: process.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_ID || undefined,
+      // Google Tag Manager ID
+      googleTagManagerId: process.env.NUXT_PUBLIC_GOOGLE_TAG_MANAGER_ID || undefined,
     },
   },
 
@@ -261,7 +263,7 @@ export default defineNuxtConfig({
 
   // Partytown Configuration (untuk third-party scripts)
   partytown: {
-    forward: ['dataLayer.push', 'fbq', 'gtag'],
+    forward: ['dataLayer.push', 'fbq', 'gtag', 'gtm'],
   },
 
   // TailwindCSS Configuration

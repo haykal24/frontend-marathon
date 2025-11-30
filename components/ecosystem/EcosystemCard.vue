@@ -12,7 +12,9 @@ interface Props {
   item: {
     id: number
     name: string
+    slug?: string
     type?: string
+    type_raw?: string
     logo_url?: string | null
     description?: string | null
     website?: string | null
@@ -23,18 +25,37 @@ interface Props {
     instagram_handle?: string | null
     is_featured?: boolean
   }
+  itemType?: 'community' | 'vendor' // Untuk menentukan route detail
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  itemType: 'vendor', // Default ke vendor
+})
+
+const { item, itemType } = props
 
 const displayLocation = computed(() => {
   // Prioritaskan 'location' (untuk Komunitas), lalu 'city' (untuk Vendor)
-  return props.item.location || props.item.city
+  return item.location || item.city
+})
+
+// Generate detail link
+const detailLink = computed(() => {
+  if (!item.slug) return null
+  
+  if (itemType === 'community') {
+    return `/ekosistem/komunitas-lari/${item.slug}`
+  }
+  
+  // Vendor - generic route
+  return `/ekosistem/vendor/${item.slug}`
 })
 </script>
 
 <template>
-  <div
+  <component
+    :is="detailLink ? 'NuxtLink' : 'div'"
+    :to="detailLink || undefined"
     class="group relative flex h-full flex-col overflow-hidden rounded-2xl border bg-white transition-all duration-300 hover:border-secondary"
     :class="[item.is_featured ? 'border-secondary' : 'border-secondary/30']"
   >
@@ -111,6 +132,7 @@ const displayLocation = computed(() => {
             target="_blank"
             rel="noopener noreferrer"
             class="text-gray-700 truncate transition-colors hover:text-secondary"
+            @click.stop
           >
             @{{ item.instagram_handle.replace('@', '') }}
           </a>
@@ -125,6 +147,7 @@ const displayLocation = computed(() => {
             target="_blank"
             rel="noopener noreferrer"
             class="truncate text-gray-700 transition-colors hover:text-secondary"
+            @click.stop
           >
             {{ formatWebsiteDisplay(item.website) }}
           </a>
@@ -137,6 +160,7 @@ const displayLocation = computed(() => {
           <a
             :href="`mailto:${item.email}`"
             class="truncate text-gray-700 transition-colors hover:text-secondary"
+            @click.stop
           >
             {{ item.email }}
           </a>
@@ -151,11 +175,12 @@ const displayLocation = computed(() => {
             target="_blank"
             rel="noopener noreferrer"
             class="truncate text-gray-700 transition-colors hover:text-secondary"
+            @click.stop
           >
             {{ item.phone }}
           </a>
         </div>
       </div>
     </div>
-  </div>
+  </component>
 </template>

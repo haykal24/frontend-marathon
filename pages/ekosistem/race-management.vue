@@ -129,7 +129,7 @@ const headerAdBannersMobile = computed(() => raceMgmtHeaderBanners.value?.mobile
         >
           <p class="min-w-0 font-medium">
             Total
-            <span class="font-semibold text-primary">{{ totalCount }}</span><span class="inline sm:hidden"> </span>
+            <span class="font-semibold text-primary">{{ totalCount }}</span><span class="inline sm:hidden" />
             <span class="hidden sm:inline">organizer terdaftar.</span>
             <span class="inline sm:hidden"> Organizer</span>
           </p>
@@ -240,7 +240,17 @@ const headerAdBannersMobile = computed(() => raceMgmtHeaderBanners.value?.mobile
               >
                 <td class="px-4 py-4 sm:px-6 max-w-[280px]">
                   <div class="flex flex-col gap-1">
-                    <span class="font-semibold text-primary break-words line-clamp-2">
+                    <NuxtLink
+                      v-if="vendor.slug"
+                      :to="`/ekosistem/vendor/${vendor.slug}`"
+                      class="font-semibold text-primary break-words line-clamp-2 hover:text-secondary transition"
+                    >
+                      {{ vendor.name }}
+                    </NuxtLink>
+                    <span
+                      v-else
+                      class="font-semibold text-primary break-words line-clamp-2"
+                    >
                       {{ vendor.name }}
                     </span>
                     <span
@@ -329,6 +339,5 @@ const headerAdBannersMobile = computed(() => raceMgmtHeaderBanners.value?.mobile
         </div>
       </div>
     </section>
-
   </div>
 </template>

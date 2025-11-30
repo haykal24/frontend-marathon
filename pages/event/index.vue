@@ -6,7 +6,7 @@ import { useSiteSettings } from '~/composables/useSiteSettings'
 import { useSeoMetaDynamic } from '~/composables/useSeoMeta'
 import { useCurrentYear } from '~/composables/useCurrentYear'
 import { useAdBanners } from '~/composables/useAdBanners'
-import { useEventListing, type EventFilterState } from '~/composables/useEventListing'
+import { useEventListing, type EventFilterState, type SortOption } from '~/composables/useEventListing'
 import { useActiveProvinces } from '~/composables/useActiveProvinces'
 import { useEventFilters } from '~/composables/useEventFilters'
 import { useEventTypes } from '~/composables/useEventTypes'
@@ -27,37 +27,22 @@ const config = useRuntimeConfig()
 const route = useRoute()
 const router = useRouter()
 
-// --- SEO Meta & Canonical (Partial - will be completed after filters init) ---
-const canonicalUrl = computed(() => {
-  // Ambil full path dengan query params untuk canonical yang akurat
-  // Google menganggap /event?province=bali sebagai halaman unik
-  const path = route.path
-  const query = route.query
-  
-  // Filter query params yang relevan untuk canonical
-  const canonicalParams = new URLSearchParams()
-  const allowedParams = ['province', 'category', 'month', 'year', 'type', 'page']
-  
-  Object.entries(query).forEach(([key, value]) => {
-    if (allowedParams.includes(key) && value) {
-      canonicalParams.append(key, String(value))
-    }
-  })
-  
-  const queryString = canonicalParams.toString()
-  return queryString ? `${path}?${queryString}` : path
-})
+// --- SEO Meta & Canonical - PERBAIKAN STRATEGY ---
+// Strategy: Halaman filter dengan query params = noindex,follow
+// Agar Google tidak mengindex ribuan kombinasi filter
+// Tapi halaman landing page dinamis (/event/provinsi/bali) = index,follow
+// hasActiveFilters removed - not used in this file
 
-// --- Breadcrumb Items ---
-const breadcrumbItems = computed<BreadcrumbItem[]>(() => {
-  const items: BreadcrumbItem[] = [
-    { text: 'Jadwal Lari', link: null }, // Current page
-  ]
-  return items
-})
+// Canonical URL: Selalu point ke base /event tanpa query params
+const canonicalUrl = computed(() => route.path)
+
+// --- Breadcrumbs (Home otomatis ditambahkan oleh komponen Breadcrumb) ---
+const breadcrumbs = computed<BreadcrumbItem[]>(() => [
+  { text: 'Event', link: null }, // Current page
+])
 
 // SEO: BreadcrumbList Schema.org untuk rich results
-useBreadcrumbSchema(breadcrumbItems)
+useBreadcrumbSchema(breadcrumbs)
 
 // --- Composables ---
 const { getImage } = useSiteSettings()
@@ -492,7 +477,7 @@ onMounted(() => {
     <PageHeader
       :title="`Kalender Event Lari ${currentYear}`"
       description="Jelajahi jadwal lari terlengkap. Gunakan filter untuk menemukan event road run, trail run, atau fun run berikutnya di kotamu."
-      :breadcrumbs="breadcrumbItems"
+      :breadcrumbs="breadcrumbs"
       :background-image-url="headerBg"
       :ad-banners="headerAdBanners"
       :ad-banners-mobile="headerAdBannersMobile"
@@ -859,22 +844,22 @@ onMounted(() => {
                 <td class="px-4 sm:px-6 py-4">
                   <div class="flex flex-col gap-1">
                     <span class="inline-flex flex-wrap items-center gap-2">
-                  <div class="flex items-center gap-2">
-                    <span
-                      :class="[
-                        'inline-flex items-center gap-2 font-semibold',
-                        event.is_featured_hero
-                          ? 'badge-modern text-xs w-fit'
-                          : 'text-primary',
-                      ]"
-                    >
-                      <IconHeroiconsSparkles20Solid
-                        v-if="event.is_featured_hero"
-                        class="h-4 w-4"
-                      />
-                      {{ event.title }}
-                    </span>
-                  </div>
+                      <div class="flex items-center gap-2">
+                        <span
+                          :class="[
+                            'inline-flex items-center gap-2 font-semibold',
+                            event.is_featured_hero
+                              ? 'badge-modern text-xs w-fit'
+                              : 'text-primary',
+                          ]"
+                        >
+                          <IconHeroiconsSparkles20Solid
+                            v-if="event.is_featured_hero"
+                            class="h-4 w-4"
+                          />
+                          {{ event.title }}
+                        </span>
+                      </div>
                      
                     </span>
                   </div>
@@ -1332,7 +1317,7 @@ onMounted(() => {
                       type="radio"
                       :checked="filters.sort === sort.value"
                       class="absolute opacity-0 w-0 h-0"
-                      @change="filters.sort = sort.value"
+                      @change="filters.sort = sort.value as SortOption"
                     >
                     <div
                       class="w-5 h-5 border-2 border-secondary/60 rounded-full flex items-center justify-center transition-colors"

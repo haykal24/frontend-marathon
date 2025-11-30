@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useRoute, useRouter } from '#app'
+import { useRoute } from '#app'
 import { useOtp } from '~/composables/useOtp'
 import { useSeoMetaDynamic } from '~/composables/useSeoMeta'
 import { useSiteSettings } from '~/composables/useSiteSettings'
@@ -205,7 +205,7 @@ const onVerifyLogin = async () => {
               loading="eager"
               decoding="async"
               fetchpriority="high"
-            />
+            >
             <div
               v-else
               class="flex h-full w-full items-center justify-center text-primary/70 bg-white"
@@ -243,7 +243,7 @@ const onVerifyLogin = async () => {
                       class="h-16 w-auto"
                       loading="lazy"
                       decoding="async"
-                    />
+                    >
                   </NuxtLink>
                 </div>
 

@@ -8,13 +8,15 @@ import { useSeoMetaDynamic } from '~/composables/useSeoMeta'
 import { useSiteSettings } from '~/composables/useSiteSettings'
 import { useBlogPosts } from '~/composables/useBlogPosts'
 import { useAdBanners } from '~/composables/useAdBanners'
-import { formatEventDate } from '~/utils/format'
+import { formatBlogDate } from '~/utils/format'
 import IconMdiMagnify from '~icons/mdi/magnify'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
 import IconHeroiconsTag20Solid from '~icons/heroicons/tag-20-solid'
 import IconHeroiconsCalendarDays20Solid from '~icons/heroicons/calendar-days-20-solid'
 import IconHeroiconsUserCircle20Solid from '~icons/heroicons/user-circle-20-solid'
+import IconMdiTagMultipleOutline from '~icons/mdi/tag-multiple-outline'
 import AppFilterDropdown from '~/components/ui/AppFilterDropdown.vue'
+import { useSchemaOrg, defineWebPage, defineItemList } from '#imports'
 
 const route = useRoute()
 const router = useRouter()
@@ -150,19 +152,79 @@ useSchemaOrg(() => [
     '@id': `${config.public.siteUrl}${seoUrl.value}`,
     name: schemaPageName.value,
     description: seoDescription.value,
+    '@type': 'CollectionPage', // CollectionPage untuk halaman listing
   }),
   // OPTIMASI: Tambahkan ItemList untuk memberitahu Google konten dari halaman blog ini
+  // Sesuai standar Google: ItemList dengan BlogPosting items yang LENGKAP
   defineItemList({
     itemListElement: computed(() =>
-      posts.value.slice(0, 10).map((post, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        item: {
-          '@type': 'BlogPosting',
-          name: post.title,
-          url: `${config.public.siteUrl}/blog/${post.slug}`,
-        },
-      }))
+      posts.value.slice(0, 10).map((post, index) => {
+        // Format tanggal ke ISO 8601
+        const formatDate = (dateStr: string | null | undefined): string | undefined => {
+          if (!dateStr) return undefined
+          try {
+            return new Date(dateStr).toISOString()
+          } catch {
+            return undefined
+          }
+        }
+
+        // Format image URL (absolute)
+        const imageUrl = post.banner
+          ? (post.banner.startsWith('http')
+              ? post.banner
+              : `${config.public.siteUrl}${post.banner}`)
+          : undefined
+
+        return {
+          '@type': 'ListItem',
+          position: index + 1,
+          item: {
+            '@type': 'BlogPosting',
+            // WAJIB: Headline
+            headline: post.title,
+            name: post.title,
+            // WAJIB: Description
+            description: post.excerpt || post.seo_description || post.title,
+            // DIREKOMENDASIKAN: URL kanonis
+            url: `${config.public.siteUrl}/blog/${post.slug}`,
+            // DIREKOMENDASIKAN: Date Published (ISO 8601)
+            datePublished: formatDate(post.published_at),
+            // DIREKOMENDASIKAN: Date Modified (ISO 8601)
+            dateModified: formatDate(post.updated_at || post.published_at),
+            // WAJIB: Author (Person)
+            author: post.author
+              ? {
+                  '@type': 'Person',
+                  name: post.author.name,
+                  // Opsional: URL author (jika ada halaman profil)
+                  // url: `${config.public.siteUrl}/author/${post.author.slug}`,
+                }
+              : undefined,
+            // DIREKOMENDASIKAN: Image (array untuk multiple aspect ratios)
+            image: imageUrl ? [imageUrl] : undefined,
+            // WAJIB: Publisher (Organization)
+            publisher: {
+              '@type': 'Organization',
+              name: 'indonesiamarathon.com',
+              url: config.public.siteUrl,
+            },
+            // OPSIONAL: MainEntityOfPage
+            mainEntityOfPage: {
+              '@type': 'WebPage',
+              '@id': `${config.public.siteUrl}/blog/${post.slug}`,
+            },
+            // OPSIONAL: Article Section (category)
+            ...(post.category && {
+              articleSection: post.category.name,
+            }),
+            // OPSIONAL: Keywords (dari tags)
+            ...(post.tags && post.tags.length > 0 && {
+              keywords: post.tags.map(tag => tag.name).join(', '),
+            }),
+          },
+        }
+      })
     ),
   }),
 ])
@@ -227,7 +289,7 @@ const { data: ssrPosts } = await useAsyncData('blog-posts-initial', async () => 
 if (ssrPosts.value) {
   const items = ssrPosts.value.data ?? []
   posts.value = items
-  const pagination = (ssrPosts.value as BlogPostsResponse).meta
+  const pagination = (ssrPosts.value as BlogPostsResponse).meta?.pagination
   currentPage.value = pagination?.current_page ?? initialPage
   lastPage.value = pagination?.last_page ?? 1
   totalCount.value = pagination?.total ?? items.length ?? 0
@@ -257,7 +319,7 @@ const fetchPostsData = async (page = 1, append = false) => {
     const items = res.data ?? []
     posts.value = append ? [...posts.value, ...items] : items
 
-    const pagination = (res as BlogPostsResponse).meta
+    const pagination = (res as BlogPostsResponse).meta?.pagination
     currentPage.value = pagination?.current_page ?? 1
     lastPage.value = pagination?.last_page ?? 1
     totalCount.value = pagination?.total ?? items.length ?? 0
@@ -400,7 +462,6 @@ const loadMore = async () => {
                       height="256"
                       loading="lazy"
                       decoding="async"
-                      fetchPriority="low"
                     >
                   </template>
                   <template v-else>
@@ -447,7 +508,7 @@ const loadMore = async () => {
                       <IconHeroiconsCalendarDays20Solid
                         class="h-4 w-4 text-secondary flex-shrink-0"
                       />
-                      <span class="text-gray-600">{{ formatEventDate(post.published_at) }}</span>
+                      <span class="text-gray-600">{{ formatBlogDate(post.published_at) }}</span>
                     </div>
                     <div
                       v-if="post.author"
@@ -605,35 +666,6 @@ const loadMore = async () => {
                   {{ tag.name }}
                 </NuxtLink>
               </div>
-            </div>
-
-            <!-- Newsletter CTA -->
-            <div
-              class="rounded-2xl border border-secondary/40 bg-gradient-to-br from-secondary/15 via-white to-white p-6 shadow-sm"
-            >
-              <h3 class="font-bold text-primary mb-2 tracking-tight">
-                Update Artikel Terbaru
-              </h3>
-              <p class="text-sm text-gray-600 mb-4">
-                Dapatkan tips lari, panduan latihan, dan insight event terbaru langsung ke inbox-mu.
-              </p>
-              <div class="space-y-2">
-                <input
-                  type="email"
-                  placeholder="Email kamu"
-                  class="w-full px-3 py-2.5 rounded-lg border border-secondary/60 bg-white text-sm placeholder-gray-400 focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition"
-                >
-                <UiAppButton
-                  variant="secondary"
-                  size="sm"
-                  block
-                >
-                  Subscribe
-                </UiAppButton>
-              </div>
-              <p class="mt-3 text-[11px] text-gray-500">
-                Kami kirim 1x seminggu. Gratis. Bisa berhenti kapan saja.
-              </p>
             </div>
           </div>
         </div>

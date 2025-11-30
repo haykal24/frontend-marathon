@@ -285,7 +285,12 @@ const handleRemoveSocialMedia = (index: number) => {
                 <div>
                   <label class="block text-sm font-semibold text-gray-900 mb-2">Pilih Paket Layanan *</label>
                   <p class="text-xs text-gray-500 mb-3">
-                    Pilih paket promosi untuk event Anda. Lihat detail paket di <NuxtLink to="/rate-card" class="text-secondary hover:underline font-medium">Halaman Rate Card</NuxtLink>.
+                    Pilih paket promosi untuk event Anda. Lihat detail paket di <NuxtLink
+                      to="/rate-card"
+                      class="text-secondary hover:underline font-medium"
+                    >
+                      Halaman Rate Card
+                    </NuxtLink>.
                   </p>
                   <Listbox v-model="form.rate_package_id">
                     <div class="relative w-full">
@@ -295,7 +300,7 @@ const handleRemoveSocialMedia = (index: number) => {
                         <span class="block truncate text-sm">
                           {{
                             ratePackages.find(p => p.id === form.rate_package_id)?.name ||
-                            'Pilih paket layanan'
+                              'Pilih paket layanan'
                           }}
                         </span>
                         <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
@@ -534,7 +539,6 @@ const handleRemoveSocialMedia = (index: number) => {
 
                 <!-- Grid 2 Kolom (Jenis Event & Organizer) -->
                 <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
-
                   <!-- Jenis Event (Custom Dropdown) -->
                   <div>
                     <label class="block text-sm font-semibold text-gray-900 mb-2">Jenis Event *</label>
@@ -907,7 +911,7 @@ const handleRemoveSocialMedia = (index: number) => {
                           <div class="relative">
                             <ListboxButton
                               class="relative w-full cursor-default rounded-xl border border-secondary/70 bg-white px-3 py-2 text-sm text-left text-gray-900 focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20"
-                        >
+                            >
                               <span class="block truncate text-sm">
                                 {{ contact.label || 'Pilih Label Kontak' }}
                               </span>
@@ -924,10 +928,10 @@ const handleRemoveSocialMedia = (index: number) => {
                                 class="absolute z-50 left-0 mt-1 w-full overflow-auto rounded-xl bg-white text-sm shadow-lg ring-1 ring-secondary/40 focus:outline-none max-h-48"
                               >
                                 <ListboxOption
-                            v-for="option in CONTACT_LABEL_OPTIONS"
-                            :key="option.value"
+                                  v-for="option in CONTACT_LABEL_OPTIONS"
+                                  :key="option.value"
                                   v-slot="{ active, selected }"
-                            :value="option.label"
+                                  :value="option.label"
                                   as="template"
                                 >
                                   <li
@@ -937,7 +941,7 @@ const handleRemoveSocialMedia = (index: number) => {
                                     ]"
                                   >
                                     <span :class="[selected ? 'font-medium' : 'font-normal', 'block truncate']">
-                            {{ option.label }}
+                                      {{ option.label }}
                                     </span>
                                     <span
                                       v-if="selected"
@@ -1013,7 +1017,7 @@ const handleRemoveSocialMedia = (index: number) => {
                           <div class="relative">
                             <ListboxButton
                               class="relative w-full cursor-default rounded-xl border border-secondary/70 bg-white px-3 py-2 text-sm text-left text-gray-900 focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20"
-                        >
+                            >
                               <span class="block truncate text-sm">
                                 {{ social.platform || 'Pilih Platform' }}
                               </span>
@@ -1030,10 +1034,10 @@ const handleRemoveSocialMedia = (index: number) => {
                                 class="absolute z-50 left-0 mt-1 w-full overflow-auto rounded-xl bg-white text-sm shadow-lg ring-1 ring-secondary/40 focus:outline-none max-h-48"
                               >
                                 <ListboxOption
-                            v-for="option in SOCIAL_PLATFORM_OPTIONS"
-                            :key="option.value"
+                                  v-for="option in SOCIAL_PLATFORM_OPTIONS"
+                                  :key="option.value"
                                   v-slot="{ active, selected }"
-                            :value="option.label"
+                                  :value="option.label"
                                   as="template"
                                 >
                                   <li
@@ -1043,7 +1047,7 @@ const handleRemoveSocialMedia = (index: number) => {
                                     ]"
                                   >
                                     <span :class="[selected ? 'font-medium' : 'font-normal', 'block truncate']">
-                            {{ option.label }}
+                                      {{ option.label }}
                                     </span>
                                     <span
                                       v-if="selected"

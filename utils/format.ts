@@ -134,11 +134,11 @@ export const getDescriptionSnippet = (description?: string | null, limit = 160):
   return clean.length > limit ? `${clean.slice(0, limit).trim()}…` : clean
 }
 
-export const sanitizeMediaUrl = (url?: string | null): string | undefined => {
-  if (!url) return undefined
+export const sanitizeMediaUrl = (url?: string | null): string => {
+  if (!url) return ''
 
   const trimmed = url.trim()
-  if (!trimmed) return undefined
+  if (!trimmed) return ''
 
   const firstSpace = trimmed.indexOf(' ')
   if (firstSpace !== -1) return trimmed.slice(0, firstSpace)

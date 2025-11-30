@@ -1,5 +1,15 @@
 <template>
   <NuxtRouteAnnouncer />
+  <!-- Google Tag Manager (noscript) -->
+  <noscript v-if="gtmId">
+    <iframe
+    :src="`https://www.googletagmanager.com/ns.html?id=${gtmId}`"
+    height="0"
+    width="0"
+    style="display:none;visibility:hidden"
+    />
+  </noscript>
+  <!-- End Google Tag Manager (noscript) -->
   <NuxtLayout>
     <!-- 
       OPTIMASI NAVIGASI BACK: 
@@ -11,14 +21,16 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useSchemaOrg, defineOrganization, defineWebSite, defineWebPage } from '#imports'
 import { useSplideAriaCleanup } from '~/composables/useSplideAriaCleanup'
 import { useSiteSettings } from '~/composables/useSiteSettings'
 
 const config = useRuntimeConfig()
-const { getSetting, settings } = useSiteSettings()
+const { getSetting } = useSiteSettings()
 
 const apiBaseUrl = config.public.apiBase || 'http://localhost:8000'
+const gtmId = computed(() => config.public.googleTagManagerId || undefined)
 const currentYear = new Date().getFullYear()
 
 // Fallback values if backend settings are not yet loaded

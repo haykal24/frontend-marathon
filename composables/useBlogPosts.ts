@@ -6,7 +6,7 @@
  * - Helper functions untuk use case spesifik (latest, by category, dll)
  */
 
-import type { BlogPost, BlogPostsResponse, BlogCategory } from '~/types/blog'
+import type { BlogPost, BlogPostsResponse, BlogCategory, BlogTag } from '~/types/blog'
 import { useApi } from './useApi'
 
 export const useBlogPosts = () => {
@@ -89,6 +89,14 @@ export const useBlogPosts = () => {
   }
 
   /**
+   * Fetch blog tags with post counts (untuk halaman tag index)
+   * @returns Promise dengan array BlogTag dengan post_count
+   */
+  const fetchBlogTags = async (): Promise<{ data: (BlogTag & { post_count?: number })[] }> => {
+    return await api.get<{ data: (BlogTag & { post_count?: number })[] }>('/blog/tags')
+  }
+
+  /**
    * Search blog posts (untuk search functionality)
    * @param query Search term
    * @param limit Jumlah hasil (default 20)
@@ -108,6 +116,7 @@ export const useBlogPosts = () => {
     fetchBlogPostsByCategory,
     fetchBlogPostBySlug,
     fetchBlogCategories,
+    fetchBlogTags,
     searchBlogPosts,
   }
 }

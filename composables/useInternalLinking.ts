@@ -215,7 +215,7 @@ export const detectDuplicateAnchors = (
 
   // Silent in production - warnings only in development
   if (duplicates.size > 0 && import.meta.dev) {
-    Array.from(duplicates.entries()).forEach(([anchor, count]) => {
+    Array.from(duplicates.entries()).forEach(([_anchor, _count]) => {
       // Removed console.warn for cleaner logs
     })
   }

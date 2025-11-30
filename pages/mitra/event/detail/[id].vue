@@ -4,12 +4,12 @@ import { useSeoMetaDynamic } from '~/composables/useSeoMeta'
 import LayoutPageHeader from '~/components/layout/PageHeader.vue'
 import MitraDetailSection from '~/components/mitra/MitraDetailSection.vue'
 import type { BreadcrumbItem } from '~/components/layout/Breadcrumb.vue'
-import type { Event } from '~/types/event'
+// Event type imported but not used directly
 import MitraSidebarNav from '~/components/mitra/SidebarNav.vue'
 
 definePageMeta({
   middleware: ['auth'],
-  layout: 'mitra',
+  layout: false, // Using custom layout via component
 })
 
 const route = useRoute()
@@ -221,10 +221,10 @@ const formatSimpleDate = (value?: string | null) => {
                         >
                           <span
                             v-for="cat in event.categories"
-                            :key="cat.id"
+                            :key="typeof cat === 'object' && cat !== null && 'id' in cat ? cat.id : String(cat)"
                             class="inline-flex items-center rounded-md bg-secondary/10 px-2 py-1 text-xs font-medium text-primary"
                           >
-                            {{ cat.name }}
+                            {{ typeof cat === 'object' && cat !== null && 'name' in cat ? cat.name : cat }}
                           </span>
                         </div>
                         <p

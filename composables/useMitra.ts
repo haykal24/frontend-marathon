@@ -50,7 +50,7 @@ export const useMitra = () => {
     try {
       // API returns: { success, message, data: [...], meta: {...} }
       // We need to unwrap to: { data: [...], meta: {...} }
-      const response = await api.get<ApiResponse<Event[]> & { meta?: any }>(url)
+      const response = await api.get<ApiResponse<Event[]> & { meta?: Record<string, unknown> }>(url)
       return {
         data: response.data || [],
         meta: response.meta,

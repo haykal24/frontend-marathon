@@ -54,7 +54,7 @@ const events = computed<Event[]>(() => {
   // Response structure: { data: Event[], meta: { pagination: {...} } }
   return Array.isArray(data.value.data) ? data.value.data : []
 })
-const pagination = computed(() => data.value?.meta?.pagination)
+// pagination removed - not used in this file
 const totalPages = computed(() => Math.ceil((stats.value?.total_events ?? 0) / perPage.value))
 
 // Use stats from API instead of counting from fetched events
@@ -276,7 +276,7 @@ const handleRefresh = () => {
                           </div>
                           <div class="min-w-0 flex-1">
                             <div class="font-semibold text-primary truncate">
-                          {{ event.title }}
+                              {{ event.title }}
                             </div>
                             <div
                               v-if="event.description"

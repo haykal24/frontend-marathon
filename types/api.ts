@@ -4,11 +4,11 @@ export type { PaginatedResponse } from './ecosystem'
 /**
  * Standard API response wrapper dari Laravel
  */
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean
   message: string
   data: T
-  meta?: any
+  meta?: Record<string, unknown>
 }
 
 /**

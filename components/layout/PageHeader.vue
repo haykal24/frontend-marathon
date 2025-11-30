@@ -56,7 +56,9 @@ const sliderOptions = {
 
 const buildBannerImage = (src?: string | null, options: { width?: number; height?: number } = {}) => {
   if (!src) return ''
-  return $img(sanitizeMediaUrl(src), {
+  const sanitized = sanitizeMediaUrl(src)
+  if (!sanitized) return ''
+  return $img(sanitized, {
     width: options.width ?? 1920,
     height: options.height ?? 1080,
     format: 'webp',
@@ -67,7 +69,9 @@ const buildBannerImage = (src?: string | null, options: { width?: number; height
 
 <template>
   <!-- SEO H1 (Hidden Visually) -->
-  <h1 class="sr-only">{{ title }}</h1>
+  <h1 class="sr-only">
+    {{ title }}
+  </h1>
 
   <!-- Desktop / Unified Slider -->
   <!-- Jika banner identik, tampilkan slider ini di semua device (block). Jika beda, hanya di desktop (hidden lg:block). -->
@@ -139,7 +143,7 @@ const buildBannerImage = (src?: string | null, options: { width?: number; height
                 height="1080"
                 loading="lazy"
                 decoding="async"
-              />
+              >
               <div
                 v-else
                 class="h-full w-full bg-gradient-to-br from-primary via-primary/80 to-black flex items-center justify-center text-white text-center"
@@ -224,7 +228,7 @@ const buildBannerImage = (src?: string | null, options: { width?: number; height
                 height="1080"
                 loading="lazy"
                 decoding="async"
-              />
+              >
               <div
                 v-else
                 class="h-full w-full bg-gradient-to-br from-primary via-primary/80 to-black flex items-center justify-center text-white text-center"

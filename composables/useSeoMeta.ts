@@ -73,18 +73,9 @@ export const useSeoMetaDynamic = (metaData: SeoMetaData) => {
     ...(modifiedTime && { articleModifiedTime: modifiedTime }),
   })
 
-  // Explicitly set canonical URL using useHead (link tag)
-  useHead({
-    link: [
-      {
-        rel: 'canonical',
-        href: resolvedUrl,
-      },
-    ],
-  })
-
-  // NOTE: Canonical URL is now explicitly handled above to support query params
-  // when passed via metaData.url
+  // NOTE: Canonical URL sudah otomatis dihandle oleh @nuxtjs/seo
+  // Kita hanya perlu set ogUrl, dan @nuxtjs/seo akan mengatur canonical tag
+  // TIDAK perlu manual useHead untuk canonical - ini mencegah duplikasi
 
   return {
     title: resolvedTitle,

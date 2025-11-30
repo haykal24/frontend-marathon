@@ -357,7 +357,10 @@ const resolveLink = (item: NavigationItem) => {
                       class="flex items-center gap-3 rounded-xl px-3 py-2 text-white transition hover:text-secondary"
                       @click="userMenuOpen = false; openDropdown = null"
                     >
-                      <component :is="navIcons.value.documentPlus" class="h-5 w-5" />
+                      <component
+                        :is="navIcons.documentPlus"
+                        class="h-5 w-5"
+                      />
                       <span>Submit Event</span>
                     </NuxtLink>
                     <button
@@ -534,7 +537,10 @@ const resolveLink = (item: NavigationItem) => {
                   class="flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3 text-sm font-medium text-white/80 transition hover:bg-secondary hover:text-primary"
                   @click="isMenuOpen = false"
                 >
-                  <component :is="navIcons.documentPlus" class="h-5 w-5" />
+                  <component
+                    :is="navIcons.documentPlus"
+                    class="h-5 w-5"
+                  />
                   <span>Submit Event</span>
                 </NuxtLink>
                 <UiAppButton

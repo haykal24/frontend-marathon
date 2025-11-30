@@ -6,25 +6,23 @@ export default defineNuxtPlugin(nuxtApp => {
   pinia.use(
     createPersistedState({
       storage: {
-        getItem: (key) => {
+        getItem: (key: string): string | null => {
           // Use cookie for SSR compatibility
-          return useCookie(key, {
+          const value = useCookie(key, {
             maxAge: 60 * 60 * 24 * 7, // 7 days
             sameSite: 'lax',
             secure: process.env.NODE_ENV === 'production',
           }).value
+          return value ?? null
         },
-        setItem: (key, value) => {
+        setItem: (key: string, value: string): void => {
           useCookie(key, {
             maxAge: 60 * 60 * 24 * 7, // 7 days
             sameSite: 'lax',
             secure: process.env.NODE_ENV === 'production',
           }).value = value
         },
-        removeItem: (key) => {
-          useCookie(key).value = null
-        },
-      },
+      } as Storage,
     })
   )
 })

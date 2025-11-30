@@ -39,7 +39,23 @@ export const useHomepageData = () => {
 
   // OPTIMASI: Gunakan useState untuk persistent cache di client-side
   // Cache ini akan bertahan selama session dan instant pada back navigation
-  const cachedHomepageData = useState<any>('homepage-cache', () => null)
+  interface HomepageCache {
+    latestEvents: unknown
+    eventTypes: unknown
+    provinces: unknown
+    blogPosts: unknown
+    featuredHeroEvents: unknown
+    sliderBanners: AdBanner[]
+    ctaBanner: AdBanner | null
+    bannerMain: ResponsiveAdBanners
+    sidebar1: ResponsiveAdBanners
+    sidebar2: ResponsiveAdBanners
+    eventsByType: Record<string, Event[]>
+    eventsByProvince: Record<string, Event[]>
+    calendarStats: Record<number, number>
+    calendarStatsByYear: Record<number, Record<number, number>>
+  }
+  const cachedHomepageData = useState<HomepageCache | null>('homepage-cache', () => null)
 
   const {
     data: homepageData,
@@ -179,14 +195,14 @@ export const useHomepageData = () => {
       }
 
         // We return the raw results here
-        const result = {
+        const result: HomepageCache = {
           latestEvents,
           eventTypes,
           provinces,
           blogPosts,
           featuredHeroEvents,
           sliderBanners: extractList<AdBanner>(sliderBannerResult as ApiListResponse<AdBanner>),
-          ctaBanner,
+          ctaBanner: ctaBanner ?? null,
           bannerMain: bannerMainResult,
           sidebar1: sidebar1Result,
           sidebar2: sidebar2Result,
@@ -202,7 +218,7 @@ export const useHomepageData = () => {
         }
 
         return result
-      } catch (error) {
+      } catch (_error) {
         // Return empty structure on error untuk graceful fallback
         return {
           latestEvents: null,

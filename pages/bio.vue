@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen bg-primary text-white font-body overflow-hidden">
-
     <div class="relative z-10 min-h-screen flex flex-col">
       <div class="container mx-auto max-w-md px-4 py-12 sm:px-6 flex-grow">
         <!-- Profile Section - Mobile First -->
@@ -9,7 +8,7 @@
           <div class="relative mx-auto inline-block group">
             <div class="relative z-10 rounded-xl bg-gradient-to-b from-white/10 to-transparent backdrop-blur-md ring-1 ring-white/10 overflow-hidden p-2">
               <!-- Shine Effect -->
-              <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out z-20 pointer-events-none"></div>
+              <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out z-20 pointer-events-none" />
               
               <ClientOnly>
                 <NuxtImg
@@ -61,12 +60,22 @@
         </div>
 
         <!-- Loading State -->
-        <div v-if="pending" class="space-y-4">
-          <div v-for="i in 5" :key="i" class="h-20 animate-pulse rounded-2xl border border-white/5 bg-white/5 backdrop-blur-xl" />
+        <div
+          v-if="pending"
+          class="space-y-4"
+        >
+          <div
+            v-for="i in 5"
+            :key="i"
+            class="h-20 animate-pulse rounded-2xl border border-white/5 bg-white/5 backdrop-blur-xl"
+          />
         </div>
 
         <!-- Links List - Apple-style Liquid Glass -->
-        <div v-else class="space-y-4">
+        <div
+          v-else
+          class="space-y-4"
+        >
           <a 
             v-for="link in links" 
             :key="link.id"
@@ -76,14 +85,14 @@
             class="group relative flex items-center gap-4 rounded-2xl p-2 transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) hover:scale-[1.02] active:scale-[0.98]"
           >
             <!-- Glass Background Layer -->
-            <div class="absolute inset-0 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.2)] group-hover:bg-white/[0.08] group-hover:border-white/20 transition-all duration-500"></div>
+            <div class="absolute inset-0 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.2)] group-hover:bg-white/[0.08] group-hover:border-white/20 transition-all duration-500" />
             
             <!-- Top Light Sheen (Liquid effect) -->
-            <div class="absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/[0.05] to-transparent opacity-100 pointer-events-none"></div>
+            <div class="absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/[0.05] to-transparent opacity-100 pointer-events-none" />
             
             <!-- Shine Effect -->
             <div class="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
-              <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
+              <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
             </div>
 
             <!-- Icon Container -->
@@ -117,7 +126,10 @@
               <h3 class="truncate text-[15px] font-semibold text-white/90 group-hover:text-white transition-colors tracking-wide font-heading">
                 {{ link.title }}
               </h3>
-              <p v-if="link.subtitle" class="mt-0.5 truncate text-xs text-white/50 font-medium group-hover:text-white/70 transition-colors">
+              <p
+                v-if="link.subtitle"
+                class="mt-0.5 truncate text-xs text-white/50 font-medium group-hover:text-white/70 transition-colors"
+              >
                 {{ link.subtitle }}
               </p>
             </div>

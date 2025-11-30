@@ -147,7 +147,7 @@ declare module 'nuxt/schema' {
       screens?: Record<string, number>
       densities?: number[]
       ipx?: {
-        modifiers?: Record<string, any>
+        modifiers?: Record<string, unknown>
       }
     }
     // @nuxt/fonts module

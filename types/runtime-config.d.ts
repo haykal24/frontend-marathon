@@ -14,6 +14,7 @@ declare module 'nuxt/schema' {
     appName: string
     r2Domain?: string
     googleAnalyticsId?: string
+    googleTagManagerId?: string
   }
 }
 

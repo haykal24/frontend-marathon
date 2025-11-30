@@ -41,11 +41,25 @@ export interface BlogTag {
 }
 
 export interface BlogPostsResponse {
+  success: boolean
+  message: string
   data: BlogPost[]
   meta: {
-    current_page: number
-    last_page: number
-    per_page: number
-    total: number
+    pagination: {
+      current_page: number
+      last_page: number
+      per_page: number
+      total: number
+      from?: number
+      to?: number
+      has_more_pages?: boolean
+      path?: string
+      links?: {
+        first: string
+        last: string
+        prev: string | null
+        next: string | null
+      }
+    }
   }
 }

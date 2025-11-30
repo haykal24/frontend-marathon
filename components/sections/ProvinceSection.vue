@@ -60,7 +60,7 @@ const buildProvinceImage = (src?: string | null) => {
             decoding="async"
             width="1200"
             height="800"
-          />
+          >
           <div
             v-else
             class="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary via-primary/80 to-black text-center text-white"

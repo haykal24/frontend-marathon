@@ -51,7 +51,9 @@ const hasValidImage = computed(() => {
 
 const buildCardImage = (src?: string | null) => {
   if (!src) return ''
-  return $img(sanitizeMediaUrl(src), {
+  const sanitized = sanitizeMediaUrl(src)
+  if (!sanitized) return ''
+  return $img(sanitized, {
     width: 640,
     height: 420,
     format: 'webp',
@@ -86,7 +88,8 @@ const buildCardImage = (src?: string | null) => {
         decoding="async"
         width="800"
         height="600"
-      />
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+      >
 
       <!-- Fallback dengan bg-primary gradient (konsisten dengan EventTypeSection/BlogSection) -->
       <div

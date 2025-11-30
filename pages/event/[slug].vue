@@ -18,12 +18,16 @@ import IconSimpleIconsFacebook from '~icons/simple-icons/facebook'
 import IconSimpleIconsX from '~icons/simple-icons/x'
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
 import { ref } from 'vue'
-import { useSchemaOrg } from '#imports'
 import { useEventSchema } from '~/composables/useEventSchema'
+import { useBreadcrumbSchema } from '~/composables/useBreadcrumbSchema'
 import IconMdiChevronDown from '~icons/mdi/chevron-down'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
 import IconMdiEmail from '~icons/mdi/email'
 import IconMdiPhone from '~icons/mdi/phone'
+import IconHeroiconsMapPin20Solid from '~icons/heroicons/map-pin-20-solid'
+import IconHeroiconsTag20Solid from '~icons/heroicons/tag-20-solid'
+import IconHeroiconsBookOpen20Solid from '~icons/heroicons/book-open-20-solid'
+import IconHeroiconsUserGroup20Solid from '~icons/heroicons/user-group-20-solid'
 
 const route = useRoute()
 const config = useRuntimeConfig()
@@ -107,14 +111,50 @@ const eventPosterImage = computed(() =>
   }),
 )
 
-// --- Breadcrumb Items ---
-const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
-  { text: 'Jadwal Lari', link: '/event' },
-  { text: eventData.value.title || 'Detail Event', link: null },
-])
+// --- Breadcrumb Items (dengan hierarki Programmatic SEO) ---
+// Breadcrumbs (Home otomatis ditambahkan oleh komponen Breadcrumb)
+// Format: Event → Provinsi → Kota → [Nama Event]
+// Fallback: Event → Kategori → [Nama Kategori] → [Nama Event] (jika provinsi tidak ada)
+const breadcrumbs = computed<BreadcrumbItem[]>(() => {
+  const items: BreadcrumbItem[] = [
+    { text: 'Event', link: '/event' },
+  ]
+
+  // Prioritas 1: Provinsi (UTAMA)
+  if (eventData.value.province) {
+    items.push({ text: 'Provinsi', link: '/event/provinsi' })
+    const provinceSlug = eventData.value.province.toLowerCase().replace(/\s+/g, '-')
+    items.push({
+      text: eventData.value.province,
+      link: `/event/provinsi/${provinceSlug}`,
+    })
+
+    // Tambahkan Kota jika ada
+    if (eventData.value.city && eventData.value.city.trim() !== '') {
+      const citySlug = eventData.value.city.toLowerCase().replace(/\s+/g, '-')
+      items.push({
+        text: eventData.value.city,
+        link: `/event/kota/${citySlug}`,
+      })
+    }
+  } 
+  // Fallback: Kategori (jika provinsi tidak ada)
+  else if (eventData.value.event_type) {
+    items.push({ text: 'Kategori', link: '/event/kategori' })
+    items.push({
+      text: formatEventType(eventData.value.event_type),
+      link: `/event/kategori/${eventData.value.event_type}`,
+    })
+  }
+
+  // Event name (current page)
+  items.push({ text: eventData.value.title || 'Detail Event', link: null })
+
+  return items
+})
 
 // SEO: BreadcrumbList Schema.org untuk rich results
-useBreadcrumbSchema(breadcrumbItems)
+useBreadcrumbSchema(breadcrumbs)
 
 // --- SEO Meta Tags ---
 if (event.value) {
@@ -183,7 +223,7 @@ if (event.value) {
 
     // Mapping offers (tiket)
     offers: evt.registration_fees && Object.keys(evt.registration_fees).length > 0
-      ? Object.entries(evt.registration_fees).map(([category, price]) => ({
+      ? Object.entries(evt.registration_fees).map(([_category, price]) => ({
           price: (typeof price === 'string' ? price.replace(/[^0-9]/g, '') : '0') || '0',
           priceCurrency: 'IDR',
           availability: 'InStock', // Default
@@ -339,7 +379,7 @@ const allContactItems = computed(() => {
     <LayoutPageHeader
       :title="eventData.title"
       :description="`${eventData.location_name}, ${eventData.city}`"
-      :breadcrumbs="breadcrumbItems"
+      :breadcrumbs="breadcrumbs"
       :background-image-url="headerBg"
       :ad-banners="headerAdBanners"
       :ad-banners-mobile="headerAdBannersMobile"
@@ -427,7 +467,10 @@ const allContactItems = computed(() => {
             </h2>
 
             <!-- Description -->
-            <div v-if="eventData.description" class="rich-content">
+            <div
+              v-if="eventData.description"
+              class="rich-content"
+            >
               <!-- eslint-disable-next-line vue/no-v-html -->
               <div v-html="eventData.description" />
             </div>
@@ -598,7 +641,6 @@ const allContactItems = computed(() => {
               >
                 Link Pendaftaran
               </NuxtLink>
-             
             </div>
           </div>
         </div>
@@ -682,6 +724,71 @@ const allContactItems = computed(() => {
         </div>
       </div>
 
+      <!-- SILO STRUCTURE: Internal Links untuk SEO -->
+      <div class="layout-container mt-10">
+        <div class="rounded-2xl border border-secondary/30 bg-white p-6">
+          <h3 class="text-lg font-bold text-primary mb-4 font-saira">
+            Jelajahi Event & Panduan Lainnya
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <!-- Link ke Provinsi Page -->
+            <NuxtLink
+              v-if="eventData.province"
+              :to="`/event/provinsi/${eventData.province.toLowerCase().replace(/\s+/g, '-')}`"
+              class="flex items-center gap-2 p-3 rounded-lg bg-surface text-primary text-sm font-medium hover:bg-surface/80 transition"
+            >
+              <IconHeroiconsMapPin20Solid class="h-4 w-4 text-secondary flex-shrink-0" />
+              <span>Lihat Event Lari di <strong>{{ eventData.province }}</strong></span>
+            </NuxtLink>
+
+            <!-- Link ke Kategori/Tipe Page -->
+            <NuxtLink
+              v-if="eventData.event_type"
+              :to="`/event/kategori/${eventData.event_type}`"
+              class="flex items-center gap-2 p-3 rounded-lg bg-surface text-primary text-sm font-medium hover:bg-surface/80 transition"
+            >
+              <IconHeroiconsTag20Solid class="h-4 w-4 text-secondary flex-shrink-0" />
+              <span>Event {{ formatEventType(eventData.event_type) }} Lainnya</span>
+            </NuxtLink>
+
+            <!-- Link ke Blog/Panduan -->
+            <NuxtLink
+              to="/blog/apa-itu-marathon-jarak-lari"
+              class="flex items-center gap-2 p-3 rounded-lg bg-surface text-primary text-sm font-medium hover:bg-surface/80 transition"
+            >
+              <IconHeroiconsBookOpen20Solid class="h-4 w-4 text-secondary flex-shrink-0" />
+              <span>Panduan Lengkap Marathon</span>
+            </NuxtLink>
+
+            <!-- Link ke Komunitas -->
+            <NuxtLink
+              to="/ekosistem/komunitas-lari"
+              class="flex items-center gap-2 p-3 rounded-lg bg-surface text-primary text-sm font-medium hover:bg-surface/80 transition"
+            >
+              <IconHeroiconsUserGroup20Solid class="h-4 w-4 text-secondary flex-shrink-0" />
+              <span>Komunitas Lari Indonesia</span>
+            </NuxtLink>
+
+            <!-- Link ke All Events -->
+            <NuxtLink
+              to="/event"
+              class="flex items-center gap-2 p-3 rounded-lg bg-surface text-primary text-sm font-medium hover:bg-surface/80 transition"
+            >
+              <IconHeroiconsMapPin20Solid class="h-4 w-4 text-secondary flex-shrink-0" />
+              <span>Lihat Semua Event Lari</span>
+            </NuxtLink>
+
+            <!-- Link ke Tips Training -->
+            <NuxtLink
+              to="/blog"
+              class="flex items-center gap-2 p-3 rounded-lg bg-surface text-primary text-sm font-medium hover:bg-surface/80 transition"
+            >
+              <IconHeroiconsBookOpen20Solid class="h-4 w-4 text-secondary flex-shrink-0" />
+              <span>Tips Training & Persiapan</span>
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>

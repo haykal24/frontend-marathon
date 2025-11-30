@@ -43,11 +43,14 @@ export const useEventFilters = async (filters: Ref<EventFilterState>) => {
     availableYears.value = normalizedYears
 
     if (!normalizedYears.includes(selectedYear.value)) {
-      const fallbackYear = normalizedYears.includes(defaultYear)
-        ? defaultYear
-        : normalizedYears[0]
-      selectedYear.value = fallbackYear
-      filters.value.year = String(fallbackYear)
+      const firstYear = normalizedYears[0]
+      if (firstYear !== undefined) {
+        const fallbackYear = normalizedYears.includes(defaultYear)
+          ? defaultYear
+          : firstYear
+        selectedYear.value = fallbackYear
+        filters.value.year = String(fallbackYear)
+      }
     }
   }
 

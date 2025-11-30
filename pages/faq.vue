@@ -100,8 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import type { FAQ } from '~/types/faq'
+import { ref, computed } from 'vue'
 import { useFAQ } from '~/composables/useFAQ'
 import { useSiteSettings } from '~/composables/useSiteSettings'
 import { useSeoMetaDynamic } from '~/composables/useSeoMeta'

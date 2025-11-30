@@ -14,6 +14,7 @@ import IconHeroiconsCalendarDays20Solid from '~icons/heroicons/calendar-days-20-
 import IconHeroiconsUserCircle20Solid from '~icons/heroicons/user-circle-20-solid'
 import IconHeroiconsShare20Solid from '~icons/heroicons/share-20-solid'
 import IconHeroiconsClock20Solid from '~icons/heroicons/clock-20-solid'
+import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
 import IconMdiContentCopy from '~icons/mdi/content-copy'
 import IconMdiWhatsapp from '~icons/mdi/whatsapp'
 import IconMdiFacebook from '~icons/mdi/facebook'
@@ -22,10 +23,11 @@ import IconMdiInstagram from '~icons/mdi/instagram'
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/vue'
 import { ref } from 'vue'
 import { useSchemaOrg, defineArticle } from '#imports'
+import { useArticleSchema } from '~/composables/useArticleSchema'
 
 const route = useRoute()
 const config = useRuntimeConfig()
-const { getImage } = useSiteSettings()
+const { getImage, getSetting } = useSiteSettings()
 const { fetchBlogPostBySlug, fetchBlogPosts } = useBlogPosts()
 const { fetchResponsiveBanners } = useAdBanners()
 
@@ -79,10 +81,22 @@ if (postError.value || !post.value) {
 // --- Fetch related posts (best practice: await useAsyncData) ---
 const { data: relatedResponse } = await useAsyncData<BlogPostsResponse>(
   `blog-related-${slug.value}`,
-  async () => {
+  async (): Promise<BlogPostsResponse> => {
     // Ensure post data is available before fetching related
     if (!post.value?.category?.slug) {
-      return { data: [], meta: { current_page: 1, last_page: 1, per_page: 4, total: 0 } }
+      return { 
+        success: true, 
+        message: '', 
+        data: [], 
+        meta: { 
+          pagination: {
+            current_page: 1, 
+            last_page: 1, 
+            per_page: 4, 
+            total: 0
+          }
+        } 
+      }
     }
 
     // Try to fetch by category and tag first (if tag exists)
@@ -123,8 +137,9 @@ const { data: relatedResponse } = await useAsyncData<BlogPostsResponse>(
 )
 
 const relatedPosts = computed<BlogPost[]>(() => {
-  const items = relatedResponse.value?.data ?? []
-  return items.filter(item => item.slug !== post.value?.slug)
+  const response = relatedResponse.value
+  const items = (response && 'data' in response && Array.isArray(response.data)) ? response.data : []
+  return items.filter((item: BlogPost) => item.slug !== post.value?.slug)
 })
 
 // --- Header Background from Site Settings ---
@@ -167,29 +182,52 @@ if (post.value?.banner) {
 }
 // Jika tidak ada banner, akan otomatis menggunakan og.webp dari config
 
-// --- Article Schema.org ---
-useSchemaOrg([
-  defineArticle({
-  headline: post.value?.title,
-  description: seoDescription.value,
-  datePublished: post.value?.published_at || undefined,
-  dateModified: post.value?.updated_at || post.value?.published_at || undefined,
-  author: post.value?.author
-    ? {
-        '@type': 'Person',
-        name: post.value.author.name,
-      }
-    : undefined,
-  url: articleUrl.value,
-    image: post.value?.banner || undefined,
-  }),
-])
+// --- Article Schema.org (Sesuai Standar Google Article) ---
+// Menggunakan composable useArticleSchema untuk memastikan compliance dengan Google guidelines
+const siteName = computed(() => getSetting('site_name', 'indonesiamarathon.com') || 'indonesiamarathon.com')
+const articleSchema = computed(() => useArticleSchema({
+  post: post.value,
+  siteUrl: config.public.siteUrl,
+  siteName: siteName.value || 'indonesiamarathon.com',
+  organizationUrl: config.public.siteUrl,
+}))
+
+if (articleSchema.value) {
+  useSchemaOrg([
+    defineArticle({
+      // WAJIB: Semua properti yang direkomendasikan Google Article Schema
+      headline: articleSchema.value.headline,
+      description: articleSchema.value.description,
+      datePublished: articleSchema.value.datePublished,
+      dateModified: articleSchema.value.dateModified,
+      author: articleSchema.value.author,
+      publisher: articleSchema.value.publisher,
+      url: articleSchema.value.url,
+      image: articleSchema.value.image,
+      mainEntityOfPage: articleSchema.value.mainEntityOfPage,
+    }),
+  ])
+}
 
 // --- Breadcrumbs ---
-const breadcrumbs = computed<BreadcrumbItem[]>(() => [
-  { text: 'Blog', link: '/blog' },
-  { text: post.value?.title ?? 'Artikel', link: null },
-])
+const breadcrumbs = computed<BreadcrumbItem[]>(() => {
+  const items: BreadcrumbItem[] = [
+    { text: 'Blog', link: '/blog' },
+  ]
+  
+  // Add category if exists
+  if (post.value?.category?.slug) {
+    items.push({ 
+      text: post.value.category.name, 
+      link: `/blog/kategori/${post.value.category.slug}` 
+    })
+  }
+  
+  // Add article title
+  items.push({ text: post.value?.title ?? 'Artikel', link: null })
+  
+  return items
+})
 
 // SEO: BreadcrumbList Schema.org untuk rich results
 useBreadcrumbSchema(breadcrumbs)
@@ -505,7 +543,46 @@ const shareX = () => {
           </aside>
         </div>
       </div>
-    </section>
 
+      <!-- Silo Structure Links -->
+      <div class="layout-container mt-12">
+        <div class="rounded-2xl border border-secondary/30 bg-white p-6">
+          <h3 class="text-lg font-bold text-primary mb-4 tracking-tight">
+            Jelajahi Artikel Lain
+          </h3>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <NuxtLink
+              to="/blog"
+              class="flex items-center gap-3 rounded-xl border border-secondary/30 bg-surface p-3 text-sm font-semibold text-primary transition hover:bg-surface/80"
+            >
+              <IconHeroiconsArrowRight20Solid class="h-4 w-4 text-secondary" />
+              Lihat Semua Artikel
+            </NuxtLink>
+            <NuxtLink
+              v-if="post?.category?.slug"
+              :to="`/blog/kategori/${post.category.slug}`"
+              class="flex items-center gap-3 rounded-xl border border-secondary/30 bg-surface p-3 text-sm font-semibold text-primary transition hover:bg-surface/80"
+            >
+              <IconHeroiconsTag20Solid class="h-4 w-4 text-secondary" />
+              Lihat Semua {{ post.category.name }}
+            </NuxtLink>
+            <NuxtLink
+              to="/blog/kategori"
+              class="flex items-center gap-3 rounded-xl border border-secondary/30 bg-surface p-3 text-sm font-semibold text-primary transition hover:bg-surface/80"
+            >
+              <IconHeroiconsTag20Solid class="h-4 w-4 text-secondary" />
+              Lihat Semua Kategori
+            </NuxtLink>
+            <NuxtLink
+              to="/blog/tag"
+              class="flex items-center gap-3 rounded-xl border border-secondary/30 bg-surface p-3 text-sm font-semibold text-primary transition hover:bg-surface/80"
+            >
+              <IconHeroiconsTag20Solid class="h-4 w-4 text-secondary" />
+              Lihat Semua Tag
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>

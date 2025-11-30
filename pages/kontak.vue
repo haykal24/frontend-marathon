@@ -138,7 +138,7 @@ const socialLinks = computed(() => {
     label: string
     value: string
     href: string
-    icon: any
+    icon: unknown
     brandColor: string
     iconColor: string
   }> = []
@@ -246,7 +246,6 @@ useSchemaOrg([
 
           <div class="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
             <div class="space-y-8">
-
               <div class="grid gap-4 md:grid-cols-2">
                 <article
                   v-for="block in supportBlocks"
@@ -258,7 +257,9 @@ useSchemaOrg([
                       :is="block.icon"
                       class="h-8 w-8 rounded-2xl bg-secondary/10 p-2 text-secondary flex-shrink-0"
                     />
-                    <p class="font-semibold text-primary">{{ block.title }}</p>
+                    <p class="font-semibold text-primary">
+                      {{ block.title }}
+                    </p>
                   </div>
                   <p
                     class="mt-2 text-sm text-gray-600"
@@ -313,8 +314,12 @@ useSchemaOrg([
                     class="h-8 w-8 rounded-2xl bg-secondary/10 p-2 text-secondary flex-shrink-0"
                   />
                   <div>
-                    <p class="text-xs uppercase tracking-[0.3em] text-gray-500">{{ info.title }}</p>
-                    <p class="text-sm text-gray-600">{{ info.description }}</p>
+                    <p class="text-xs uppercase tracking-[0.3em] text-gray-500">
+                      {{ info.title }}
+                    </p>
+                    <p class="text-sm text-gray-600">
+                      {{ info.description }}
+                    </p>
                   </div>
                 </div>
                 <div class="flex items-center justify-between gap-3">
@@ -343,25 +348,31 @@ useSchemaOrg([
                     <p class="text-xs uppercase tracking-[0.35em] text-gray-500">
                       Jam Operasional
                     </p>
-                    <p class="mt-1 text-sm font-semibold text-primary">{{ contactHoursPrimary }}</p>
+                    <p class="mt-1 text-sm font-semibold text-primary">
+                      {{ contactHoursPrimary }}
+                    </p>
                     <p class="text-sm text-gray-600">
                       {{ contactHoursPrimaryNote }}
                     </p>
-                </div>
+                  </div>
                 </div>
                 <div class="mt-4 grid gap-3">
                   <div class="flex items-start gap-3 text-sm text-gray-600">
                     <IconHeroiconsClock20Solid class="h-8 w-8 rounded-2xl bg-secondary/10 p-2 text-secondary flex-shrink-0" />
                     <div>
-                    <p class="font-semibold text-primary">Respons Cepat</p>
-                    <p>{{ contactHoursPrimaryNote }}</p>
+                      <p class="font-semibold text-primary">
+                        Respons Cepat
+                      </p>
+                      <p>{{ contactHoursPrimaryNote }}</p>
                     </div>
                   </div>
                   <div class="flex items-start gap-3 rounded-2xl border border-secondary bg-surface/80 px-3 py-3 text-sm text-gray-700">
                     <IconHeroiconsClock20Solid class="h-8 w-8 rounded-2xl bg-secondary/10 p-2 text-secondary flex-shrink-0" />
                     <div>
-                    <p class="font-semibold text-primary">{{ contactHoursSecondary }}</p>
-                    <p>{{ contactHoursSecondaryNote }}</p>
+                      <p class="font-semibold text-primary">
+                        {{ contactHoursSecondary }}
+                      </p>
+                      <p>{{ contactHoursSecondaryNote }}</p>
                     </div>
                   </div>
                 </div>

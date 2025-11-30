@@ -178,7 +178,7 @@ defineExpose({
                       decoding="async"
                       width="1920"
                       height="640"
-                    />
+                    >
                     <div
                       v-else
                       :class="`flex h-full ${mainBannerHeightClass} items-center justify-center bg-primary text-white`"
@@ -211,7 +211,7 @@ defineExpose({
                   decoding="async"
                   width="1920"
                   height="640"
-                />
+                >
                 <div
                   v-else
                   :class="`flex h-full ${mainBannerHeightClass} items-center justify-center bg-primary text-white`"
@@ -267,7 +267,7 @@ defineExpose({
                       decoding="async"
                       width="900"
                       height="400"
-                    />
+                    >
                     <div
                       v-else
                       :class="`flex h-full ${sidebarBannerHeightClass} items-center justify-center bg-primary text-white`"
@@ -299,7 +299,7 @@ defineExpose({
                   decoding="async"
                   width="900"
                   height="400"
-                />
+                >
                 <div
                   v-else
                   :class="`flex h-full ${sidebarBannerHeightClass} items-center justify-center bg-primary text-white`"
@@ -349,7 +349,7 @@ defineExpose({
                 decoding="async"
                 width="1200"
                 height="720"
-              />
+              >
               <div
                 v-else
                 class="flex h-72 items-center justify-center bg-primary text-white"

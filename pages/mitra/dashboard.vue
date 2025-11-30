@@ -54,7 +54,7 @@ const events = computed<Event[]>(() => {
   // Response structure: { data: Event[], meta: { pagination: {...} } }
   return Array.isArray(data.value.data) ? data.value.data : []
 })
-const pagination = computed(() => data.value?.meta?.pagination)
+// pagination removed - not used in this file
 const totalPages = computed(() => Math.ceil((stats.value?.total_events ?? 0) / perPage.value))
 
 // Use stats from API instead of counting from fetched events
@@ -200,7 +200,7 @@ const getEventKey = (event: Event, index: number) => {
               >
                 Gagal memuat event. <button
                   class="text-secondary underline font-medium"
-                  @click="refresh"
+                  @click="() => refresh()"
                 >
                   Coba lagi
                 </button>

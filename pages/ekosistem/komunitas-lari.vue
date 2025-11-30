@@ -147,7 +147,7 @@ const sanitizedInstagram = (handle?: string | null) => {
         >
           <p class="min-w-0 font-medium">
             Total
-            <span class="font-semibold text-primary">{{ totalCount }}</span><span class="inline sm:hidden"> </span>
+            <span class="font-semibold text-primary">{{ totalCount }}</span><span class="inline sm:hidden" />
             <span class="hidden sm:inline">komunitas terdaftar.</span>
             <span class="inline sm:hidden"> Komunitas</span>
           </p>
@@ -217,6 +217,7 @@ const sanitizedInstagram = (handle?: string | null) => {
               :id="`${community.id}`"
               :key="community.id"
               :item="community"
+              item-type="community"
             />
           </div>
 
@@ -257,7 +258,17 @@ const sanitizedInstagram = (handle?: string | null) => {
                 class="transition-colors hover:bg-secondary/5"
               >
                 <td class="px-4 py-4 sm:px-6 max-w-[280px]">
-                  <span class="font-semibold text-primary break-words line-clamp-2">
+                  <NuxtLink
+                    v-if="community.slug"
+                    :to="`/ekosistem/komunitas-lari/${community.slug}`"
+                    class="font-semibold text-primary break-words line-clamp-2 hover:text-secondary transition"
+                  >
+                    {{ community.name }}
+                  </NuxtLink>
+                  <span
+                    v-else
+                    class="font-semibold text-primary break-words line-clamp-2"
+                  >
                     {{ community.name }}
                   </span>
                 </td>
@@ -339,6 +350,5 @@ const sanitizedInstagram = (handle?: string | null) => {
         </div>
       </div>
     </section>
-
   </div>
 </template>
