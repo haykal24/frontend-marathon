@@ -19,7 +19,14 @@ const handleMouseDown = (e: MouseEvent) => {
   if (!scrollContainer.value) return
   // Don't start dragging if clicking on interactive elements
   const target = e.target as HTMLElement
-  if (target.tagName === 'A' || target.tagName === 'BUTTON' || target.closest('a, button')) {
+  // Check if clicking on link, button, or any interactive element
+  if (
+    target.tagName === 'A' || 
+    target.tagName === 'BUTTON' || 
+    target.closest('a, button, [role="button"]') ||
+    target.closest('NuxtLink') ||
+    (target.closest('td') && target.closest('td')?.querySelector('a'))
+  ) {
     return
   }
   isDragging.value = true

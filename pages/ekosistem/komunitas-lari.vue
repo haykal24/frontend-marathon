@@ -11,6 +11,7 @@ import IconMdiViewList from '~icons/mdi/view-list'
 import IconMdiInstagram from '~icons/mdi/instagram'
 import IconMdiWhatsapp from '~icons/mdi/whatsapp'
 import IconMdiEmailOutline from '~icons/mdi/email-outline'
+import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
 import { buildWhatsappUrl } from '~/utils/contact'
 import EcosystemTable from '~/components/ecosystem/EcosystemTable.vue'
 import { useAdBanners } from '~/composables/useAdBanners'
@@ -148,7 +149,7 @@ const sanitizedInstagram = (handle?: string | null) => {
           <p class="min-w-0 font-medium">
             Total
             <span class="font-semibold text-primary">{{ totalCount }}</span><span class="inline sm:hidden" />
-            <span class="hidden sm:inline">komunitas terdaftar.</span>
+            <span class="hidden sm:inline"> komunitas terdaftar.</span>
             <span class="inline sm:hidden"> Komunitas</span>
           </p>
           <div
@@ -249,6 +250,12 @@ const sanitizedInstagram = (handle?: string | null) => {
                 >
                   Kontak
                 </th>
+                <th
+                  scope="col"
+                  class="px-4 py-4 sm:px-6 w-32"
+                >
+                  Aksi
+                </th>
               </tr>
             </template>
             <template #body>
@@ -316,6 +323,20 @@ const sanitizedInstagram = (handle?: string | null) => {
                       class="text-gray-400"
                     >—</span>
                   </div>
+                </td>
+                <td class="px-4 py-4 sm:px-6">
+                  <NuxtLink
+                    v-if="community.slug"
+                    :to="`/ekosistem/komunitas-lari/${community.slug}`"
+                    class="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary hover:text-secondary"
+                  >
+                    <span>Detail</span>
+                    <IconHeroiconsArrowRight20Solid class="h-3.5 w-3.5" />
+                  </NuxtLink>
+                  <span
+                    v-else
+                    class="text-gray-400 text-xs"
+                  >—</span>
                 </td>
               </tr>
             </template>

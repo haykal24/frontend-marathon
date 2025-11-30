@@ -12,6 +12,7 @@ import IconMdiWhatsapp from '~icons/mdi/whatsapp'
 import IconMdiEmailOutline from '~icons/mdi/email-outline'
 import IconMdiWeb from '~icons/mdi/web'
 import IconMdiMapMarker from '~icons/mdi/map-marker'
+import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
 import { buildWhatsappUrl, formatWebsiteDisplay } from '~/utils/contact'
 import EcosystemTable from '~/components/ecosystem/EcosystemTable.vue'
 import { useAdBanners } from '~/composables/useAdBanners'
@@ -130,7 +131,7 @@ const headerAdBannersMobile = computed(() => vendorMedaliHeaderBanners.value?.mo
           <p class="min-w-0 font-medium">
             Total
             <span class="font-semibold text-primary">{{ totalCount }}</span><span class="inline sm:hidden" />
-            <span class="hidden sm:inline">vendor terdaftar.</span>
+            <span class="hidden sm:inline"> vendor terdaftar.</span>
             <span class="inline sm:hidden"> Vendor</span>
           </p>
           <div
@@ -199,6 +200,7 @@ const headerAdBannersMobile = computed(() => vendorMedaliHeaderBanners.value?.mo
               :id="`${vendor.id}`"
               :key="vendor.id"
               :item="vendor"
+              item-type="vendor"
             />
           </div>
 
@@ -229,6 +231,12 @@ const headerAdBannersMobile = computed(() => vendorMedaliHeaderBanners.value?.mo
                   class="px-4 py-4 sm:px-6 min-w-56"
                 >
                   Kontak
+                </th>
+                <th
+                  scope="col"
+                  class="px-4 py-4 sm:px-6 w-32"
+                >
+                  Aksi
                 </th>
               </tr>
             </template>
@@ -305,6 +313,20 @@ const headerAdBannersMobile = computed(() => vendorMedaliHeaderBanners.value?.mo
                       class="text-gray-400"
                     >—</span>
                   </div>
+                </td>
+                <td class="px-4 py-4 sm:px-6">
+                  <NuxtLink
+                    v-if="vendor.slug"
+                    :to="`/ekosistem/vendor/${vendor.slug}`"
+                    class="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary hover:text-secondary"
+                  >
+                    <span>Detail</span>
+                    <IconHeroiconsArrowRight20Solid class="h-3.5 w-3.5" />
+                  </NuxtLink>
+                  <span
+                    v-else
+                    class="text-gray-400 text-xs"
+                  >—</span>
                 </td>
               </tr>
             </template>
