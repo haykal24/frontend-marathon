@@ -15,7 +15,7 @@ export const useProvinces = () => {
   const api = useApi()
 
   /**
-   * Fetch all provinces
+   * Fetch all provinces (with pagination support)
    */
   const fetchProvinces = async (params?: Record<string, string | number | boolean>) => {
     try {
@@ -26,8 +26,10 @@ export const useProvinces = () => {
       // Handle different response formats
       if (response && 'data' in response) {
         const data = response.data
-    return {
+        const resp = response as ApiResponse<Province[]> & { meta?: { pagination?: any } }
+        return {
           data: Array.isArray(data) ? data : [],
+          meta: resp.meta || undefined,
         }
       }
       
@@ -43,13 +45,13 @@ export const useProvinces = () => {
   }
 
   /**
-   * Fetch active provinces only (yang punya event)
+   * Fetch active provinces only (yang punya event) (with pagination support)
    */
-  const fetchActiveProvinces = async () => {
+  const fetchActiveProvinces = async (params?: { page?: number; per_page?: number }) => {
     try {
-    const response = await fetchProvinces()
+    const response = await fetchProvinces({ ...params })
     if (!response || !response.data) {
-      return { data: [] }
+      return { data: [], meta: response?.meta }
     }
       
       const filtered = Array.isArray(response.data)
@@ -60,7 +62,7 @@ export const useProvinces = () => {
           })
         : []
       
-      return { data: filtered }
+      return { data: filtered, meta: response.meta }
     } catch (_error) {
       return { data: [] }
     }

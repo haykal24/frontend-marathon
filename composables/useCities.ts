@@ -16,22 +16,29 @@ export const useCities = () => {
   const api = useApi()
 
   /**
-   * Fetch all cities with events
+   * Fetch all cities with events (with pagination support)
    */
-  const fetchCities = async () => {
+  const fetchCities = async (params?: { page?: number; per_page?: number }) => {
     try {
-      const response = await api.get<City[] | { data: City[] }>('/events/cities')
+      const queryParams = new URLSearchParams()
+      if (params?.page) queryParams.append('page', params.page.toString())
+      if (params?.per_page) queryParams.append('per_page', params.per_page.toString())
       
-      // Handle different response formats
-      // If response is wrapped in { data: [...] }
+      const query = queryParams.toString()
+      const url = `/events/cities${query ? `?${query}` : ''}`
+      
+      const response = await api.get<{ success?: boolean; data: City[]; meta?: { pagination?: any } } | City[]>(url)
+      
+      // Handle paginated response (from BaseApiController)
       if (response && typeof response === 'object' && 'data' in response) {
-        const data = (response as { data: City[] }).data
+        const resp = response as { success?: boolean; data: City[]; meta?: { pagination?: any } }
         return {
-          data: Array.isArray(data) ? data : [],
+          data: Array.isArray(resp.data) ? resp.data : [],
+          meta: resp.meta || undefined,
         }
       }
       
-      // If response is directly an array
+      // If response is directly an array (backward compatibility)
       if (Array.isArray(response)) {
         return { data: response }
       }

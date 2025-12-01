@@ -19,7 +19,10 @@ import IconHeroiconsMapPin20Solid from '~icons/heroicons/map-pin-20-solid'
 import IconHeroiconsBookOpen20Solid from '~icons/heroicons/book-open-20-solid'
 import IconHeroiconsUserGroup20Solid from '~icons/heroicons/user-group-20-solid'
 import IconHeroiconsSparkles20Solid from '~icons/heroicons/sparkles-20-solid'
+import IconMdiViewGrid from '~icons/mdi/view-grid'
+import IconMdiViewList from '~icons/mdi/view-list'
 import EventCard from '~/components/event/EventCard.vue'
+import EventCardSkeleton from '~/components/event/EventCardSkeleton.vue'
 import { formatEventMeta, formatEventDateRange } from '~/utils/format'
 import UiAppButton from '~/components/ui/AppButton.vue'
 
@@ -155,7 +158,8 @@ const { data: eventHeaderBanners } = await useAsyncData(`ad-banners-event-header
 const headerAdBanners = computed(() => eventHeaderBanners.value?.desktop ?? [])
 const headerAdBannersMobile = computed(() => eventHeaderBanners.value?.mobile ?? [])
 
-// Tidak ada view mode - hanya grid view
+// View mode (Grid/Table toggle)
+const viewMode = ref<'grid' | 'table'>('grid')
 </script>
 
 <template>
@@ -190,10 +194,85 @@ const headerAdBannersMobile = computed(() => eventHeaderBanners.value?.mobile ??
           </div>
         </div>
 
+        <!-- View Toggle -->
+        <div
+          v-if="totalCount > 0 || !pending"
+          class="mb-6 flex items-center justify-between rounded-xl border border-secondary/30 bg-white p-3"
+        >
+          <div class="text-sm text-gray-600">
+            <span>Total</span>
+            <span class="font-semibold text-primary ml-2">{{ totalCount }}</span>
+            <span class="ml-1">event</span>
+            <span
+              v-if="lastPage > 1"
+              class="text-gray-400 mx-2"
+            >•</span>
+            <span
+              v-if="lastPage > 1"
+              class="text-gray-500 font-medium"
+            >
+              Hal. {{ currentPage }}/{{ lastPage }}
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              :class="[
+                'p-2.5 rounded-lg transition h-10 w-10 flex items-center justify-center',
+                viewMode === 'grid'
+                  ? 'bg-secondary text-primary'
+                  : 'border border-secondary/40 text-gray-500 hover:border-secondary/60',
+              ]"
+              aria-label="Grid View"
+              title="Tampilan Grid"
+              @click="viewMode = 'grid'"
+            >
+              <IconMdiViewGrid class="h-5 w-5" />
+            </button>
+            <button
+              :class="[
+                'p-2.5 rounded-lg transition h-10 w-10 flex items-center justify-center',
+                viewMode === 'table'
+                  ? 'bg-secondary text-primary'
+                  : 'border border-secondary/40 text-gray-500 hover:border-secondary/60',
+              ]"
+              aria-label="Table View"
+              title="Tampilan Tabel"
+              @click="viewMode = 'table'"
+            >
+              <IconMdiViewList class="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
         <!-- Event List -->
-        <div v-if="events.length > 0">
-          <!-- Grid View Only -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 auto-rows-fr">
+        <div v-if="pending && events.length === 0">
+          <div
+            v-if="viewMode === 'grid'"
+            class="grid grid-cols-1 sm:grid-cols-2 gap-6"
+          >
+            <EventCardSkeleton
+              v-for="n in 4"
+              :key="`skel-${n}`"
+            />
+          </div>
+          <div
+            v-else
+            class="space-y-2"
+          >
+            <div
+              v-for="n in 9"
+              :key="`skel-table-${n}`"
+              class="h-16 w-full rounded-lg skeleton-shine"
+            />
+          </div>
+        </div>
+        
+        <div v-else-if="events.length > 0">
+          <!-- Grid View -->
+          <div
+            v-if="viewMode === 'grid'"
+            class="grid grid-cols-1 sm:grid-cols-2 gap-6 auto-rows-fr"
+          >
             <EventCard
               v-for="event in events"
               :key="event.id"
@@ -201,6 +280,75 @@ const headerAdBannersMobile = computed(() => eventHeaderBanners.value?.mobile ??
               tone="white"
               class="h-full"
             />
+          </div>
+          
+          <!-- Table View -->
+          <div
+            v-else
+            class="overflow-x-auto rounded-2xl border border-secondary/20 bg-white shadow-sm"
+          >
+            <table class="w-full text-sm text-left text-gray-600">
+              <thead class="bg-gray-100 text-xs font-semibold uppercase tracking-wider text-primary">
+                <tr>
+                  <th
+                    scope="col"
+                    class="px-4 sm:px-6 py-4 font-bold text-primary text-xs"
+                  >
+                    Tanggal
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-4 sm:px-6 py-4 font-bold text-primary text-xs min-w-60"
+                  >
+                    Nama Event
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-4 sm:px-6 py-4 font-bold text-primary text-xs min-w-48"
+                  >
+                    Lokasi
+                  </th>
+                  <th
+                    scope="col"
+                    class="px-4 sm:px-6 py-4 font-bold text-primary text-xs min-w-40"
+                  >
+                    Kategori
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-secondary/20">
+                <tr
+                  v-for="event in events"
+                  :key="event.id"
+                  class="hover:bg-secondary/5 transition-colors cursor-pointer"
+                  @click="navigateTo(`/event/${event.slug}`)"
+                >
+                  <td class="px-4 sm:px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                    {{ formatEventDateRange(event.event_date, event.event_end_date) }}
+                  </td>
+                  <td class="px-4 sm:px-6 py-4">
+                    <div class="flex items-center gap-2">
+                      <IconHeroiconsSparkles20Solid
+                        v-if="event.is_featured_hero"
+                        class="h-4 w-4 text-secondary"
+                      />
+                      <span class="font-semibold text-primary">{{ event.title }}</span>
+                    </div>
+                  </td>
+                  <td class="px-4 sm:px-6 py-4 text-gray-600">
+                    <div class="flex flex-col gap-0.5">
+                      <span class="font-medium text-gray-900">{{ event.city }}</span>
+                      <span class="text-xs">{{ event.province }}</span>
+                    </div>
+                  </td>
+                  <td class="px-4 sm:px-6 py-4">
+                    <span class="text-sm font-medium text-gray-900">
+                      {{ formatEventMeta(event) }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
           
           <!-- Load More Button -->

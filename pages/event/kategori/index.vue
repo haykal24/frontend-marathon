@@ -7,7 +7,7 @@
  * TIDAK ADA DI NAVIGATION - hanya untuk breadcrumb & sitemap
  */
 
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useImage } from '#imports'
 import { useSeoMetaDynamic } from '~/composables/useSeoMeta'
 import { useSiteSettings } from '~/composables/useSiteSettings'
@@ -17,6 +17,7 @@ import { useBreadcrumbSchema } from '~/composables/useBreadcrumbSchema'
 import type { BreadcrumbItem } from '~/components/layout/Breadcrumb.vue'
 import type { EventType } from '~/types/event'
 import IconHeroiconsTag20Solid from '~icons/heroicons/tag-20-solid'
+import UiAppButton from '~/components/ui/AppButton.vue'
 
 const $img = useImage()
 
@@ -25,9 +26,43 @@ const { getImage } = useSiteSettings()
 const { fetchActiveEventTypes } = useEventTypes()
 const { fetchResponsiveBanners } = useAdBanners()
 
-// Fetch event types
-const { data: eventTypesData } = await useAsyncData('event-types-active', () => fetchActiveEventTypes())
-const eventTypes = computed<EventType[]>(() => eventTypesData.value?.data ?? [])
+// Fetch event types with pagination
+const eventTypes = ref<EventType[]>([])
+const pending = ref(false)
+const currentPage = ref(1)
+const lastPage = ref(1)
+const totalCount = ref(0)
+
+const loadEventTypes = async (page = 1, append = false) => {
+  pending.value = true
+  try {
+    const response = await fetchActiveEventTypes({ page, per_page: 12 })
+    
+    if (append && page !== 1) {
+      eventTypes.value = [...eventTypes.value, ...(response.data || [])]
+    } else {
+      eventTypes.value = response.data || []
+    }
+    
+    if (response.meta?.pagination) {
+      currentPage.value = response.meta.pagination.current_page || page
+      lastPage.value = response.meta.pagination.last_page || 1
+      totalCount.value = response.meta.pagination.total || 0
+    }
+  } finally {
+    pending.value = false
+  }
+}
+
+const loadMore = () => {
+  if (currentPage.value >= lastPage.value || pending.value) {
+    return
+  }
+  return loadEventTypes(currentPage.value + 1, true)
+}
+
+// Initial load
+await loadEventTypes(1)
 
 // SEO
 const currentYear = new Date().getFullYear()
@@ -84,7 +119,7 @@ const headerAdBannersMobile = computed(() => eventHeaderBanners.value?.mobile ??
     <!-- Page Header -->
     <LayoutPageHeader
       title="Kategori Event Lari"
-      :description="`Temukan ${eventTypes.length} kategori event lari di Indonesia`"
+      :description="`Temukan ${totalCount || eventTypes.length} kategori event lari di Indonesia`"
       :breadcrumbs="breadcrumbs"
       :background-image-url="headerBg"
       :ad-banners="headerAdBanners"
@@ -105,56 +140,83 @@ const headerAdBannersMobile = computed(() => eventHeaderBanners.value?.mobile ??
         </div>
 
         <!-- Event Type Grid (Styling seperti EventTypeSection) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <NuxtLink
-            v-for="type in eventTypes"
-            :key="type.id"
-            :to="`/event/kategori/${type.slug}`"
-            class="group relative h-64 overflow-hidden rounded-2xl bg-primary transition-all hover:shadow-xl"
-          >
-            <!-- Image -->
-            <img
-              v-if="type.image"
-              :src="buildTypeImage(type.image)"
-              :alt="type.name"
-              class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-              loading="lazy"
-              decoding="async"
-              width="1280"
-              height="720"
-            >
-            <!-- Fallback gradient -->
+        <div v-if="pending && eventTypes.length === 0">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div
-              v-else
-              class="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary via-primary/80 to-black text-center text-white"
+              v-for="n in 6"
+              :key="`skel-${n}`"
+              class="h-64 rounded-2xl skeleton-shine"
+            />
+          </div>
+        </div>
+        
+        <div v-else-if="eventTypes.length > 0">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <NuxtLink
+              v-for="type in eventTypes"
+              :key="type.id"
+              :to="`/event/kategori/${type.slug}`"
+              class="group relative h-64 overflow-hidden rounded-2xl bg-primary transition-all hover:shadow-xl"
             >
-              <span class="text-lg font-semibold tracking-wider uppercase">{{ type.name }}</span>
-            </div>
-            
-            <!-- Overlay gradient -->
-            <div class="absolute inset-0 bg-gradient-to-t from-primary/85 via-primary/40 to-transparent" />
-            
-            <!-- Content -->
-            <div class="absolute inset-0 flex flex-col justify-between p-5 text-white">
-              <span class="badge-modern inline-flex items-center gap-2 self-start">
-                <IconHeroiconsTag20Solid class="h-4 w-4" />
-                Kategori
-              </span>
-              <div>
-                <h3 class="text-xl font-semibold tracking-tight mb-1">
-                  {{ type.name }}
-                </h3>
-                <p class="text-sm text-white/80">
-                  {{ type.event_count || 0 }} event tersedia
-                </p>
+              <!-- Image -->
+              <img
+                v-if="type.image"
+                :src="buildTypeImage(type.image)"
+                :alt="type.name"
+                class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                loading="lazy"
+                decoding="async"
+                width="1280"
+                height="720"
+              >
+              <!-- Fallback gradient -->
+              <div
+                v-else
+                class="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary via-primary/80 to-black text-center text-white"
+              >
+                <span class="text-lg font-semibold tracking-wider uppercase">{{ type.name }}</span>
               </div>
-            </div>
-          </NuxtLink>
+              
+              <!-- Overlay gradient -->
+              <div class="absolute inset-0 bg-gradient-to-t from-primary/85 via-primary/40 to-transparent" />
+              
+              <!-- Content -->
+              <div class="absolute inset-0 flex flex-col justify-between p-5 text-white">
+                <span class="badge-modern inline-flex items-center gap-2 self-start">
+                  <IconHeroiconsTag20Solid class="h-4 w-4" />
+                  Kategori
+                </span>
+                <div>
+                  <h3 class="text-xl font-semibold tracking-tight mb-1">
+                    {{ type.name }}
+                  </h3>
+                  <p class="text-sm text-white/80">
+                    {{ type.event_count || 0 }} event tersedia
+                  </p>
+                </div>
+              </div>
+            </NuxtLink>
+          </div>
+          
+          <!-- Load More Button -->
+          <div
+            v-if="currentPage < lastPage"
+            class="mt-10 flex justify-center"
+          >
+            <UiAppButton
+              variant="primary"
+              size="md"
+              :is-loading="pending"
+              @click="loadMore"
+            >
+              Lihat Lebih Banyak
+            </UiAppButton>
+          </div>
         </div>
 
         <!-- Empty State -->
         <div
-          v-if="eventTypes.length === 0"
+          v-else
           class="text-center py-16 text-gray-500"
         >
           <p>Belum ada kategori event aktif.</p>

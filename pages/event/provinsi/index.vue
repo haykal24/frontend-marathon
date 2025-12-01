@@ -7,7 +7,7 @@
  * TIDAK ADA DI NAVIGATION - hanya untuk breadcrumb & sitemap
  */
 
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useImage } from '#imports'
 import { useSeoMetaDynamic } from '~/composables/useSeoMeta'
 import { useSiteSettings } from '~/composables/useSiteSettings'
@@ -16,8 +16,8 @@ import { useAdBanners } from '~/composables/useAdBanners'
 import { useBreadcrumbSchema } from '~/composables/useBreadcrumbSchema'
 import type { BreadcrumbItem } from '~/components/layout/Breadcrumb.vue'
 import type { Province } from '~/types/event'
-// IconHeroiconsMapPin20Solid imported but not used
 import IconHeroiconsSparkles20Solid from '~icons/heroicons/sparkles-20-solid'
+import UiAppButton from '~/components/ui/AppButton.vue'
 
 const $img = useImage()
 
@@ -26,9 +26,47 @@ const { getImage } = useSiteSettings()
 const { fetchActiveProvinces } = useProvinces()
 const { fetchResponsiveBanners } = useAdBanners()
 
-// Fetch provinces with events
-const { data: provincesData } = await useAsyncData('provinces-with-events', () => fetchActiveProvinces())
-const provinces = computed<Province[]>(() => provincesData.value?.data ?? [])
+// Fetch provinces with pagination
+const provinces = ref<Province[]>([])
+const pending = ref(false)
+const currentPage = ref(1)
+const lastPage = ref(1)
+const totalCount = ref(0)
+
+const loadProvinces = async (page = 1, append = false) => {
+  pending.value = true
+  try {
+    const response = await fetchActiveProvinces({ page, per_page: 12 })
+    
+    if (append && page !== 1) {
+      provinces.value = [...provinces.value, ...(response.data || [])]
+    } else {
+      provinces.value = response.data || []
+    }
+    
+    if (response.meta?.pagination) {
+      currentPage.value = response.meta.pagination.current_page || page
+      lastPage.value = response.meta.pagination.last_page || 1
+      totalCount.value = response.meta.pagination.total || 0
+    } else if (Array.isArray(response.data)) {
+      // Fallback: jika tidak ada meta, set default
+      totalCount.value = response.data.length
+      lastPage.value = 1
+    }
+  } finally {
+    pending.value = false
+  }
+}
+
+const loadMore = () => {
+  if (currentPage.value >= lastPage.value || pending.value) {
+    return
+  }
+  return loadProvinces(currentPage.value + 1, true)
+}
+
+// Initial load
+await loadProvinces(1)
 
 // SEO
 const currentYear = new Date().getFullYear()
@@ -85,7 +123,7 @@ const headerAdBannersMobile = computed(() => eventHeaderBanners.value?.mobile ??
     <!-- Page Header -->
     <LayoutPageHeader
       title="Event Lari per Provinsi"
-      :description="`Jelajahi ${provinces.length} provinsi yang menyelenggarakan event lari di Indonesia`"
+      :description="`Jelajahi ${totalCount || provinces.length} provinsi yang menyelenggarakan event lari di Indonesia`"
       :breadcrumbs="breadcrumbs"
       :background-image-url="headerBg"
       :ad-banners="headerAdBanners"
@@ -106,56 +144,83 @@ const headerAdBannersMobile = computed(() => eventHeaderBanners.value?.mobile ??
         </div>
 
         <!-- Province Grid (Styling seperti ProvinceSection) -->
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <NuxtLink
-            v-for="province in provinces"
-            :key="province.id"
-            :to="`/event/provinsi/${province.slug}`"
-            class="group relative h-64 overflow-hidden rounded-2xl bg-primary"
-          >
-            <!-- Image -->
-            <img
-              v-if="province.thumbnail"
-              :src="buildProvinceImage(province.thumbnail)"
-              :alt="province.name"
-              class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-              loading="lazy"
-              decoding="async"
-              width="1200"
-              height="800"
-            >
-            <!-- Fallback gradient -->
+        <div v-if="pending && provinces.length === 0">
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div
-              v-else
-              class="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary via-primary/80 to-black text-center text-white"
+              v-for="n in 6"
+              :key="`skel-${n}`"
+              class="h-64 rounded-2xl skeleton-shine"
+            />
+          </div>
+        </div>
+        
+        <div v-else-if="provinces.length > 0">
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <NuxtLink
+              v-for="province in provinces"
+              :key="province.id"
+              :to="`/event/provinsi/${province.slug}`"
+              class="group relative h-64 overflow-hidden rounded-2xl bg-primary"
             >
-              <span class="text-lg font-semibold tracking-tight">{{ province.name }}</span>
-            </div>
-            
-            <!-- Overlay gradient -->
-            <div class="absolute inset-0 bg-gradient-to-t from-primary/85 via-primary/40 to-transparent" />
-            
-            <!-- Content -->
-            <div class="absolute inset-0 flex flex-col justify-between p-5 text-white">
-              <span class="badge-modern inline-flex items-center gap-2 self-start">
-                <IconHeroiconsSparkles20Solid class="h-4 w-4" />
-                Favorit
-              </span>
-              <div>
-                <h2 class="text-xl font-semibold tracking-tight">
-                  {{ province.name }}
-                </h2>
-                <p class="text-sm text-white/80">
-                  {{ province.event_count ?? 0 }} event tersedia
-                </p>
+              <!-- Image -->
+              <img
+                v-if="province.thumbnail"
+                :src="buildProvinceImage(province.thumbnail)"
+                :alt="province.name"
+                class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                loading="lazy"
+                decoding="async"
+                width="1200"
+                height="800"
+              >
+              <!-- Fallback gradient -->
+              <div
+                v-else
+                class="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary via-primary/80 to-black text-center text-white"
+              >
+                <span class="text-lg font-semibold tracking-tight">{{ province.name }}</span>
               </div>
-            </div>
-          </NuxtLink>
+              
+              <!-- Overlay gradient -->
+              <div class="absolute inset-0 bg-gradient-to-t from-primary/85 via-primary/40 to-transparent" />
+              
+              <!-- Content -->
+              <div class="absolute inset-0 flex flex-col justify-between p-5 text-white">
+                <span class="badge-modern inline-flex items-center gap-2 self-start">
+                  <IconHeroiconsSparkles20Solid class="h-4 w-4" />
+                  Favorit
+                </span>
+                <div>
+                  <h2 class="text-xl font-semibold tracking-tight">
+                    {{ province.name }}
+                  </h2>
+                  <p class="text-sm text-white/80">
+                    {{ province.event_count ?? 0 }} event tersedia
+                  </p>
+                </div>
+              </div>
+            </NuxtLink>
+          </div>
+          
+          <!-- Load More Button -->
+          <div
+            v-if="currentPage < lastPage"
+            class="mt-10 flex justify-center"
+          >
+            <UiAppButton
+              variant="primary"
+              size="md"
+              :is-loading="pending"
+              @click="loadMore"
+            >
+              Lihat Lebih Banyak
+            </UiAppButton>
+          </div>
         </div>
 
         <!-- Empty State -->
         <div
-          v-if="provinces.length === 0"
+          v-else
           class="text-center py-16 text-gray-500"
         >
           <p>Belum ada data provinsi dengan event aktif.</p>
