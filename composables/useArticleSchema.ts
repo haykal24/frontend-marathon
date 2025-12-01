@@ -52,24 +52,32 @@ function generateArticleImages(
 /**
  * Format author untuk Article schema
  * Sesuai praktik terbaik Google: Person dengan name dan url
+ * 
+ * Google merekomendasikan menambahkan URL author untuk E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness)
+ * Jika belum ada halaman profil author, arahkan ke halaman Tentang Kami sebagai fallback
  */
-function formatAuthor(author: BlogAuthor | null | undefined, _siteUrl: string) {
+function formatAuthor(author: BlogAuthor | null | undefined, siteUrl: string) {
   if (!author) {
-    return undefined
+    // Fallback: jika tidak ada author, gunakan Organization
+    return {
+      '@type': 'Organization' as const,
+      name: 'Indonesia Marathon Team',
+      url: `${siteUrl}/tentang-kami`,
+    }
   }
 
   const authorSchema: {
     '@type': 'Person'
     name: string
-    url?: string
+    url: string
   } = {
     '@type': 'Person',
     name: author.name,
+    // Tambahkan URL author untuk memenuhi rekomendasi Google
+    // Jika belum ada halaman profil author, arahkan ke halaman Tentang Kami
+    // Di masa depan bisa dibuat: `${siteUrl}/author/${author.slug}` atau `${siteUrl}/tentang-kami`
+    url: `${siteUrl}/tentang-kami`,
   }
-
-  // Jika ada email atau bio, bisa dibuat URL profil (opsional)
-  // Untuk saat ini, kita skip URL author karena belum ada halaman profil
-  // Di masa depan bisa: `${siteUrl}/author/${author.slug}`
 
   return authorSchema
 }
@@ -131,7 +139,14 @@ export function useArticleSchema(options: ArticleSchemaOptions) {
     dateModified: formatISODate(post.updated_at || post.published_at),
     
     // WAJIB: Author (Person atau Organization) - Array untuk multiple authors
-    author: author ? [author] : undefined,
+    // Author sudah include URL untuk memenuhi rekomendasi Google E-E-A-T
+    author: author ? [author] : [
+      {
+        '@type': 'Organization' as const,
+        name: siteName,
+        url: organizationUrl || siteUrl,
+      }
+    ],
     
     // WAJIB: Publisher (Organization)
     publisher,
