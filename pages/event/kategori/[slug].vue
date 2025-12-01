@@ -77,9 +77,6 @@ const currentYear = new Date().getFullYear()
 const categoryName = computed(() => eventType.value?.name || 'Event Lari')
 const categoryDesc = computed(() => eventType.value?.description || `event ${eventType.value?.name?.toLowerCase() || 'lari'}`)
 
-// View mode (Grid/Table toggle)
-const viewMode = ref<'grid' | 'table'>('grid')
-
 const seoTitle = computed(() => 
   `Jadwal Event ${categoryName.value} ${currentYear} - Kalender Lari Indonesia`
 )
@@ -150,9 +147,6 @@ const { data: eventHeaderBanners } = await useAsyncData(`ad-banners-event-header
 )
 const headerAdBanners = computed(() => eventHeaderBanners.value?.desktop ?? [])
 const headerAdBannersMobile = computed(() => eventHeaderBanners.value?.mobile ?? [])
-
-// View mode (Grid/Table toggle)
-const viewMode = ref<'grid' | 'table'>('grid')
 </script>
 
 <template>
