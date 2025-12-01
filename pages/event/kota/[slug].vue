@@ -7,7 +7,7 @@
  * TIDAK ADA DI NAVIGATION - hanya untuk breadcrumb & sitemap
  */
 
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useSeoMetaDynamic } from '~/composables/useSeoMeta'
 import { useSiteSettings } from '~/composables/useSiteSettings'
@@ -15,41 +15,72 @@ import { useEvents } from '~/composables/useEvents'
 import { useAdBanners } from '~/composables/useAdBanners'
 import { useBreadcrumbSchema } from '~/composables/useBreadcrumbSchema'
 import type { BreadcrumbItem } from '~/components/layout/Breadcrumb.vue'
-import type { Event } from '~/types/event'
 import IconHeroiconsMapPin20Solid from '~icons/heroicons/map-pin-20-solid'
 import IconHeroiconsBookOpen20Solid from '~icons/heroicons/book-open-20-solid'
 import IconHeroiconsUserGroup20Solid from '~icons/heroicons/user-group-20-solid'
-import IconMdiViewGrid from '~icons/mdi/view-grid'
-import IconMdiViewList from '~icons/mdi/view-list'
 import IconHeroiconsSparkles20Solid from '~icons/heroicons/sparkles-20-solid'
 import EventCard from '~/components/event/EventCard.vue'
 import { formatEventMeta, formatEventDateRange } from '~/utils/format'
-import { ref } from 'vue'
+import UiAppButton from '~/components/ui/AppButton.vue'
 
 const route = useRoute()
 const config = useRuntimeConfig()
 const { getImage } = useSiteSettings()
-const { fetchEvents } = useEvents()
 const { fetchResponsiveBanners } = useAdBanners()
 
 const kotaSlug = route.params.slug as string
 const kotaName = kotaSlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
 
-// Fetch events for this city
-const { data: eventsData } = await useAsyncData(
-  `events-city-${kotaSlug}`,
-  async () => {
-    return await fetchEvents({
-      city: kotaName,
-      per_page: 50,
-      order_by: 'event_date',
-      order: 'asc',
-    })
-  }
-)
+// Setup filters untuk useEventListing
+// Note: useEventListing tidak support city filter langsung, jadi kita perlu extend atau gunakan search
+// Untuk sementara, kita akan fetch langsung dengan city parameter
+const { fetchEvents } = useEvents()
 
-const events = computed<Event[]>(() => eventsData.value?.data ?? [])
-const totalEvents = computed(() => eventsData.value?.meta?.pagination?.total ?? 0)
+// Fetch events dengan city filter dan pagination
+const events = ref<any[]>([])
+const pending = ref(false)
+const currentPage = ref(1)
+const lastPage = ref(1)
+const totalCount = ref(0)
+
+const loadEvents = async (page = 1, append = false) => {
+  pending.value = true
+  try {
+    const response = await fetchEvents({
+      city: kotaName,
+      page,
+      per_page: 12,
+      sort: 'latest',
+      order_by: 'event_date',
+      order: 'desc',
+      status: 'published',
+    })
+    
+    if (append && page !== 1) {
+      events.value = [...events.value, ...response.data]
+    } else {
+      events.value = response.data
+    }
+    
+    currentPage.value = response.meta.pagination.current_page
+    lastPage.value = response.meta.pagination.last_page
+    totalCount.value = response.meta.pagination.total
+  } finally {
+    pending.value = false
+  }
+}
+
+const loadMore = () => {
+  if (currentPage.value >= lastPage.value || pending.value) {
+    return
+  }
+  return loadEvents(currentPage.value + 1, true)
+}
+
+// Initial load
+await loadEvents(1)
+
+// Events sudah di-fetch di atas
 
 // SEO: Dynamic title dan description
 const currentYear = new Date().getFullYear()
@@ -57,7 +88,7 @@ const seoTitle = computed(() =>
   `Jadwal Lari di ${kotaName} ${currentYear} - Event Marathon Terlengkap`
 )
 const seoDescription = computed(() => 
-  `Temukan ${totalEvents.value}+ jadwal event lari terbaru di ${kotaName} ${currentYear}. Dari fun run, half marathon, hingga ultra trail. Update setiap hari!`
+  `Temukan ${totalCount.value}+ jadwal event lari terbaru di ${kotaName} ${currentYear}. Dari fun run, half marathon, hingga ultra trail. Update setiap hari!`
 )
 
 useSeoMetaDynamic({
@@ -78,7 +109,7 @@ useSchemaOrg([
   // ItemList untuk SEO
   defineItemList({
     itemListElement: computed(() =>
-      events.value.slice(0, 20).map((event, index) => ({
+      events.value.slice(0, 20).map((event: any, index: number) => ({
         '@type': 'ListItem',
         position: index + 1,
         item: {
@@ -124,8 +155,7 @@ const { data: eventHeaderBanners } = await useAsyncData(`ad-banners-event-header
 const headerAdBanners = computed(() => eventHeaderBanners.value?.desktop ?? [])
 const headerAdBannersMobile = computed(() => eventHeaderBanners.value?.mobile ?? [])
 
-// View mode (Grid/Table toggle)
-const viewMode = ref<'grid' | 'table'>('grid')
+// Tidak ada view mode - hanya grid view
 </script>
 
 <template>
@@ -133,7 +163,7 @@ const viewMode = ref<'grid' | 'table'>('grid')
     <!-- Page Header -->
     <LayoutPageHeader
       :title="`Event Lari di ${kotaName}`"
-      :description="`${totalEvents} event lari terbaru di ${kotaName} untuk ${currentYear}.`"
+      :description="`${totalCount} event lari terbaru di ${kotaName} untuk ${currentYear}.`"
       :breadcrumbs="breadcrumbs"
       :background-image-url="headerBg"
       :ad-banners="headerAdBanners"
@@ -154,52 +184,16 @@ const viewMode = ref<'grid' | 'table'>('grid')
               Kami menyediakan informasi lengkap mulai dari fun run, half marathon, hingga ultra trail running.
             </p>
             <p class="mb-0">
-              <strong>{{ totalEvents }} event</strong> tersedia di {{ kotaName }}. 
+              <strong>{{ totalCount }} event</strong> tersedia di {{ kotaName }}. 
               Cek jadwal, lokasi, dan cara daftar setiap event di bawah ini. Update setiap hari!
             </p>
           </div>
         </div>
 
-        <!-- View Toggle -->
-        <div class="mb-6 flex items-center justify-between rounded-xl border border-secondary/30 bg-white p-3">
-          <div class="text-sm text-gray-600">
-            <span>Total</span>
-            <span class="font-semibold text-primary ml-2">{{ totalEvents }}</span>
-            <span class="ml-1">event</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <button
-              :class="[
-                'p-2 rounded-lg transition',
-                viewMode === 'grid'
-                  ? 'bg-secondary text-primary'
-                  : 'border border-secondary/40 text-gray-500 hover:border-secondary/60',
-              ]"
-              @click="viewMode = 'grid'"
-            >
-              <IconMdiViewGrid class="h-5 w-5" />
-            </button>
-            <button
-              :class="[
-                'p-2 rounded-lg transition',
-                viewMode === 'table'
-                  ? 'bg-secondary text-primary'
-                  : 'border border-secondary/40 text-gray-500 hover:border-secondary/60',
-              ]"
-              @click="viewMode = 'table'"
-            >
-              <IconMdiViewList class="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-
         <!-- Event List -->
         <div v-if="events.length > 0">
-          <!-- Grid View -->
-          <div
-            v-if="viewMode === 'grid'"
-            class="grid grid-cols-1 sm:grid-cols-2 gap-6 auto-rows-fr"
-          >
+          <!-- Grid View Only -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 auto-rows-fr">
             <EventCard
               v-for="event in events"
               :key="event.id"
@@ -209,73 +203,19 @@ const viewMode = ref<'grid' | 'table'>('grid')
             />
           </div>
           
-          <!-- Table View -->
+          <!-- Load More Button -->
           <div
-            v-else
-            class="overflow-x-auto rounded-2xl border border-secondary/20 bg-white shadow-sm"
+            v-if="currentPage < lastPage"
+            class="mt-10 flex justify-center"
           >
-            <table class="w-full text-sm text-left text-gray-600">
-              <thead class="bg-gray-100 text-xs font-semibold uppercase tracking-wider text-primary">
-                <tr>
-                  <th
-                    scope="col"
-                    class="px-4 sm:px-6 py-4 font-bold text-primary text-xs"
-                  >
-                    Tanggal
-                  </th>
-                  <th
-                    scope="col"
-                    class="px-4 sm:px-6 py-4 font-bold text-primary text-xs min-w-60"
-                  >
-                    Nama Event
-                  </th>
-                  <th
-                    scope="col"
-                    class="px-4 sm:px-6 py-4 font-bold text-primary text-xs min-w-48"
-                  >
-                    Lokasi
-                  </th>
-                  <th
-                    scope="col"
-                    class="px-4 sm:px-6 py-4 font-bold text-primary text-xs min-w-40"
-                  >
-                    Kategori
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-secondary/20">
-                <tr
-                  v-for="event in events"
-                  :key="event.id"
-                  class="hover:bg-secondary/5 transition-colors cursor-pointer"
-                  @click="navigateTo(`/event/${event.slug}`)"
-                >
-                  <td class="px-4 sm:px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                    {{ formatEventDateRange(event.event_date, event.event_end_date) }}
-                  </td>
-                  <td class="px-4 sm:px-6 py-4">
-                    <div class="flex items-center gap-2">
-                      <IconHeroiconsSparkles20Solid
-                        v-if="event.is_featured_hero"
-                        class="h-4 w-4 text-secondary"
-                      />
-                      <span class="font-semibold text-primary">{{ event.title }}</span>
-                    </div>
-                  </td>
-                  <td class="px-4 sm:px-6 py-4 text-gray-600">
-                    <div class="flex flex-col gap-0.5">
-                      <span class="font-medium text-gray-900">{{ event.city }}</span>
-                      <span class="text-xs">{{ event.province }}</span>
-                    </div>
-                  </td>
-                  <td class="px-4 sm:px-6 py-4">
-                    <span class="text-sm font-medium text-gray-900">
-                      {{ formatEventMeta(event) }}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <UiAppButton
+              variant="primary"
+              size="md"
+              :is-loading="pending"
+              @click="loadMore"
+            >
+              Lihat Lebih Banyak
+            </UiAppButton>
           </div>
         </div>
         
@@ -287,7 +227,7 @@ const viewMode = ref<'grid' | 'table'>('grid')
             Tidak Ada Event Ditemukan
           </h3>
           <p class="mt-2 text-gray-500">
-            Belum ada event untuk provinsi ini. Pantau terus untuk update!
+            Belum ada event untuk kota ini. Pantau terus untuk update!
           </p>
         </div>
 
