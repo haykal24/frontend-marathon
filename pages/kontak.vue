@@ -33,7 +33,7 @@ const headerBg = computed(
 )
 
 const contactEmail = computed(
-  () => siteSettings.getSetting<string>('contact_email', 'halo@indonesiamarathon.com') ?? 'halo@indonesiamarathon.com'
+  () => siteSettings.getSetting<string>('contact_email', 'kontak@indonesiamarathon.com') ?? 'kontak@indonesiamarathon.com'
 )
 const contactWhatsapp = computed(
   () => siteSettings.getSetting<string>('contact_whatsapp', '0812-0000-0000') ?? '0812-0000-0000'
@@ -43,17 +43,17 @@ const contactAddress = computed(
   () => siteSettings.getSetting<string>('contact_address', 'Jakarta, Indonesia') ?? 'Jakarta, Indonesia'
 )
 const instagramHandle = computed(
-  () => siteSettings.getSetting<string>('instagram_handle', '@indonesiamarathon') ?? '@indonesiamarathon'
+  () => siteSettings.getSetting<string>('instagram_handle', '@indonesia.marathon') ?? '@indonesia.marathon'
 )
 const facebookUrl = computed(
   () => siteSettings.getSetting<string>('facebook_url', 'https://facebook.com/indonesiamarathon') ??
     'https://facebook.com/indonesiamarathon'
 )
 const twitterHandle = computed(
-  () => siteSettings.getSetting<string>('twitter_handle', '@indonesiamarathon') ?? '@indonesiamarathon'
+  () => siteSettings.getSetting<string>('twitter_handle', '@indonesia.marathon') ?? '@indonesia.marathon'
 )
 const tiktokHandle = computed(
-  () => siteSettings.getSetting<string>('tiktok_handle', '@indonesiamarathon') ?? '@indonesiamarathon'
+  () => siteSettings.getSetting<string>('tiktok_handle', '@indonesia.marathon') ?? '@indonesia.marathon'
 )
 const contactHoursPrimary = computed(
   () =>

@@ -56,11 +56,13 @@ const {
   eventTypes,
   categories,
   ratePackages,
+  provinces,
   loading,
   error,
   success: _success,
   createEventType,
   createCategory,
+  createProvince,
   submitEvent,
   init,
 } = useSubmitEvent()
@@ -72,10 +74,13 @@ const breadcrumbs = computed(() => [
 
 const showNewTypeInput = ref(false)
 const showNewCategoryInput = ref(false)
+const showNewProvinceInput = ref(false)
 const newTypeName = ref('')
 const newCategoryName = ref('')
+const newProvinceName = ref('')
 const creatingType = ref(false)
 const creatingCategory = ref(false)
+const creatingProvince = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
 const toastType = ref<'success' | 'error'>('success')
@@ -133,6 +138,21 @@ const handleAddCategory = async () => {
   }
 }
 
+const handleAddProvince = async () => {
+  if (!newProvinceName.value.trim()) return
+  try {
+    creatingProvince.value = true
+    const created = await createProvince(newProvinceName.value)
+    if (created) {
+      form.province = created.name
+      newProvinceName.value = ''
+      showNewProvinceInput.value = false
+    }
+  } finally {
+    creatingProvince.value = false
+  }
+}
+
 const ensureCategoryFeeEntries = () => {
   if (!categories.value?.length) return
 
@@ -181,8 +201,15 @@ watch(
   { deep: true }
 )
 
+const isSubmitting = ref(false)
+
 const handleSubmit = async () => {
-  if (loading.value) return
+  // Prevent double submit
+  if (loading.value || isSubmitting.value) {
+    return
+  }
+
+  isSubmitting.value = true
   try {
     await submitEvent(form)
     toastType.value = 'success'
@@ -195,6 +222,8 @@ const handleSubmit = async () => {
     toastType.value = 'error'
     toastMessage.value = error.value || 'Gagal mengirim event. Silakan coba lagi.'
     showToast.value = true
+  } finally {
+    isSubmitting.value = false
   }
 }
 
@@ -469,13 +498,85 @@ const handleRemoveSocialMedia = (index: number) => {
 
                   <!-- Provinsi -->
                   <div>
-                    <label class="block text-sm font-semibold text-gray-900 mb-2">Provinsi (opsional)</label>
-                    <input
-                      v-model="form.province"
-                      type="text"
-                      placeholder="cth: DKI Jakarta"
-                      class="w-full rounded-xl border border-secondary/70 bg-white px-4 py-2 text-sm placeholder:text-sm focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20"
-                    >
+                    <label class="block text-sm font-semibold text-gray-900 mb-2">Provinsi *</label>
+                    <div class="space-y-2">
+                      <Listbox v-model="form.province">
+                        <div class="relative w-full">
+                          <ListboxButton
+                            class="relative w-full cursor-default rounded-xl border border-secondary/70 bg-white px-4 py-2 text-sm text-left text-gray-900 focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20"
+                          >
+                            <span class="block truncate">
+                              {{ provinces.find(p => p.name === form.province)?.name || form.province || 'Pilih provinsi' }}
+                            </span>
+                            <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                              <IconMdiChevronDown class="h-5 w-5 text-gray-400" />
+                            </span>
+                          </ListboxButton>
+                          <transition
+                            leave-active-class="transition duration-100 ease-in"
+                            leave-from-class="opacity-100"
+                            leave-to-class="opacity-0"
+                          >
+                            <ListboxOptions
+                              class="absolute z-50 left-0 mt-2 w-full overflow-auto rounded-xl bg-white text-base shadow-lg ring-1 ring-secondary/40 focus:outline-none sm:text-sm max-h-60"
+                            >
+                              <ListboxOption
+                                v-for="province in provinces"
+                                :key="province.id"
+                                v-slot="{ active, selected }"
+                                :value="province.name"
+                                as="template"
+                              >
+                                <li
+                                  :class="[
+                                    active ? 'bg-secondary/10 text-primary' : 'text-gray-900',
+                                    'relative cursor-default select-none py-2 pl-10 pr-4',
+                                  ]"
+                                >
+                                  <span :class="[selected ? 'font-medium' : 'font-normal', 'block truncate']">
+                                    {{ province.name }}
+                                  </span>
+                                  <span
+                                    v-if="selected"
+                                    class="absolute inset-y-0 left-0 flex items-center pl-3 text-secondary"
+                                  >
+                                    <IconMdiCheck class="h-5 w-5" />
+                                  </span>
+                                </li>
+                              </ListboxOption>
+                            </ListboxOptions>
+                          </transition>
+                        </div>
+                      </Listbox>
+                      <button
+                        v-if="!showNewProvinceInput"
+                        type="button"
+                        class="mt-2 inline-flex items-center gap-1.5 text-xs text-primary hover:text-secondary hover:underline font-medium transition-colors"
+                        @click="showNewProvinceInput = true"
+                      >
+                        <IconMdiPlus class="h-3.5 w-3.5" />
+                        <span>Tambah provinsi baru</span>
+                      </button>
+                      <div
+                        v-else
+                        class="flex gap-2"
+                      >
+                        <input
+                          v-model="newProvinceName"
+                          type="text"
+                          placeholder="Nama provinsi baru"
+                          class="flex-1 rounded-xl border border-secondary/70 bg-white px-3 py-2 text-sm placeholder:text-sm focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20"
+                        >
+                        <button
+                          type="button"
+                          :disabled="creatingProvince || !newProvinceName"
+                          class="rounded-xl bg-secondary px-3 py-2 text-xs font-semibold text-primary hover:bg-secondary/90 disabled:opacity-50 whitespace-nowrap"
+                          @click="handleAddProvince"
+                        >
+                          {{ creatingProvince ? 'Membuat...' : 'Buat' }}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1106,16 +1207,16 @@ const handleRemoveSocialMedia = (index: number) => {
                   <UiAppButton
                     to="/mitra/dashboard"
                     variant="primary"
-                    :disabled="loading"
+                    :disabled="loading || isSubmitting"
                   >
                     Batal
                   </UiAppButton>
                   <UiAppButton
                     variant="secondary"
-                    :disabled="loading"
+                    :disabled="loading || isSubmitting"
                     @click="handleSubmit"
                   >
-                    {{ loading ? 'Mengirim...' : 'Kirim Event' }}
+                    {{ loading || isSubmitting ? 'Mengirim...' : 'Kirim Event' }}
                   </UiAppButton>
                 </div>
               </form>

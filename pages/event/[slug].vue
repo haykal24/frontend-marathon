@@ -7,7 +7,7 @@ import { useEvents } from '~/composables/useEvents'
 import { useSiteSettings } from '~/composables/useSiteSettings'
 import { useAdBanners } from '~/composables/useAdBanners'
 import { useEventFaq } from '~/composables/useEventFaq'
-import { formatEventType } from '~/utils/format'
+import { formatEventType, formatEventDateRange, formatDateWithDay, formatRupiah } from '~/utils/format'
 import LayoutPageHeader from '~/components/layout/PageHeader.vue'
 import IconMdiShareVariant from '~icons/mdi/share-variant'
 import IconMdiContentCopy from '~icons/mdi/content-copy'
@@ -28,6 +28,7 @@ import IconHeroiconsMapPin20Solid from '~icons/heroicons/map-pin-20-solid'
 import IconHeroiconsTag20Solid from '~icons/heroicons/tag-20-solid'
 import IconHeroiconsBookOpen20Solid from '~icons/heroicons/book-open-20-solid'
 import IconHeroiconsUserGroup20Solid from '~icons/heroicons/user-group-20-solid'
+import IconHeroiconsCalendarDays20Solid from '~icons/heroicons/calendar-days-20-solid'
 
 const route = useRoute()
 const config = useRuntimeConfig()
@@ -484,6 +485,78 @@ const allContactItems = computed(() => {
             <!-- Divider -->
             <div class="border-t border-secondary/20" />
 
+            <!-- Informasi Tanggal Event -->
+            <div v-if="eventData.event_date">
+              <h3 class="lg:text-lg text-base font-bold text-primary mb-4">
+                Tanggal Event
+              </h3>
+              <div class="p-4 rounded-xl border border-secondary bg-white hover:border-secondary/70 transition-colors">
+                <div class="flex items-start gap-3">
+                  <IconHeroiconsCalendarDays20Solid class="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                  <div class="flex-1">
+                    <p class="text-sm font-semibold text-primary">
+                      {{ formatDateWithDay(eventData.event_date) }}
+                    </p>
+                    <p
+                      v-if="eventData.event_end_date && eventData.event_end_date !== eventData.event_date"
+                      class="text-xs text-gray-600 mt-1"
+                    >
+                      {{ formatEventDateRange(eventData.event_date, eventData.event_end_date) }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Informasi Lokasi -->
+            <div v-if="eventData.location_name || eventData.city">
+              <h3 class="lg:text-lg text-base font-bold text-primary mb-4">
+                Lokasi Event
+              </h3>
+              <div class="p-4 rounded-xl border border-secondary bg-white hover:border-secondary/70 transition-colors">
+                <div class="flex items-start gap-3">
+                  <IconHeroiconsMapPin20Solid class="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                  <div class="flex-1">
+                    <p
+                      v-if="eventData.location_name"
+                      class="text-sm font-semibold text-primary"
+                    >
+                      {{ eventData.location_name }}
+                    </p>
+                    <p
+                      v-if="eventData.city || eventData.province"
+                      class="text-xs text-gray-600 mt-1"
+                    >
+                      {{ [eventData.city, eventData.province].filter(Boolean).join(', ') }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Informasi Organizer -->
+            <div v-if="eventData.organizer_name">
+              <h3 class="lg:text-lg text-base font-bold text-primary mb-4">
+                Penyelenggara
+              </h3>
+              <div class="p-4 rounded-xl border border-secondary bg-white hover:border-secondary/70 transition-colors">
+                <div class="flex items-start gap-3">
+                  <IconHeroiconsUserGroup20Solid class="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+                  <div class="flex-1">
+                    <p class="text-sm font-semibold text-primary">
+                      {{ eventData.organizer_name }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Divider -->
+            <div
+              v-if="eventData.event_date || eventData.location_name || eventData.organizer_name"
+              class="border-t border-secondary/20"
+            />
+
             <!-- Biaya Registrasi -->
             <div
               v-if="
@@ -500,7 +573,7 @@ const allContactItems = computed(() => {
                   class="flex justify-between items-center p-4 rounded-xl border border-secondary bg-white hover:border-secondary/70 transition-colors"
                 >
                   <span class="text-sm font-medium text-gray-600">{{ category }}</span>
-                  <span class="text-sm font-bold text-primary">{{ fee }}</span>
+                  <span class="text-sm font-bold text-primary">{{ formatRupiah(fee) }}</span>
                 </div>
               </div>
             </div>

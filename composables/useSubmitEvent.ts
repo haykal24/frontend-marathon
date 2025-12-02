@@ -22,6 +22,12 @@ interface RatePackageOption {
   description: string | null
 }
 
+interface ProvinceOption {
+  id: number
+  name: string
+  slug: string
+}
+
 interface RegistrationFeeEntry {
   category: string
   price: string
@@ -67,6 +73,7 @@ export const useSubmitEvent = () => {
   const eventTypes = ref<EventTypeOption[]>([])
   const categories = ref<CategoryOption[]>([])
   const ratePackages = ref<RatePackageOption[]>([])
+  const provinces = ref<ProvinceOption[]>([])
 
   const form = reactive<SubmitEventForm>({
     rate_package_id: null,
@@ -162,9 +169,66 @@ export const useSubmitEvent = () => {
   }
 
   /**
+   * Fetch provinces dari backend
+   */
+  const fetchProvinces = async () => {
+    try {
+      const res = await api.get<{ data: ProvinceOption[] }>('/provinces', {
+        params: { per_page: 100 }, // Fetch semua provinsi
+      })
+      // Handle paginated response
+      if (res && 'data' in res) {
+        const data = res.data
+        if (Array.isArray(data)) {
+          provinces.value = data.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            slug: p.slug,
+          }))
+        } else {
+          provinces.value = []
+        }
+      } else if (Array.isArray(res)) {
+        provinces.value = res.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          slug: p.slug,
+        }))
+      } else {
+        provinces.value = []
+      }
+    } catch (e) {
+      console.error('Failed to fetch provinces:', e)
+      error.value = 'Gagal memuat provinsi'
+      provinces.value = []
+    }
+  }
+
+  /**
+   * Buat province baru
+   */
+  const createProvince = async (name: string) => {
+    try {
+      const res = await api.post<{ data: ProvinceOption }>('/provinces', { name })
+      if (res.data) {
+        provinces.value.push(res.data)
+        return res.data
+      }
+    } catch (e) {
+      error.value = 'Gagal membuat provinsi baru'
+      throw e
+    }
+  }
+
+  /**
    * Submit event
    */
   const submitEvent = async (formData: SubmitEventForm) => {
+    // Prevent double submit
+    if (loading.value) {
+      throw new Error('Sedang memproses, harap tunggu...')
+    }
+
     loading.value = true
     error.value = null
     success.value = false
@@ -316,7 +380,7 @@ export const useSubmitEvent = () => {
    * Init: fetch data dari backend
    */
   const init = async () => {
-    await Promise.all([fetchEventTypes(), fetchCategories(), fetchRatePackages()])
+    await Promise.all([fetchEventTypes(), fetchCategories(), fetchRatePackages(), fetchProvinces()])
   }
 
   return {
@@ -324,14 +388,17 @@ export const useSubmitEvent = () => {
     eventTypes,
     categories,
     ratePackages,
+    provinces,
     loading,
     error,
     success,
     fetchEventTypes,
     fetchCategories,
     fetchRatePackages,
+    fetchProvinces,
     createEventType,
     createCategory,
+    createProvince,
     submitEvent,
     resetForm,
     init,

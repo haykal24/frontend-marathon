@@ -166,7 +166,7 @@ const valueProps = computed(() => [
     icon: IconHeroiconsMegaphone20Solid,
     title: 'Jangkauan Web & Instagram',
     description:
-      'Promosi Anda hadir di website indonesiamarathon.com dan akun Instagram @indonesiamarathon.',
+      'Promosi Anda hadir di website indonesiamarathon.com dan akun Instagram @indonesia.marathon.',
   },
   {
     icon: IconHeroiconsChartBar20Solid,

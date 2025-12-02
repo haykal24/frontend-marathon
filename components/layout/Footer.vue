@@ -19,6 +19,10 @@ import IconHeroiconsTrophy from '~icons/heroicons/trophy'
 import IconHeroiconsFlag from '~icons/heroicons/flag'
 import IconHeroiconsEllipsisHorizontalCircle from '~icons/heroicons/ellipsis-horizontal-circle'
 import IconHeroiconsMegaphone from '~icons/heroicons/megaphone'
+import IconHeroiconsMapPin from '~icons/heroicons/map-pin'
+import IconHeroiconsBuildingOffice2 from '~icons/heroicons/building-office-2'
+import IconHeroiconsTag from '~icons/heroicons/tag'
+import IconHeroiconsCalendar from '~icons/heroicons/calendar'
 
 import { useSiteSettings } from '~/composables/useSiteSettings'
 import { watch } from 'vue'
@@ -171,6 +175,10 @@ const footerIcons = {
   trophy: IconHeroiconsTrophy,
   flag: IconHeroiconsFlag,
   megaphone: IconHeroiconsMegaphone,
+  mapPin: IconHeroiconsMapPin,
+  building: IconHeroiconsBuildingOffice2,
+  tag: IconHeroiconsTag,
+  calendarMonth: IconHeroiconsCalendar,
 } as const
 
 const footerLinks = {
@@ -179,12 +187,16 @@ const footerLinks = {
     { label: 'Event Lari', path: '/event', icon: footerIcons.calendar },
     { label: 'Ekosistem', path: '/ekosistem', icon: footerIcons.globe },
     { label: 'Artikel', path: '/blog', icon: footerIcons.newspaper },
+    { label: 'Cari Event Di Kota?', path: '/event/kota', icon: footerIcons.mapPin },
+    { label: 'Cari Event Di Provinsi?', path: '/event/provinsi', icon: footerIcons.building },
   ],
   informasi: [
     { label: 'FAQ', path: '/faq', icon: footerIcons.ellipsis },
     { label: 'Tentang Kami', path: '/tentang-kami', icon: footerIcons.info },
     { label: 'Kontak', path: '/kontak', icon: footerIcons.chat },
     { label: 'Rate Card', path: '/rate-card', icon: footerIcons.megaphone },
+    { label: 'Kalender Bulanan', path: '/event/bulan', icon: footerIcons.calendarMonth },
+    { label: 'Kategori Event', path: '/event/kategori', icon: footerIcons.tag },
     { label: 'Kebijakan Privasi', path: '/privacy', icon: footerIcons.shield },
   ],
   ekosistem: [
@@ -292,6 +304,7 @@ const getSocialHoverClasses = (label: string) => {
           <li
             v-for="link in footerLinks.informasi"
             :key="link.path"
+            :class="link.path === '/privacy' ? 'lg:hidden' : ''"
           >
             <NuxtLink
               :to="link.path"
@@ -375,12 +388,40 @@ const getSocialHoverClasses = (label: string) => {
 
     <div class="border-t border-white/10 bg-primary/95">
       <ClientOnly>
-        <div class="layout-container py-6 text-center text-xs text-white/50">
-          {{ footerCopyright }}
+        <div class="layout-container py-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-white/50">
+          <div class="text-center sm:text-left">
+            {{ footerCopyright }}
+          </div>
+          <div class="hidden lg:block">
+            <NuxtLink
+              to="/privacy"
+              class="inline-flex items-center gap-2 hover:text-secondary transition"
+            >
+              <component
+                :is="footerIcons.shield"
+                class="h-4 w-4 flex-shrink-0"
+              />
+              <span>Kebijakan Privasi</span>
+            </NuxtLink>
+          </div>
         </div>
         <template #fallback>
-          <div class="layout-container py-6 text-center text-xs text-white/50">
-            © {{ currentYear }} indonesiamarathon.com. All rights reserved.
+          <div class="layout-container py-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-white/50">
+            <div class="text-center sm:text-left">
+              © {{ currentYear }} indonesiamarathon.com. All rights reserved.
+            </div>
+            <div class="hidden lg:block">
+              <NuxtLink
+                to="/privacy"
+                class="inline-flex items-center gap-2 hover:text-secondary transition"
+              >
+                <component
+                  :is="footerIcons.shield"
+                  class="h-4 w-4 flex-shrink-0"
+                />
+                <span>Kebijakan Privasi</span>
+              </NuxtLink>
+            </div>
           </div>
         </template>
       </ClientOnly>

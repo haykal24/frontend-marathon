@@ -234,9 +234,15 @@ const sanitizedInstagram = (handle?: string | null) => {
                 </th>
                 <th
                   scope="col"
-                  class="px-4 py-4 sm:px-6 w-56"
+                  class="px-4 py-4 sm:px-6 w-48"
                 >
                   Lokasi
+                </th>
+                <th
+                  scope="col"
+                  class="px-4 py-4 sm:px-6 w-56"
+                >
+                  Deskripsi
                 </th>
                 <th
                   scope="col"
@@ -281,6 +287,18 @@ const sanitizedInstagram = (handle?: string | null) => {
                 </td>
                 <td class="px-4 py-4 sm:px-6 text-gray-700">
                   {{ community.location || '—' }}
+                </td>
+                <td class="px-4 py-4 sm:px-6">
+                  <span
+                    v-if="community.description"
+                    class="text-xs text-gray-600 line-clamp-2 break-words"
+                  >
+                    {{ community.description }}
+                  </span>
+                  <span
+                    v-else
+                    class="text-gray-400"
+                  >—</span>
                 </td>
                 <td class="px-4 py-4 sm:px-6">
                   <a

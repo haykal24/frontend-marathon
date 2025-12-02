@@ -32,7 +32,8 @@ const { data: availableYearsData } = await useAsyncData('event-available-years',
   return response.years || []
 })
 
-const availableYears = computed<number[]>(() => {
+// Initial available years (before filtering by events)
+const initialAvailableYears = computed<number[]>(() => {
   const years = availableYearsData.value || []
   if (years.length === 0) {
     // Fallback: generate years from 2024 to 2027
@@ -41,38 +42,15 @@ const availableYears = computed<number[]>(() => {
   return years.sort((a, b) => a - b)
 })
 
-// Watch untuk set selectedYear ke currentYear jika available
-watch(
-  [availableYears, currentYear],
-  ([years, current]) => {
-    if (years.length === 0) {
-      selectedYear.value = current
-      return
-    }
-    if (!years.includes(selectedYear.value)) {
-      const firstYear = years[0]
-      if (firstYear !== undefined) {
-        selectedYear.value = years.includes(current) ? current : firstYear
-      }
-    }
-  },
-  { immediate: true },
-)
-
 // Fetch calendar stats untuk semua tahun yang tersedia
-const yearsToFetch = computed(() => {
-  const years = availableYears.value
-  // Ambil maksimal 4 tahun terakhir untuk performa
-  return years.slice(-4)
-})
-
 const { data: calendarStatsByYear } = await useAsyncData(
   'calendar-stats-by-year-bulan',
   async () => {
     const statsByYear: Record<number, Record<number, number>> = {}
     
+    // Fetch semua tahun yang tersedia (bukan hanya 4 tahun terakhir)
     await Promise.all(
-      yearsToFetch.value.map(async (year) => {
+      initialAvailableYears.value.map(async (year) => {
         try {
           const response = await fetchCalendarStats(year)
           statsByYear[year] = response?.data || {}
@@ -85,6 +63,49 @@ const { data: calendarStatsByYear } = await useAsyncData(
     
     return statsByYear
   }
+)
+
+// Filter tahun yang memiliki event (tidak kosong)
+const yearsWithEvents = computed<number[]>(() => {
+  if (!calendarStatsByYear.value) return []
+  
+  return Object.keys(calendarStatsByYear.value)
+    .map(year => Number(year))
+    .filter(year => {
+      const stats = calendarStatsByYear.value?.[year] || {}
+      const totalEvents = Object.values(stats).reduce((sum, count) => sum + count, 0)
+      return totalEvents > 0
+    })
+    .sort((a, b) => a - b)
+})
+
+const availableYears = computed<number[]>(() => {
+  // Jika sudah ada data calendar stats, gunakan tahun yang memiliki event
+  if (yearsWithEvents.value.length > 0) {
+    return yearsWithEvents.value
+  }
+  
+  // Fallback: gunakan tahun dari API atau generate default
+  return initialAvailableYears.value
+})
+
+// Watch untuk set selectedYear ke currentYear jika available
+watch(
+  [availableYears, currentYear],
+  ([years, current]) => {
+    if (years.length === 0) {
+      selectedYear.value = current
+      return
+    }
+    // Jika tahun yang dipilih tidak ada di daftar tahun yang memiliki event, pindah ke tahun yang tersedia
+    if (!years.includes(selectedYear.value)) {
+      const firstYear = years[0]
+      if (firstYear !== undefined) {
+        selectedYear.value = years.includes(current) ? current : firstYear
+      }
+    }
+  },
+  { immediate: true },
 )
 
 const activeStats = computed<Record<number, number>>(() => {
@@ -199,12 +220,9 @@ const headerAdBannersMobile = computed(() => eventHeaderBanners.value?.mobile ??
             </div>
           </div>
 
-          <div
-            v-if="hasEvents"
-            class="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-10"
-          >
+          <div class="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-10">
             <div class="lg:col-span-2">
-              <!-- Year Selector -->
+              <!-- Year Selector - SELALU TAMPIL -->
               <div class="mb-6 rounded-xl border border-secondary/30 bg-white p-4">
                 <p class="text-xs font-semibold text-gray-700 mb-3">
                   Tahun
@@ -227,7 +245,10 @@ const headerAdBannersMobile = computed(() => eventHeaderBanners.value?.mobile ??
               </div>
 
               <!-- Month Grid (Calendar Style - 4 columns) -->
-              <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+              <div
+                v-if="hasEvents"
+                class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4"
+              >
                 <NuxtLink
                   v-for="month in calendarGrid"
                   :key="month.monthSlug"
@@ -258,6 +279,20 @@ const headerAdBannersMobile = computed(() => eventHeaderBanners.value?.mobile ??
                     {{ month.eventCount }} Event
                   </p>
                 </NuxtLink>
+              </div>
+
+              <!-- Empty State - TAMPIL JIKA TIDAK ADA EVENT -->
+              <div
+                v-else
+                class="rounded-2xl border border-dashed border-secondary/40 bg-surface px-6 py-10 text-center text-gray-600"
+              >
+                <IconHeroiconsCalendarDays20Solid class="mx-auto h-10 w-10 text-gray-500" />
+                <p class="mt-4 text-base font-medium">
+                  Belum ada event terjadwal untuk tahun {{ selectedYear }}.
+                </p>
+                <p class="mt-1 text-sm">
+                  Pantau terus halaman ini, kami akan update segera setelah jadwal terbaru dirilis.
+                </p>
               </div>
             </div>
             <div class="lg:col-span-1">
@@ -299,19 +334,6 @@ const headerAdBannersMobile = computed(() => eventHeaderBanners.value?.mobile ??
                 </div>
               </div>
             </div>
-          </div>
-
-          <div
-            v-else
-            class="rounded-2xl border border-dashed border-secondary/40 bg-surface px-6 py-10 text-center text-gray-600"
-          >
-            <IconHeroiconsCalendarDays20Solid class="mx-auto h-10 w-10 text-gray-500" />
-            <p class="mt-4 text-base font-medium">
-              Belum ada event terjadwal untuk tahun {{ selectedYear }}.
-            </p>
-            <p class="mt-1 text-sm">
-              Pantau terus halaman ini, kami akan update segera setelah jadwal terbaru dirilis.
-            </p>
           </div>
         </div>
       </div>

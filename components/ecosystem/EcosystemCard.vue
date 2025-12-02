@@ -121,24 +121,24 @@ const detailLink = computed(() => {
         >
           {{ props.item.name }}
         </h3>
+        <!-- Cuplikan Deskripsi di bawah nama -->
+        <p
+          v-if="props.item.description"
+          class="mt-2 text-sm text-gray-600 line-clamp-2"
+        >
+          {{ props.item.description }}
+        </p>
         <p
           v-if="props.item.type"
-          class="text-xs font-semibold uppercase tracking-wider text-gray-500"
+          class="mt-2 text-xs font-semibold uppercase tracking-wider text-gray-500"
         >
           {{ props.item.type.replace(/_/g, ' ') }}
         </p>
       </div>
     </div>
 
-    <!-- Body: Description & Details -->
+    <!-- Body: Details -->
     <div class="relative z-10 flex flex-1 flex-col justify-between px-5 pb-5">
-      <p
-        v-if="props.item.description"
-        class="mb-4 text-sm text-gray-600 line-clamp-3"
-      >
-        {{ props.item.description }}
-      </p>
-
       <div class="mt-auto space-y-3 pt-4 border-t border-secondary/20">
         <div
           v-if="displayLocation"

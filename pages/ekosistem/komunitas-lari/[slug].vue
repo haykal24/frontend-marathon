@@ -4,7 +4,7 @@
  * URL: /ekosistem/komunitas-lari/{slug}
  */
 
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import type { BreadcrumbItem } from '~/components/layout/Breadcrumb.vue'
 import type { RunningCommunity } from '~/types/ecosystem'
 import { useSeoMetaDynamic } from '~/composables/useSeoMeta'
@@ -19,7 +19,9 @@ import IconMdiWhatsapp from '~icons/mdi/whatsapp'
 import IconMdiEmailOutline from '~icons/mdi/email-outline'
 import IconMdiPhone from '~icons/mdi/phone'
 import IconMdiMapMarker from '~icons/mdi/map-marker'
+import IconMdiClose from '~icons/mdi/close'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
+import IconHeroiconsArrowLeft20Solid from '~icons/heroicons/arrow-left-20-solid'
 import { buildWhatsappUrl } from '~/utils/contact'
 
 const route = useRoute()
@@ -179,12 +181,67 @@ const emailUrl = computed(() => {
   return `mailto:${community.value.email}`
 })
 
-// Gallery click handler
-const handleGalleryClick = (url: string) => {
-  if (import.meta.client && typeof window !== 'undefined') {
-    window.open(url, '_blank')
+// Gallery Lightbox State
+const lightboxOpen = ref(false)
+const lightboxIndex = ref(0)
+
+// Gallery click handler - Open lightbox
+const handleGalleryClick = (index: number) => {
+  lightboxIndex.value = index
+  lightboxOpen.value = true
+  // Prevent body scroll when lightbox is open
+  if (import.meta.client && typeof document !== 'undefined') {
+    document.body.style.overflow = 'hidden'
   }
 }
+
+// Close lightbox
+const closeLightbox = () => {
+  lightboxOpen.value = false
+  if (import.meta.client && typeof document !== 'undefined') {
+    document.body.style.overflow = ''
+  }
+}
+
+// Navigate lightbox
+const nextImage = () => {
+  if (lightboxIndex.value < galleryImages.value.length - 1) {
+    lightboxIndex.value++
+  } else {
+    lightboxIndex.value = 0
+  }
+}
+
+const prevImage = () => {
+  if (lightboxIndex.value > 0) {
+    lightboxIndex.value--
+  } else {
+    lightboxIndex.value = galleryImages.value.length - 1
+  }
+}
+
+// Keyboard navigation
+onMounted(() => {
+  if (import.meta.client) {
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (!lightboxOpen.value) return
+      
+      if (e.key === 'Escape') {
+        closeLightbox()
+      } else if (e.key === 'ArrowRight') {
+        nextImage()
+      } else if (e.key === 'ArrowLeft') {
+        prevImage()
+      }
+    }
+    
+    window.addEventListener('keydown', handleKeydown)
+    
+    onUnmounted(() => {
+      window.removeEventListener('keydown', handleKeydown)
+    })
+  }
+})
 </script>
 
 <template>
@@ -207,23 +264,20 @@ const handleGalleryClick = (url: string) => {
           <div class="lg:col-span-2 space-y-6">
             <!-- About Section -->
             <div class="rounded-2xl border border-secondary bg-white p-6">
+              <div class="flex items-center gap-3 mb-4">
+                <span class="badge-modern">Komunitas Lari</span>
+              </div>
+
               <h2 class="text-xl font-bold text-primary mb-4">
                 Tentang Komunitas
               </h2>
-              
-              <!-- Logo -->
+
+              <!-- Description -->
               <div
-                v-if="logoImage"
-                class="mb-6 flex justify-center"
+                v-if="community.description"
+                class="mb-6 text-sm lg:text-base text-gray-700 leading-relaxed"
               >
-                <img
-                  :src="logoImage"
-                  :alt="community.name"
-                  class="w-32 h-32 rounded-xl object-cover"
-                  width="128"
-                  height="128"
-                  loading="eager"
-                >
+                <p>{{ community.description }}</p>
               </div>
 
               <!-- Location -->
@@ -237,7 +291,7 @@ const handleGalleryClick = (url: string) => {
               </div>
 
               <!-- Contact Info -->
-              <div class="flex flex-wrap gap-3 mb-6">
+              <div class="flex flex-wrap gap-3">
                 <a
                   v-if="instagramUrl"
                   :href="instagramUrl"
@@ -266,7 +320,7 @@ const handleGalleryClick = (url: string) => {
                   class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
                 >
                   <IconMdiEmailOutline class="h-5 w-5" />
-                  <span class="text-sm font-medium">Email</span>
+                  <span class="text-sm font-medium">{{ community.email }}</span>
                 </a>
 
                 <div
@@ -278,13 +332,7 @@ const handleGalleryClick = (url: string) => {
                 </div>
               </div>
 
-              <!-- Contact Info Text -->
-              <div
-                v-if="community.contact_info"
-                class="text-sm text-gray-600"
-              >
-                <p>{{ community.contact_info }}</p>
-              </div>
+           
             </div>
 
             <!-- Gallery Section -->
@@ -300,7 +348,7 @@ const handleGalleryClick = (url: string) => {
                   v-for="(img, idx) in galleryImages"
                   :key="img.id || idx"
                   class="relative aspect-video rounded-xl overflow-hidden bg-gray-100 cursor-pointer hover:opacity-90 transition"
-                  @click="handleGalleryClick(img.url)"
+                  @click="handleGalleryClick(idx)"
                 >
                   <img
                     :src="img.thumb_optimized_url || img.thumb_url"
@@ -361,6 +409,61 @@ const handleGalleryClick = (url: string) => {
         </div>
       </div>
     </section>
+
+    <!-- Gallery Lightbox Modal -->
+    <Teleport to="body">
+      <div
+        v-if="lightboxOpen && galleryImages.length > 0"
+        class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-sm"
+        @click="closeLightbox"
+      >
+        <!-- Close Button -->
+        <button
+          class="absolute top-4 right-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+          @click.stop="closeLightbox"
+        >
+          <IconMdiClose class="h-6 w-6" />
+        </button>
+
+        <!-- Navigation Buttons -->
+        <button
+          v-if="galleryImages.length > 1"
+          class="absolute left-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+          @click.stop="prevImage"
+        >
+          <IconHeroiconsArrowLeft20Solid class="h-6 w-6" />
+        </button>
+
+        <button
+          v-if="galleryImages.length > 1"
+          class="absolute right-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+          @click.stop="nextImage"
+        >
+          <IconHeroiconsArrowRight20Solid class="h-6 w-6" />
+        </button>
+
+        <!-- Image Container -->
+        <div
+          class="relative max-h-[90vh] max-w-[90vw]"
+          @click.stop
+        >
+          <img
+            :src="galleryImages[lightboxIndex]?.optimized_url || galleryImages[lightboxIndex]?.url"
+            :alt="galleryImages[lightboxIndex]?.name || `Galeri ${community.name} ${lightboxIndex + 1}`"
+            class="max-h-[90vh] max-w-[90vw] object-contain"
+            loading="eager"
+          >
+        </div>
+
+        <!-- Image Counter -->
+        <div
+          v-if="galleryImages.length > 1"
+          class="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 text-sm text-white backdrop-blur-sm"
+        >
+          {{ lightboxIndex + 1 }} / {{ galleryImages.length }}
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 

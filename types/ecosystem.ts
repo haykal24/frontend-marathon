@@ -9,6 +9,7 @@ export interface RunningCommunity {
   id: number
   name: string
   slug?: string
+  description?: string | null
   location?: string | null
   city?: string | null
   instagram_handle?: string | null
