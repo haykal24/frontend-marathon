@@ -347,13 +347,13 @@ onMounted(() => {
                 <div
                   v-for="(img, idx) in galleryImages"
                   :key="img.id || idx"
-                  class="relative aspect-video rounded-xl overflow-hidden bg-gray-100 cursor-pointer hover:opacity-90 transition"
+                  class="relative aspect-video rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition"
                   @click="handleGalleryClick(idx)"
                 >
                   <img
                     :src="img.thumb_optimized_url || img.thumb_url"
                     :alt="img.name || `Galeri ${community.name} ${idx + 1}`"
-                    class="w-full h-full object-cover"
+                    class="w-full h-full object-contain"
                     loading="lazy"
                   >
                 </div>
