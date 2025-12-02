@@ -334,7 +334,7 @@ onMounted(() => {
                 <div
                   v-for="(img, idx) in galleryImages"
                   :key="img.id || idx"
-                  class="relative aspect-video rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition"
+                  class="relative aspect-[4/5] rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition"
                   @click="handleGalleryClick(idx)"
                 >
                   <img
