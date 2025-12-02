@@ -262,7 +262,7 @@ const totalCount = computed(() => items.value.length)
                     </span>
                     <span
                       v-if="vendor.description"
-                      class="text-xs text-gray-500 line-clamp-1 break-words"
+                      class="text-sm text-gray-500 line-clamp-1 break-words"
                     >{{
                       vendor.description
                     }}</span>
@@ -274,7 +274,7 @@ const totalCount = computed(() => items.value.length)
                 <td class="px-4 py-4 sm:px-6">
                   <div class="flex items-center gap-2 text-gray-700">
                     <IconMdiMapMarker class="h-4 w-4 text-secondary" />
-                    <span>{{ vendor.city || '—' }}</span>
+                    <span class="text-sm">{{ vendor.city || '—' }}</span>
                   </div>
                 </td>
                 <td class="px-4 py-4 sm:px-6">

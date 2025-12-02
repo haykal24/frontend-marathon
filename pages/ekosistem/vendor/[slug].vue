@@ -153,7 +153,9 @@ const logoImage = computed(() => {
 const galleryImages = computed(() => 
   (vendor.value.gallery || []).map(img => ({
     ...img,
-    optimized_url: buildImageUrl(img.url, { width: 1200, height: 800 }),
+    // URL original untuk lightbox (full size tanpa resize dari backend)
+    full_url: img.original_url || img.url, // Gunakan original_url dari backend, fallback ke url
+    // Optimized untuk thumbnail
     thumb_optimized_url: buildImageUrl(img.thumb_url, { width: 400, height: 300 }),
   }))
 )
@@ -434,7 +436,7 @@ onMounted(() => {
           @click.stop
         >
           <img
-            :src="galleryImages[lightboxIndex]?.optimized_url || galleryImages[lightboxIndex]?.url"
+            :src="galleryImages[lightboxIndex]?.full_url || galleryImages[lightboxIndex]?.url"
             :alt="galleryImages[lightboxIndex]?.name || `Galeri ${vendor.name} ${lightboxIndex + 1}`"
             class="max-h-[90vh] max-w-[90vw] object-contain"
             loading="eager"

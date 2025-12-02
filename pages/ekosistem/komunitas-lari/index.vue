@@ -285,19 +285,21 @@ const sanitizedInstagram = (handle?: string | null) => {
                     {{ community.name }}
                   </span>
                 </td>
-                <td class="px-4 py-4 sm:px-6 text-gray-700">
-                  {{ community.location || '—' }}
+                <td class="px-4 py-4 sm:px-6">
+                  <span class="text-sm text-gray-700">
+                    {{ community.location || '—' }}
+                  </span>
                 </td>
                 <td class="px-4 py-4 sm:px-6">
                   <span
                     v-if="community.description"
-                    class="text-xs text-gray-600 line-clamp-2 break-words"
+                    class="text-sm text-gray-600 line-clamp-2 break-words"
                   >
                     {{ community.description }}
                   </span>
                   <span
                     v-else
-                    class="text-gray-400"
+                    class="text-sm text-gray-400"
                   >—</span>
                 </td>
                 <td class="px-4 py-4 sm:px-6">
