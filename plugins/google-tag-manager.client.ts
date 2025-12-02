@@ -1,7 +1,7 @@
 /**
  * Google Tag Manager Plugin dengan Partytown
  * 
- * Menggunakan @nuxt/scripts untuk load Google Tag Manager di web worker
+ * Menggunakan @nuxt/scripts dengan Partytown untuk load Google Tag Manager di web worker
  * untuk performa yang lebih baik (tidak blocking main thread)
  * 
  * Partytown memindahkan GTM script ke web worker sehingga tidak menghambat
@@ -26,8 +26,8 @@ export default defineNuxtPlugin(() => {
     })
   }
 
-  // Load Google Tag Manager script di head menggunakan useHead
-  // Partytown akan otomatis memindahkan script ke web worker
+  // Load Google Tag Manager script menggunakan useHead dengan type: 'text/partytown'
+  // Partytown akan memindahkan script ke web worker
   // karena sudah dikonfigurasi di nuxt.config.ts (partytown.forward: ['dataLayer.push', 'gtm'])
   useHead({
     script: [
@@ -37,8 +37,7 @@ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','${gtmId}');`,
-        type: 'text/javascript',
-        // Partytown akan otomatis intercept script ini
+        type: 'text/partytown', // Explicitly tell Partytown to handle this script
       },
     ],
   })
