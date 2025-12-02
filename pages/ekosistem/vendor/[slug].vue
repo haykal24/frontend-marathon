@@ -230,7 +230,7 @@ onMounted(() => {
     onUnmounted(() => {
       window.removeEventListener('keydown', handleKeydown)
     })
-  }
+}
 })
 </script>
 
@@ -268,15 +268,6 @@ onMounted(() => {
                 class="mb-6 text-sm lg:text-base text-gray-700 leading-relaxed"
               >
                 <p>{{ vendor.description }}</p>
-              </div>
-
-              <!-- Location -->
-              <div
-                v-if="vendor.city"
-                class="mb-4 flex items-center gap-2 text-gray-600"
-              >
-                <IconMdiMapMarker class="h-5 w-5 text-secondary flex-shrink-0" />
-                <span>{{ vendor.city }}</span>
               </div>
 
               <!-- Contact Info -->
@@ -340,7 +331,7 @@ onMounted(() => {
                   <img
                     :src="img.thumb_optimized_url || img.thumb_url"
                     :alt="img.name || `Galeri ${vendor.name} ${idx + 1}`"
-                    class="w-full h-full object-contain"
+                    class="w-full h-full object-cover"
                     loading="lazy"
                   >
                 </div>
@@ -367,7 +358,15 @@ onMounted(() => {
                 <h3 class="text-lg font-bold text-primary mb-2">
                   {{ vendor.name }}
                 </h3>
-                <span class="text-sm text-gray-600">{{ vendorTypeLabel }}</span>
+                <span class="text-sm text-gray-600 mb-3 block">{{ vendorTypeLabel }}</span>
+                <!-- Location -->
+                <div
+                  v-if="vendor.city"
+                  class="flex items-center justify-center gap-2 text-sm text-gray-600"
+                >
+                  <IconMdiMapMarker class="h-4 w-4 text-secondary flex-shrink-0" />
+                  <span>{{ vendor.city }}</span>
+                </div>
               </div>
 
               <!-- Quick Links -->

@@ -242,7 +242,7 @@ onMounted(() => {
     onUnmounted(() => {
       window.removeEventListener('keydown', handleKeydown)
     })
-  }
+}
 })
 </script>
 
@@ -273,23 +273,13 @@ onMounted(() => {
               <h2 class="text-xl font-bold text-primary mb-4">
                 Tentang Komunitas
               </h2>
-
+              
               <!-- Description -->
               <div
                 v-if="community.description"
                 class="mb-6 text-sm lg:text-base text-gray-700 leading-relaxed"
               >
                 <p>{{ community.description }}</p>
-              </div>
-
-              <!-- Location -->
-              <div
-                v-if="community.location || community.city"
-                class="mb-4 flex items-center gap-2 text-gray-600"
-              >
-                <IconMdiMapMarker class="h-5 w-5 text-secondary flex-shrink-0" />
-                <span>{{ community.city || community.location }}</span>
-                <span v-if="community.city && community.location"> - {{ community.location }}</span>
               </div>
 
               <!-- Contact Info -->
@@ -355,7 +345,7 @@ onMounted(() => {
                   <img
                     :src="img.thumb_optimized_url || img.thumb_url"
                     :alt="img.name || `Galeri ${community.name} ${idx + 1}`"
-                    class="w-full h-full object-contain"
+                    class="w-full h-full object-cover"
                     loading="lazy"
                   >
                 </div>
@@ -379,9 +369,18 @@ onMounted(() => {
                   height="200"
                   loading="eager"
                 >
-                <h3 class="text-lg font-bold text-primary">
+                <h3 class="text-lg font-bold text-primary mb-3">
                   {{ community.name }}
                 </h3>
+                <!-- Location -->
+                <div
+                  v-if="community.location || community.city"
+                  class="flex items-center justify-center gap-2 text-sm text-gray-600"
+                >
+                  <IconMdiMapMarker class="h-4 w-4 text-secondary flex-shrink-0" />
+                  <span>{{ community.city || community.location }}</span>
+                  <span v-if="community.city && community.location"> - {{ community.location }}</span>
+                </div>
               </div>
 
               <!-- Quick Links -->

@@ -27,7 +27,7 @@ export const useProvinces = () => {
       if (response && 'data' in response) {
         const data = response.data
         const resp = response as ApiResponse<Province[]> & { meta?: { pagination?: any } }
-        return {
+    return {
           data: Array.isArray(data) ? data : [],
           meta: resp.meta || undefined,
         }

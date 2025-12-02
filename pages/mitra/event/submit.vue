@@ -561,12 +561,12 @@ const handleRemoveSocialMedia = (index: number) => {
                         v-else
                         class="flex gap-2"
                       >
-                        <input
+                    <input
                           v-model="newProvinceName"
-                          type="text"
+                      type="text"
                           placeholder="Nama provinsi baru"
                           class="flex-1 rounded-xl border border-secondary/70 bg-white px-3 py-2 text-sm placeholder:text-sm focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/20"
-                        >
+                    >
                         <button
                           type="button"
                           :disabled="creatingProvince || !newProvinceName"
