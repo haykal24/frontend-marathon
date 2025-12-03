@@ -126,7 +126,7 @@ const detailLink = computed(() => {
           v-if="props.item.description"
           class="mt-2 text-sm text-gray-600 line-clamp-2"
         >
-          {{ props.item.description }}
+          {{ props.item.description.replace(/<[^>]*>/g, '') }}
         </p>
         <p
           v-if="props.item.type"

@@ -278,10 +278,9 @@ onMounted(() => {
               <!-- Description -->
               <div
                 v-if="community.description"
-                class="mb-6 text-sm lg:text-base text-gray-700 leading-relaxed"
-              >
-                <p>{{ community.description }}</p>
-              </div>
+                class="mb-6 text-sm lg:text-base text-gray-700 leading-relaxed prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-li:my-0.5"
+                v-html="community.description"
+              />
 
               <!-- Contact Info -->
               <div class="flex flex-wrap gap-3">

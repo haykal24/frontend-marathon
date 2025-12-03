@@ -266,7 +266,7 @@ const headerAdBannersMobile = computed(() => vendorMedaliHeaderBanners.value?.mo
                       v-if="vendor.description"
                       class="text-sm text-gray-500 line-clamp-1 break-words"
                     >{{
-                      vendor.description
+                      vendor.description.replace(/<[^>]*>/g, '')
                     }}</span>
                   </div>
                 </td>

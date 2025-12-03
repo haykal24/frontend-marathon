@@ -301,7 +301,7 @@ const sanitizedInstagram = (handle?: string | null) => {
                     v-if="community.description"
                     class="text-sm text-gray-600 line-clamp-2 break-words"
                   >
-                    {{ community.description }}
+                    {{ community.description.replace(/<[^>]*>/g, '') }}
                   </span>
                   <span
                     v-else
