@@ -131,7 +131,13 @@ const contactInfoItems = computed(() => [
   },
 ])
 
-const formatHandle = (handle?: string | null) => handle?.replace('@', '').trim()
+const formatHandle = (handle?: string | null) => {
+  if (!handle) return ''
+  // Remove @ prefix and trim whitespace
+  const clean = handle.replace(/^@/, '').trim()
+  // Remove URL part if user accidentally pasted full URL
+  return clean.replace(/^(https?:\/\/)?(www\.)?instagram\.com\//, '').replace(/\/$/, '')
+}
 
 const socialLinks = computed(() => {
   const links: Array<{
