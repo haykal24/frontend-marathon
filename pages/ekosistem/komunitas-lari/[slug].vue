@@ -19,6 +19,7 @@ import IconMdiWhatsapp from '~icons/mdi/whatsapp'
 import IconMdiEmailOutline from '~icons/mdi/email-outline'
 import IconMdiPhone from '~icons/mdi/phone'
 import IconMdiMapMarker from '~icons/mdi/map-marker'
+import IconMdiWeb from '~icons/mdi/web'
 import IconMdiClose from '~icons/mdi/close'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
 import IconHeroiconsArrowLeft20Solid from '~icons/heroicons/arrow-left-20-solid'
@@ -293,6 +294,17 @@ onMounted(() => {
                 >
                   <IconMdiInstagram class="h-5 w-5" />
                   <span class="text-sm font-medium">{{ community.instagram_handle }}</span>
+                </a>
+
+                <a
+                  v-if="community.website"
+                  :href="community.website"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0EA5E9]/10 text-[#0EA5E9] hover:bg-[#0EA5E9]/20 transition"
+                >
+                  <IconMdiWeb class="h-5 w-5" />
+                  <span class="text-sm font-medium">{{ community.website }}</span>
                 </a>
 
                 <a

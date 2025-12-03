@@ -3,6 +3,7 @@ export interface GalleryImage {
   url: string
   thumb_url: string
   name: string
+  original_url?: string
 }
 
 export interface RunningCommunity {
@@ -13,6 +14,7 @@ export interface RunningCommunity {
   location?: string | null
   city?: string | null
   instagram_handle?: string | null
+  website?: string | null
   contact_info?: string | null
   logo_url?: string | null
   is_featured: boolean
@@ -37,6 +39,7 @@ export interface Vendor {
   is_featured: boolean
   logo?: string | null
   logo_url?: string | null
+  instagram_handle?: string | null
   gallery?: GalleryImage[]
   created_at?: string
   updated_at?: string

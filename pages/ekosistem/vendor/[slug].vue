@@ -18,6 +18,7 @@ import IconMdiWeb from '~icons/mdi/web'
 import IconMdiEmailOutline from '~icons/mdi/email-outline'
 import IconMdiWhatsapp from '~icons/mdi/whatsapp'
 import IconMdiPhone from '~icons/mdi/phone'
+import IconMdiInstagram from '~icons/mdi/instagram'
 import IconMdiMapMarker from '~icons/mdi/map-marker'
 import IconMdiClose from '~icons/mdi/close'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
@@ -161,6 +162,12 @@ const galleryImages = computed(() =>
 )
 
 // Contact helpers
+const instagramUrl = computed(() => {
+  if (!vendor.value.instagram_handle) return null
+  const handle = vendor.value.instagram_handle.replace('@', '')
+  return `https://instagram.com/${handle}`
+})
+
 const whatsappUrl = computed(() => {
   if (!vendor.value.phone) return null
   return buildWhatsappUrl(vendor.value.phone)
@@ -272,6 +279,19 @@ onMounted(() => {
 
               <!-- Contact Info -->
               <div class="flex flex-wrap gap-3">
+                <a
+                  v-if="instagramUrl"
+                  :href="instagramUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#E1306C]/10 text-[#E1306C] hover:bg-[#E1306C]/20 transition"
+                >
+                  <IconMdiInstagram class="h-5 w-5" />
+                  <span class="text-sm font-medium">
+                    {{ vendor.instagram_handle?.startsWith('@') ? vendor.instagram_handle : `@${vendor.instagram_handle}` }}
+                  </span>
+                </a>
+
                 <a
                   v-if="vendor.website"
                   :href="vendor.website"

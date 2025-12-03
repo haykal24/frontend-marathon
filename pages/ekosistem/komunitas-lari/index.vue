@@ -246,9 +246,15 @@ const sanitizedInstagram = (handle?: string | null) => {
                 </th>
                 <th
                   scope="col"
-                  class="px-4 py-4 sm:px-6 w-56"
+                  class="px-4 py-4 sm:px-6 w-48"
                 >
                   Instagram
+                </th>
+                <th
+                  scope="col"
+                  class="px-4 py-4 sm:px-6 w-48"
+                >
+                  Website
                 </th>
                 <th
                   scope="col"
@@ -312,6 +318,21 @@ const sanitizedInstagram = (handle?: string | null) => {
                   >
                     <IconMdiInstagram class="h-4 w-4 text-[#E1306C]" />
                     @{{ sanitizedInstagram(community.instagram_handle) }}
+                  </a>
+                  <span
+                    v-else
+                    class="text-gray-400"
+                  >—</span>
+                </td>
+                <td class="px-4 py-4 sm:px-6">
+                  <a
+                    v-if="community.website"
+                    :href="community.website"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-2 rounded-full border border-secondary/30 px-3 py-1 text-xs font-medium text-primary transition-colors hover:border-secondary hover:bg-secondary/10"
+                  >
+                    <span class="truncate max-w-[180px]">{{ community.website }}</span>
                   </a>
                   <span
                     v-else

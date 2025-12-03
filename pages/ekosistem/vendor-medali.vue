@@ -11,6 +11,7 @@ import IconMdiViewList from '~icons/mdi/view-list'
 import IconMdiWhatsapp from '~icons/mdi/whatsapp'
 import IconMdiEmailOutline from '~icons/mdi/email-outline'
 import IconMdiWeb from '~icons/mdi/web'
+import IconMdiInstagram from '~icons/mdi/instagram'
 import IconMdiMapMarker from '~icons/mdi/map-marker'
 import IconHeroiconsArrowRight20Solid from '~icons/heroicons/arrow-right-20-solid'
 import { buildWhatsappUrl, formatWebsiteDisplay } from '~/utils/contact'
@@ -280,6 +281,16 @@ const headerAdBannersMobile = computed(() => vendorMedaliHeaderBanners.value?.mo
                 </td>
                 <td class="px-4 py-4 sm:px-6">
                   <div class="flex flex-wrap items-center gap-2">
+                    <a
+                      v-if="vendor.instagram_handle"
+                      :href="`https://instagram.com/${vendor.instagram_handle.replace('@', '')}`"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center gap-2 rounded-full bg-[#E1306C]/10 px-3 py-1 text-xs font-semibold text-[#E1306C] transition-colors hover:bg-[#E1306C]/20"
+                    >
+                      <IconMdiInstagram class="h-4 w-4" />
+                      <span>@{{ vendor.instagram_handle.replace('@', '') }}</span>
+                    </a>
                     <a
                       v-if="vendor.phone && buildWhatsappUrl(vendor.phone)"
                       :href="buildWhatsappUrl(vendor.phone) || '#'"
